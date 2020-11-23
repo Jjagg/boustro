@@ -1,0 +1,23 @@
+name: example
+description: example
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.12.0-0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_spanned_controller:
+    path: ../
+
+  keyboard_attachable: ^1.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  pedantic: ^1.0.0
+

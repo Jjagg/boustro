@@ -1,0 +1,29 @@
+include: all_lint_rules.yaml
+analyzer:
+  enable-experiment:
+  - non-nullable
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+  strong-mode:
+    implicit-casts: false
+  errors:
+    # Otherwise cause the import of all_lint_rules to warn because of some rules conflicts.
+    # We explicitly enabled even conflicting rules and are fixing the conflict
+    # in this file
+    included_file_warning: ignore
+
+linter:
+  rules:
+    always_put_required_named_parameters_first: false
+    always_specify_types: false
+    always_use_package_imports: false
+    avoid_annotating_with_dynamic: false
+    avoid_as: false
+    avoid_returning_null: false
+    lines_longer_than_80_chars: false
+    prefer_double_quotes: false
+    prefer_expression_function_bodies: false
+    flutter_style_todos: false
+    unnecessary_final: false
+    unnecessary_this: false
