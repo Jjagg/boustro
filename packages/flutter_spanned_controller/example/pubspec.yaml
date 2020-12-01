@@ -13,11 +13,11 @@ dependencies:
   flutter_spanned_controller:
     path: ../
 
-  keyboard_attachable: ^1.0.3
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   pedantic: ^1.0.0
 
+flutter:
+  uses-material-design: true

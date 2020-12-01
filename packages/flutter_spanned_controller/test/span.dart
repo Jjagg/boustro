@@ -58,7 +58,7 @@ void main() {
   group('collapse', () {
     test('''do not remove expandable span at the end''', () {
       expect(
-        (AttributeSpanList()
+        (SpanController()
               ..shift(0, 3)
               ..add(sp(
                   a, 1, 2, InsertBehavior.exclusive, InsertBehavior.inclusive))
@@ -70,7 +70,7 @@ void main() {
 
     test('''remove useless span at the start''', () {
       expect(
-        (AttributeSpanList()
+        (SpanController()
               ..shift(0, 3)
               ..add(sp(
                   a, 1, 2, InsertBehavior.inclusive, InsertBehavior.exclusive))
@@ -82,7 +82,7 @@ void main() {
 
     test('''remove useless span collapsed''', () {
       expect(
-        (AttributeSpanList()
+        (SpanController()
               ..shift(0, 3)
               ..add(sp(
                   a, 1, 2, InsertBehavior.exclusive, InsertBehavior.exclusive))
@@ -94,7 +94,7 @@ void main() {
 
     test('''do not remove unexpandable span not collapsed''', () {
       expect(
-        (AttributeSpanList()
+        (SpanController()
               ..shift(0, 3)
               ..add(sp(
                   a, 1, 3, InsertBehavior.exclusive, InsertBehavior.exclusive))
@@ -108,7 +108,7 @@ void main() {
   group('shift', () {
     test('empty before-after', () {
       expect(
-          (AttributeSpanList()
+          (SpanController()
                 ..add(sp(a, 0, 0, InsertBehavior.exclusive,
                     InsertBehavior.inclusive))
                 ..shift(0, 2))
@@ -118,7 +118,7 @@ void main() {
 
     test('insertion before', () {
       expect(
-        (AttributeSpanList()
+        (SpanController()
               ..shift(0, 5)
               ..add(sp(a, 3, 4))
               ..shift(1, 3))
@@ -130,20 +130,20 @@ void main() {
 
   group('add', () {
     test('merge touching', () {
-      final l = AttributeSpanList()..shift(0, 5);
+      final l = SpanController()..shift(0, 5);
       final s1 = sp(a, 1, 2);
       final s2 = sp(a, 2, 3);
       expect((l..add(s1)..add(s2)).spans, [sp(a, 1, 3)]);
     });
     test('merge bridge', () {
-      final l = AttributeSpanList()..shift(0, 10);
+      final l = SpanController()..shift(0, 10);
       final s1 = sp(a, 1, 3);
       final s2 = sp(a, 5, 8);
       final s3 = sp(a, 3, 5);
       expect((l..add(s1)..add(s2)..add(s3)).spans, [sp(a, 1, 8)]);
     });
     test('merge containing', () {
-      final l = AttributeSpanList()..shift(0, 10);
+      final l = SpanController()..shift(0, 10);
       final s1 = sp(a, 1, 3);
       final s2 = sp(a, 5, 8);
       final s3 = sp(a, 0, 9);
@@ -153,11 +153,11 @@ void main() {
 
   group('segments', () {
     test('empty', () {
-      expect(AttributeSpanList().segments, isEmpty);
+      expect(SpanController().segments, isEmpty);
     });
 
     test('plain', () {
-      expect((AttributeSpanList()..shift(0, 3)).segments,
+      expect((SpanController()..shift(0, 3)).segments,
           [AttributeSegment([], TextRange(start: 0, end: 3))]);
     });
 
@@ -170,7 +170,7 @@ void main() {
       final sf = sp(f, 2, 10);
 
       expect(
-          (AttributeSpanList()
+          (SpanController()
                 ..shift(0, 10)
                 ..add(sa)
                 ..add(sb)

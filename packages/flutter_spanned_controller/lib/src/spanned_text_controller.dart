@@ -8,7 +8,6 @@ import 'package:flutter/widgets.dart';
 import 'attribute_span.dart';
 
 /// Result of [SpannedTextController.diffStrings].
-@visibleForTesting
 class StringDiff extends Equatable {
   const StringDiff(this.index, this.deleted, this.inserted)
       : assert(index >= 0);
@@ -43,20 +42,19 @@ class _AttributeNotifier {
   final ValueNotifier<bool> notifier;
 }
 
-class _AttributeListener {
-  _AttributeListener(this.controller);
+class AttributeListener {
+  AttributeListener();
 
-  final SpannedTextController controller;
   final List<_AttributeNotifier> notifiers = [];
 
-  ValueListenable<bool> addListener(TextAttribute attribute) {
+  ValueListenable<bool> listen(TextAttribute attribute, bool value) {
     final existing =
         notifiers.firstWhereOrNull((e) => e.attribute == attribute);
     if (existing != null) {
       return existing.notifier;
     }
 
-    final current = controller.isApplied(attribute);
+    final current = value;
     final notifier = ValueNotifier(current);
     notifiers.add(_AttributeNotifier(attribute, notifier));
     return notifier;
@@ -66,28 +64,30 @@ class _AttributeListener {
     notifiers.removeWhere((n) => n.attribute == attribute);
   }
 
-  void notify() {
+  void notify(bool Function(TextAttribute) isApplied) {
     for (final entry in notifiers) {
-      final value = controller.isApplied(entry.attribute);
+      final value = isApplied(entry.attribute);
       entry.notifier.value = value;
+    }
+  }
+
+  void dispose() {
+    for (final entry in notifiers) {
+      entry.notifier.dispose();
     }
   }
 }
 
-/// Extensions for [AttributeSpanList].
-extension AttributeSpanListExtensions on AttributeSpanList {
+///
+extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
   /// Apply the attributes to [text] and return the resulting [TextSpan].
   TextSpan buildTextSpans({required String text, required TextStyle style}) {
-    if (!canApplyTo(text)) {
-      throw ArgumentError.value(
-          text, 'text', 'Spans could not be applied to text.');
-    }
     return TextSpan(
       style: style,
-      children: segments.map((segment) {
+      children: map((segment) {
         final spanText = segment.range.textInside(text);
-        final spanStyle = segment.attributes
-            .fold<TextStyle>(const TextStyle(), (style, attr) => attr.apply(style));
+        final spanStyle = segment.attributes.fold<TextStyle>(
+            const TextStyle(), (style, attr) => attr.apply(style));
         //print('  > $spanText ${spanStyle.fontWeight == FontWeight.bold ? '(bold)' : ''}');
         return TextSpan(text: spanText, style: spanStyle);
       }).toList(),
@@ -95,188 +95,20 @@ extension AttributeSpanListExtensions on AttributeSpanList {
   }
 }
 
-abstract class SpanController {
-  /// Get all applied spans.
-  Iterable<AttributeSpan> get spans;
+enum OverrideType { apply, remove }
 
-  /// Get the segments for the applied spans.
-  Iterable<AttributeSegment> get segments;
+class _AttributeOverride {
+  const _AttributeOverride(
+    this.attribute,
+    this.type,
+    this.startBehavior,
+    this.endBehavior,
+  );
 
-  /// Apply a span to the text.
-  void addSpan(AttributeSpan span);
-
-  /// Returns true if the [attribute] is applied to the current selection.
-  bool isApplied(TextAttribute attribute);
-
-  /// Returns true if the [attribute] would be applied if text was inserted
-  /// for the current selection.
-  bool willApply(TextAttribute attribute);
-}
-
-/// A text editing controller that maintains an [AttributeSpanList]
-/// and builds rich text by applying the attributes to its text
-/// value.
-class SpannedTextController extends TextEditingController
-    implements SpanController {
-  SpannedTextController({this.compositionAttribute = UnderlineAttribute.value});
-
-  final TextAttribute compositionAttribute;
-  final _attributeSpans = AttributeSpanList();
-  late final _attributeListener = _AttributeListener(this);
-
-  @override
-  Iterable<AttributeSpan> get spans => _attributeSpans.spans;
-  @override
-  Iterable<AttributeSegment> get segments => _attributeSpans.segments;
-
-  ValueListenable<bool> addAttributeListener(TextAttribute attribute) {
-    return _attributeListener.addListener(attribute);
-  }
-
-  void removeAttributeListener(TextAttribute attribute) {
-    _attributeListener.removeListener(attribute);
-  }
-
-  @override
-  void addSpan(AttributeSpan span) {
-    _attributeSpans.add(span);
-    _attributeListener.notify();
-  }
-
-  void applyAttribute(TextAttribute attribute, InsertBehavior startBehavior,
-      InsertBehavior endBehavior) {
-    if (!selection.isValid) {
-      return;
-    }
-
-    final range = selection.normalize();
-    final span = AttributeSpan(attribute, range, startBehavior, endBehavior);
-    addSpan(span);
-  }
-
-  bool toggleAttribute(
-    TextAttribute attribute,
-    InsertBehavior startBehavior,
-    InsertBehavior endBehavior,
-  ) {
-    final applied = isApplied(attribute);
-    if (applied) {
-      if (selection.isCollapsed) {
-        if (endBehavior == InsertBehavior.inclusive) {
-          applyAttribute(attribute, startBehavior, InsertBehavior.exclusive);
-        }
-      } else {
-        _attributeSpans.removeAllIn(selection, attribute);
-        _attributeListener.notify();
-      }
-    } else {
-      if (selection.isCollapsed) {
-        if (endBehavior == InsertBehavior.inclusive) {
-          applyAttribute(attribute, startBehavior, endBehavior);
-        }
-      } else {
-        applyAttribute(attribute, startBehavior, endBehavior);
-      }
-    }
-
-    return !applied;
-  }
-
-  @override
-  bool isApplied(TextAttribute attribute) {
-    return _attributeSpans.isApplied(attribute, value.selection);
-  }
-
-  @override
-  bool willApply(TextAttribute attribute) {
-    return _attributeSpans.willApply(attribute, value.selection.baseOffset);
-  }
-
-  void _handleValueChange(TextEditingValue newValue) {
-    if (newValue.text != text) {
-      assert(newValue.selection.isCollapsed);
-      final diff =
-          diffStrings(text, newValue.text, newValue.selection.baseOffset);
-      print(diff);
-      print('$newValue');
-      _attributeSpans
-        ..collapse(diff.deletedRange)
-        ..shift(diff.index, diff.inserted.length);
-      print('spans: ${_attributeSpans.spans}');
-    }
-  }
-
-  @override
-  set value(TextEditingValue value) {
-    // When this is set without a selection, assume the whole
-    // text was replaced and put the cursor at the end of the
-    // text for diffing purposes.
-    final fixedValue = value.selection.isValid
-        ? value
-        : value.copyWith(
-            selection: TextSelection.collapsed(offset: value.text.length),
-          );
-    _handleValueChange(fixedValue);
-    super.value = value;
-    _attributeListener.notify();
-  }
-
-  /// Builds [TextSpan] from current editing value.
-  ///
-  /// By default makes text in composing range appear as underlined. Descendants
-  /// can override this method to customize appearance of text.
-  @override
-  TextSpan buildTextSpan({TextStyle? style, required bool withComposing}) {
-    if (spans.length == 0) {
-      return super.buildTextSpan(style: style, withComposing: withComposing);
-    }
-
-    final attribSpans = !value.isComposingRangeValid || !withComposing
-        ? _attributeSpans
-        : (_attributeSpans.copy()
-          ..add(AttributeSpan(
-            UnderlineAttribute.value,
-            value.composing,
-            InsertBehavior.exclusive,
-            InsertBehavior.exclusive,
-          )));
-
-    return attribSpans.buildTextSpans(
-      text: text,
-      style: style ?? const TextStyle(),
-    );
-  }
-
-  /// Diff two strings under the assumption that at most one insertion and one
-  /// deletion took place, and both happened at the same index, after which the
-  /// cursor was at the given index in the new string.
-  @visibleForTesting
-  static StringDiff diffStrings(String oldText, String newText, int cursor) {
-    assert(cursor >= 0, 'Cursor was negative.');
-    assert(cursor <= newText.length, 'Cursor was outside of newText range.');
-    final delta = newText.length - oldText.length;
-    var limit = math.max(0, cursor - delta);
-    var end = oldText.length;
-    while (end > limit && oldText[end - 1] == newText[end + delta - 1]) {
-      end -= 1;
-    }
-    var start = 0;
-    var startLimit = cursor - math.max(0, delta);
-    while (start < startLimit && oldText[start] == newText[start]) {
-      start += 1;
-    }
-    final deleted = (start < end) ? oldText.substring(start, end) : '';
-    final inserted = newText.substring(start, end + delta);
-
-    assert(start + inserted.length == cursor,
-        'start + inserted.length != cursor. Probably bad input.');
-
-    return StringDiff(
-      start,
-      deleted,
-      inserted,
-    );
-  }
+  final TextAttribute attribute;
+  final OverrideType type;
+  final InsertBehavior startBehavior;
+  final InsertBehavior endBehavior;
 }
 
 @immutable
@@ -312,5 +144,395 @@ class UnderlineAttribute extends TextAttribute {
   @override
   TextStyle apply(TextStyle style) {
     return style.merge(const TextStyle(decoration: TextDecoration.underline));
+  }
+}
+
+/// High-level convenience methods for SpannedTextEditingController.
+extension SpannedTextEditingControllerExtension
+    on SpannedTextEditingController {
+  /// Apply an attribute to the current selection.
+  void applyAttribute(
+    TextAttribute attribute,
+    InsertBehavior startBehavior,
+    InsertBehavior endBehavior,
+  ) {
+    if (!selection.isValid || selection.isCollapsed) {
+      return;
+    }
+
+    final range = selection.normalize();
+    final span = AttributeSpan(attribute, range, startBehavior, endBehavior);
+    spans = spans.merge(span);
+  }
+
+  bool isApplied(TextAttribute attribute) {
+    if (!selection.isValid) {
+      return false;
+    }
+    return _attributeOverrides.any((ov) =>
+            ov.attribute == attribute && ov.type == OverrideType.apply) ||
+        spans.isApplied(attribute, selection.normalize());
+  }
+
+  /// Toggle an attribute for the current selection.
+  ///
+  /// For a collapsed selection, if an attribute would normally be applied on
+  /// insertion, a call to this method makes it so the attribute is not applied
+  /// and vice-versa. I.e. the result of [SpanApplicator.isApplied] will be
+  /// inverted for [attribute] after calling this method. This will only have
+  /// an effect if [endBehavior] is set to [InsertBehavior.inclusive].
+  ///
+  /// For a range selection, if the attribute is not applied to the full
+  /// selection it will be applied to the full selection. Otherwise the
+  /// attribute will be removed from the selection.
+  ///
+  /// This method uses [setOverride] to override
+  bool toggleAttribute(
+    TextAttribute attribute,
+    InsertBehavior startBehavior,
+    InsertBehavior endBehavior,
+  ) {
+    final applied = isApplied(attribute);
+    if (selection.isCollapsed && endBehavior == InsertBehavior.inclusive) {
+      final overrideType = applied ? OverrideType.remove : OverrideType.apply;
+      setOverride(attribute, overrideType, startBehavior, endBehavior);
+    } else {
+      if (applied) {
+        spans = spans.removeFrom(selection, attribute);
+      } else {
+        applyAttribute(attribute, startBehavior, endBehavior);
+      }
+    }
+
+    return !applied;
+  }
+}
+
+@immutable
+class SpannedText {
+  const SpannedText(this.text, this.spans);
+
+  final String text;
+  final SpanList spans;
+
+  int get length => text.length;
+
+  SpannedText copyWith({String? text, SpanList? spans}) => SpannedText(
+        text ?? this.text,
+        spans ?? this.spans,
+      );
+
+  SpannedText insert(int index, String inserted) {
+    assert(index >= 0 && inserted.length >= 0);
+    if (inserted.length == 0) {
+      return this;
+    }
+
+    return SpannedText(
+      text.substring(0, index) + inserted + text.substring(index),
+      spans.shift(index, inserted.length),
+    );
+  }
+
+  SpannedText collapse({int? after, int? before}) {
+    assert(after != null || before != null);
+    after ??= 0;
+    before ??= text.length;
+    final range = TextRange(start: after, end: before);
+
+    if (range.isCollapsed) {
+      return this;
+    }
+
+    return SpannedText(
+      text.substring(0, after) + text.substring(before),
+      spans.collapse(range),
+    );
+  }
+
+  SpannedText concat(SpannedText other) {
+    return SpannedText(
+      text + other.text,
+      other.spans
+          .shift(0, text.length)
+          .spans
+          .fold(spans, (ls, s) => ls.merge(s)),
+    );
+  }
+
+  SpannedText applyDiff(StringDiff diff) {
+    return this
+        .collapse(after: diff.index, before: diff.index + diff.deleted.length)
+        .insert(diff.index, diff.inserted);
+  }
+
+  /// Apply the attributes to [text] and return the resulting [TextSpan].
+  TextSpan buildTextSpans({required TextStyle style}) {
+    return TextSpan(
+      style: style,
+      children: spans.getSegments(text.length).map((segment) {
+        final spanText = segment.range.textInside(text);
+        final spanStyle = segment.attributes.fold<TextStyle>(
+            const TextStyle(), (style, attr) => attr.apply(style));
+        //print('  > $spanText ${spanStyle.fontWeight == FontWeight.bold ? '(bold)' : ''}');
+        return TextSpan(text: spanText, style: spanStyle);
+      }).toList(),
+    );
+  }
+}
+
+typedef ProcessTextValue = TextEditingValue Function(
+  SpannedTextEditingController,
+  TextEditingValue,
+);
+
+class SpannedTextEditingController implements TextEditingController {
+  /// Create a new SpannedTextEditingController.
+  SpannedTextEditingController({
+    this.compositionAttribute = UnderlineAttribute.value,
+    this.processTextValue = _defaultProcessTextValue,
+    String? text,
+    Iterable<AttributeSpan>? spans,
+  })  : _textController = TextEditingController(text: text),
+        _spans = SpanList(spans);
+
+  SpannedTextEditingController copy() => SpannedTextEditingController(
+      compositionAttribute: compositionAttribute,
+      processTextValue: processTextValue,
+      text: text,
+      spans: spans.spans);
+
+  SpannedTextEditingController copyWith({
+    TextAttribute? compositionAttribute,
+    ProcessTextValue? processTextValue,
+    String? text,
+    Iterable<AttributeSpan>? spans,
+  }) =>
+      SpannedTextEditingController(
+          compositionAttribute:
+              compositionAttribute ?? this.compositionAttribute,
+          processTextValue: processTextValue ?? this.processTextValue,
+          text: text ?? this.text,
+          spans: spans ?? this.spans.spans);
+
+  /// The attribute that's applied to the active composition.
+  /// By default this is [UnderlineAttribute].
+  final TextAttribute compositionAttribute;
+
+  final ProcessTextValue processTextValue;
+
+  final TextEditingController _textController;
+
+  SpanList _spans;
+
+  SpanList get spans => _spans;
+  set spans(SpanList spans) {
+    if (_spans != spans) {
+      _spans = spans;
+      notifyListeners();
+    }
+  }
+
+  SpannedText get spannedText => SpannedText(text, spans);
+  set spannedText(SpannedText newText) {
+    _ignoreSetValue = true;
+    value = value.copyWith(text: newText.text);
+    _ignoreSetValue = false;
+    spans = newText.spans;
+  }
+
+  bool _ignoreSetValue = false;
+  final List<_AttributeOverride> _attributeOverrides = [];
+
+  @override
+  TextSelection get selection => _textController.selection;
+
+  @override
+  set selection(TextSelection newSelection) {
+    if (!isSelectionWithinTextBounds(newSelection)) {
+      throw FlutterError('invalid text selection: $newSelection');
+    }
+    final newComposing = newSelection.isCollapsed &&
+            _isSelectionWithinComposingRange(newSelection)
+        ? value.composing
+        : TextRange.empty;
+    value = value.copyWith(selection: newSelection, composing: newComposing);
+  }
+
+  @override
+  String get text => _textController.text;
+
+  @override
+  set text(String? newText) {
+    value = value.copyWith(
+      text: newText,
+      selection: const TextSelection.collapsed(offset: -1),
+      composing: TextRange.empty,
+    );
+  }
+
+  @override
+  TextEditingValue get value => _textController.value;
+
+  @override
+  set value(TextEditingValue value) {
+    if (_ignoreSetValue) {
+      _textController.value = value;
+    } else {
+      final pValue = processTextValue(this, value);
+      // We set the cursor at the end of the inserted text for diffing purposes
+      // when it is invalid.
+      final cursor = pValue.selection.isValid
+          ? pValue.selection.baseOffset
+          : pValue.text.length;
+      final diff = diffStrings(text, pValue.text, cursor);
+      spans = spans
+          .collapse(diff.deletedRange)
+          .shift(diff.index, diff.inserted.length);
+      _applyOverrides(
+        TextRange(start: diff.index, end: diff.index + diff.inserted.length),
+      );
+
+      if (pValue.selection != _textController.selection ||
+          pValue.text != _textController.text) {
+        _attributeOverrides.clear();
+      }
+
+      _textController.value = pValue;
+    }
+  }
+
+  /// Override whether or not an attribute will be applied on the next
+  /// insertion.
+  ///
+  /// Overrides are cleared whenever [selection] or [text] changes.
+  void setOverride(
+    TextAttribute attribute,
+    OverrideType type,
+    InsertBehavior startBehavior,
+    InsertBehavior endBehavior,
+  ) {
+    _attributeOverrides
+      ..removeWhere((ao) => ao.attribute == attribute)
+      ..add(_AttributeOverride(attribute, type, startBehavior, endBehavior));
+    notifyListeners();
+  }
+
+  @override
+  TextSpan buildTextSpan({TextStyle? style, required bool withComposing}) {
+    if (spans.spans.isEmpty) {
+      return _textController.buildTextSpan(
+        style: style,
+        withComposing: withComposing,
+      );
+    }
+
+    final segments = !value.isComposingRangeValid || !withComposing
+        ? spans.getSegments(text.length)
+        : (spans.merge(AttributeSpan(
+            compositionAttribute,
+            value.composing,
+            InsertBehavior.exclusive,
+            InsertBehavior.exclusive,
+          ))).getSegments(text.length);
+
+    return segments.buildTextSpans(
+      text: text,
+      style: style ?? const TextStyle(),
+    );
+  }
+
+  @override
+  void clear() {
+    _ignoreSetValue = true;
+    _textController.clear();
+    _spans = SpanList();
+    _ignoreSetValue = false;
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+  }
+
+  @override
+  void clearComposing() => _textController.clearComposing();
+
+  @override
+  bool isSelectionWithinTextBounds(TextSelection selection) =>
+      _textController.isSelectionWithinTextBounds(selection);
+
+  @override
+  void addListener(listener) => _textController.addListener(listener);
+
+  @override
+  bool get hasListeners => _textController.hasListeners;
+
+  @override
+  void notifyListeners() => _textController.notifyListeners();
+
+  @override
+  void removeListener(listener) => _textController.removeListener(listener);
+
+  void _applyOverrides(TextRange range) {
+    // apply overrides
+    for (final ao in _attributeOverrides) {
+      if (ao.type == OverrideType.apply) {
+        final span = AttributeSpan(
+          ao.attribute,
+          range,
+          ao.startBehavior,
+          ao.endBehavior,
+        );
+        spans = spans.merge(span);
+      } else {
+        spans = spans.removeFrom(range, ao.attribute);
+      }
+    }
+  }
+
+  /// Check that the [selection] is inside of the composing range.
+  bool _isSelectionWithinComposingRange(TextSelection selection) {
+    return selection.start >= value.composing.start &&
+        selection.end <= value.composing.end;
+  }
+
+  static TextEditingValue _defaultProcessTextValue(
+          SpannedTextEditingController _, TextEditingValue value) =>
+      value;
+
+  /// Diff two strings under the assumption that at most one insertion and one
+  /// deletion took place, and both happened at the same index, after which the
+  /// cursor was at the given index in the new string.
+  static StringDiff diffStrings(String oldText, String newText, int cursor) {
+    assert(cursor >= 0, 'Cursor was negative.');
+    assert(cursor <= newText.length, 'Cursor was outside of newText range.');
+    final delta = newText.length - oldText.length;
+    final limit = math.max(0, cursor - delta);
+    var end = oldText.length;
+    while (end > limit && oldText[end - 1] == newText[end + delta - 1]) {
+      end -= 1;
+    }
+    var start = 0;
+    final startLimit = cursor - math.max(0, delta);
+    while (start < startLimit && oldText[start] == newText[start]) {
+      start += 1;
+    }
+    final deleted = (start < end) ? oldText.substring(start, end) : '';
+    final inserted = newText.substring(start, end + delta);
+
+    assert(start + inserted.length == cursor,
+        'start + inserted.length != cursor. Probably bad input.');
+
+    return StringDiff(
+      start,
+      deleted,
+      inserted,
+    );
+  }
+
+  @override
+  String toString() {
+    return _textController.toString();
   }
 }

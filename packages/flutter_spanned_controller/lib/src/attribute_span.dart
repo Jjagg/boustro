@@ -28,7 +28,7 @@ abstract class TextAttribute {
 }
 
 /// The insert behavior of a span boundary determines how it behaves
-/// when [AttributeSpanList.shift] is called at its index.
+/// when [AttributeSpan.shift] is called at its index.
 enum InsertBehavior {
   inclusive,
   exclusive,
@@ -54,6 +54,8 @@ extension InsertBehaviorExtension on InsertBehavior {
   }
 }
 
+/// A [TextAttribute] applied to a [range] of text with rules for
+/// expansion on [shift].
 @immutable
 class AttributeSpan extends Equatable {
   /// Create an attribute span.
@@ -95,6 +97,9 @@ class AttributeSpan extends Equatable {
   ///
   /// See [TextRange.isCollapsed].
   bool get isCollapsed => range.isCollapsed;
+
+  /// Inverse of [isCollapsed].
+  bool get isNotCollapsed => !range.isCollapsed;
 
   /// Returns true if [shift] can make the [range] of this span larger.
   bool get isExpandable =>
@@ -199,6 +204,7 @@ class AttributeSpan extends Equatable {
 /// A range of the source text with all attributes that are applied to it.
 @immutable
 class AttributeSegment {
+  /// Create an attribute segment.
   const AttributeSegment(this.attributes, this.range);
 
   /// Attributes applied to this segment.
@@ -243,22 +249,34 @@ class _AttributeTransition {
 ///
 /// Call [shift] when text is inserted and [collapse] when text is deleted.
 ///
-/// Add attribute spans with [add] and remove them with [remove].
-class AttributeSpanList {
-  BuiltList<AttributeSpan> _spans = BuiltList();
+/// Add attribute spans with [merge] and remove them with [remove].
+///
+/// Note that SpanList is immutable. Any mutation operation will return a new
+/// SpanList.
+@immutable
+class SpanList {
+  /// Create a SpanController.
+  ///
+  /// [spans] must not be out of bounds. That means [AttributeSpan.range]'s
+  /// [TextRange.end] may not me larger than [length].
+  SpanList([
+    Iterable<AttributeSpan>? spans,
+  ]) : this._sortedList(spans == null
+            ? BuiltList()
+            : spans
+                .sorted((a, b) => a.range.start - b.range.start)
+                .toBuiltList());
 
-  int _sourceLength = 0;
+  SpanList._sorted(Iterable<AttributeSpan> spans)
+      : this._sortedList(spans.toBuiltList());
 
-  AttributeSpanList copy() => AttributeSpanList()
-    .._spans = this._spans.toBuiltList()
-    .._sourceLength = _sourceLength;
+  const SpanList._sortedList(this._spans);
 
-  /// Attribute spans sorted by start index, then end index.
+  final BuiltList<AttributeSpan> _spans;
+
   Iterable<AttributeSpan> get spans => _spans;
 
-  /// Iterate parts of the source text per segment that has a different
-  /// set of attributes applied to it.
-  Iterable<AttributeSegment> get segments sync* {
+  Iterable<AttributeSegment> getSegments(int end) sync* {
     // We sweep over start and end points of all spans to build the segments.
     final transitions = spans.expand((s) sync* {
       yield _AttributeTransition(
@@ -285,109 +303,30 @@ class AttributeSpanList {
       }
     }
 
-    if (currentSegmentStart < _sourceLength) {
+    if (currentSegmentStart < end) {
       yield AttributeSegment(
         const [],
-        TextRange(start: currentSegmentStart, end: _sourceLength),
+        TextRange(start: currentSegmentStart, end: end),
       );
     }
   }
 
-  /// Add a span. Merges touching spans with the same attribute.
+  /// If range is not collapsed, returns true if [attribute] is applied to the
+  /// full range of text.
   ///
-  /// Useless spans are not added. See [AttributeSpan.isUseless].
-  ///
-  /// Spans touching [span] with an equal [AttributeSpan.attribute] will be
-  /// merged.
-  ///
-  /// Merged spans will always use [AttributeSpan.startBehavior] and
-  /// [AttributeSpan.endBehavior] of the passed [span].
-  /// [AttributeSpan.startBehavior] and [AttributeSpan.endBehavior] are not
-  /// taken into account for merging; touching spans will always be merged.
-  ///
-  /// Throws [ArgumentError] if the spans range was outside the source range.
-  void add(AttributeSpan span) {
-    if (span.range.end > _sourceLength && !span.isFixed) {
-      throw ArgumentError.value(span, 'span',
-          'Span must be inside source bounds ([0, $_sourceLength]).');
-    }
-    final toMerge = spans
-        .where(
-            (s) => s.attribute == span.attribute && s.range.touches(span.range))
-        .followedBy([span]);
-    final start =
-        toMerge.fold<int>(_maxSpanLength, (m, s) => math.min(m, s.range.start));
-    final end = toMerge.fold<int>(-1, (m, s) => math.max(m, s.range.end));
-    final merged = span.copyWith(
-      range: TextRange(start: start, end: end),
-    );
-    if (merged.isNotUseless) {
-      _spans = _spans.rebuild(
-        (b) => b
-          ..removeWhere(toMerge.contains)
-          ..add(merged)
-          ..sort((a, b) => a.range.start - b.range.start),
-      );
-    }
-  }
-
+  /// If range is collapsed, returns the result of [willApply] for [attribute].
   bool isApplied(TextAttribute attribute, TextRange range) {
-    return _getSpansIn(range, attribute).any((s) => s.isApplied(range));
+    assert(range.isValid && range.isNormalized);
+    return _getSpansIn(range, attribute).any(
+      (s) => s.isApplied(range.normalize()),
+    );
   }
 
+  /// Returns true if an insertion at [index] would get [attribute] applied
+  /// to it due to a spans [InsertBehavior].
   bool willApply(TextAttribute attribute, int index) {
     return _getSpansIn(TextRange.collapsed(index), attribute)
         .any((s) => s.willApply(index));
-  }
-
-  /// Remove a span.
-  void remove(AttributeSpan span) {
-    _spans = _spans.rebuild((b) => b.remove(span));
-  }
-
-
-  /// Remove all spans with the given attribute.
-  void removeAll(TextAttribute attribute) {
-    _spans =
-        _spans.rebuild((b) => b.removeWhere((s) => s.attribute == attribute));
-  }
-
-  void removeAllIn(TextRange range, TextAttribute attribute) {
-    final spansToRemove = _getSpansIn(range, attribute);
-    _spans = _spans.rebuild((b) => b.removeWhere(spansToRemove.contains));
-  }
-
-  void shift(int index, int length) {
-    if (index < 0 || index > _sourceLength) {
-      throw ArgumentError.value(index, 'index',
-          'Index must be inside source bounds ([0, $_sourceLength]).');
-    }
-    if (length > 0) {
-      _spans = _spans.map((s) => s.shift(index, length)).toBuiltList();
-      _sourceLength += length;
-    }
-  }
-
-  void collapse(TextRange range) {
-    if (!range.isValid || !range.isNormalized) {
-      throw ArgumentError.value(
-          range, 'range', 'Range must be valid and normalized.');
-    }
-
-    if (!range.isCollapsed) {
-      _spans = _spans.expand((s) sync* {
-        final collapsedSpan = s.collapse(range);
-        if (collapsedSpan != null && collapsedSpan.isNotUseless) {
-          yield collapsedSpan;
-        }
-      }).toBuiltList();
-      _sourceLength -= range.length;
-    }
-  }
-
-  /// Returns true if the attributes can be applied to [text].
-  bool canApplyTo(String text) {
-    return text.length == _sourceLength;
   }
 
   Iterable<AttributeSpan> _getSpansIn(TextRange range, TextAttribute attr) =>
@@ -401,6 +340,103 @@ class AttributeSpanList {
     TextAttribute attribute,
   ) {
     return spans.where((s) => s.attribute == attribute);
+  }
+
+  /// Add a span. Merges touching spans with the same attribute.
+  ///
+  /// Collapsed spans are not added. See [AttributeSpan.isCollapsed].
+  ///
+  /// Spans touching [span] with an equal [AttributeSpan.attribute] will be
+  /// merged.
+  ///
+  /// Merged spans will always use [AttributeSpan.startBehavior] and
+  /// [AttributeSpan.endBehavior] of the passed [span].
+  /// [AttributeSpan.startBehavior] and [AttributeSpan.endBehavior] are not
+  /// taken into account for merging; touching spans will always be merged.
+  SpanList merge(AttributeSpan span) {
+    final touching = spans.where(
+        (s) => s.attribute == span.attribute && s.range.touches(span.range));
+    final toMerge = touching.followedBy([span]);
+    final start =
+        toMerge.fold<int>(_maxSpanLength, (m, s) => math.min(m, s.range.start));
+    final end = toMerge.fold<int>(-1, (m, s) => math.max(m, s.range.end));
+    final merged = span.copyWith(
+      range: TextRange(start: start, end: end),
+    );
+    if (merged.isNotCollapsed) {
+      return SpanList(
+        _spans.whereNot(toMerge.contains).followedBy([merged]).sorted(
+            (a, b) => a.range.start - b.range.start),
+      );
+    } else {
+      return SpanList._sorted(_spans.whereNot(touching.contains));
+    }
+  }
+
+  /// Remove [span].
+  SpanList remove(AttributeSpan span) {
+    return SpanList._sorted(_spans.where((s) => s != span));
+  }
+
+  /// Remove all spans with the given attribute.
+  SpanList removeAll(TextAttribute attribute) {
+    return SpanList._sorted(_spans.where((s) => s.attribute != attribute));
+  }
+
+  /// Remove all spans with the given attribute from [range].
+  ///
+  /// This method can remove parts of spans if the range does not cover
+  /// the range of matching spans.
+  SpanList removeFrom(TextRange range, TextAttribute attribute) {
+    return SpanList(
+      _spans.rebuild(
+        (b) => b.expand(
+          (s) sync* {
+            if (s.attribute != attribute || !s.range.overlaps(range)) {
+              yield s;
+            } else {
+              if (s.range.start < range.start) {
+                yield s.copyWith(
+                    range: TextRange(start: s.range.start, end: range.start));
+              }
+              if (range.end < s.range.end) {
+                yield s.copyWith(
+                    range: TextRange(start: range.end, end: s.range.end));
+              }
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  /// Shift spans with an insertion at [index] with the given [length].
+  SpanList shift(int index, int length) {
+    if (index < 0) {
+      throw ArgumentError.value(index, 'index', 'Index must be non-negative.');
+    }
+    if (length == 0) {
+      return this;
+    }
+    return SpanList(_spans.map((s) => s.shift(index, length)));
+  }
+
+  /// Collapse span with a deletion at [range].
+  SpanList collapse(TextRange range) {
+    if (!range.isValid || !range.isNormalized) {
+      throw ArgumentError.value(
+          range, 'range', 'Range must be valid and normalized.');
+    }
+
+    if (range.isCollapsed) {
+      return this;
+    }
+    return SpanList(_spans.expand((s) sync* {
+      final collapsedSpan = s.collapse(range);
+      if (collapsedSpan != null && collapsedSpan.isNotCollapsed) {
+        yield collapsedSpan;
+      }
+    }));
   }
 }
 
@@ -423,6 +459,10 @@ extension SpanRangeExtensions on TextRange {
   bool touches(TextRange other) {
     assert(isValid && isNormalized);
     return !misses(other);
+  }
+
+  bool overlaps(TextRange other) {
+    return start < other.end && end > other.start;
   }
 
   bool contains(TextRange other) {
