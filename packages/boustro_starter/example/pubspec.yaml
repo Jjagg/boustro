@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  flutter_spanned_controller:
+  boustro_starter:
     path: ../
 
 dev_dependencies:

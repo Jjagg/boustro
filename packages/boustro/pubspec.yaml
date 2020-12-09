@@ -1,0 +1,31 @@
+name: boustro
+description: A simple rich text editor for Flutter.
+version: 0.1.0
+author: Jesse Gielen
+homepage: https://github.com
+
+publish_to: none
+
+environment:
+  sdk: ">=2.12.0-0 <3.0.0"
+  flutter: ">=1.17.0 <2.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  built_collection: ^5.0.0-nullsafety.0
+
+  flutter_spanned_controller:
+    path: ../flutter_spanned_controller
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  pedantic: ^1.0.0
+
+#dependency_overrides:
+  # Workaround for https://github.com/rrousselGit/freezed/issues/294
+  #analyzer: '0.40.4'
+

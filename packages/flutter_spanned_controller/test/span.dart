@@ -58,48 +58,36 @@ void main() {
   group('collapse', () {
     test('''do not remove expandable span at the end''', () {
       expect(
-        (SpanController()
-              ..shift(0, 3)
-              ..add(sp(
-                  a, 1, 2, InsertBehavior.exclusive, InsertBehavior.inclusive))
-              ..collapse(TextRange(start: 1, end: 3)))
-            .spans,
+        SpanList([
+          sp(a, 1, 2, InsertBehavior.exclusive, InsertBehavior.inclusive)
+        ]).collapse(TextRange(start: 1, end: 3)).spans,
         [sp(a, 1, 1, InsertBehavior.exclusive, InsertBehavior.inclusive)],
       );
     });
 
     test('''remove useless span at the start''', () {
       expect(
-        (SpanController()
-              ..shift(0, 3)
-              ..add(sp(
-                  a, 1, 2, InsertBehavior.inclusive, InsertBehavior.exclusive))
-              ..collapse(TextRange(start: 0, end: 2)))
-            .spans,
-        [],
+        SpanList([
+          sp(a, 1, 2, InsertBehavior.inclusive, InsertBehavior.exclusive)
+        ]).collapse(TextRange(start: 0, end: 2)).spans,
+        <dynamic>[],
       );
     });
 
     test('''remove useless span collapsed''', () {
       expect(
-        (SpanController()
-              ..shift(0, 3)
-              ..add(sp(
-                  a, 1, 2, InsertBehavior.exclusive, InsertBehavior.exclusive))
-              ..collapse(TextRange(start: 1, end: 2)))
-            .spans,
-        [],
+        SpanList([
+          sp(a, 1, 2, InsertBehavior.exclusive, InsertBehavior.exclusive)
+        ]).collapse(TextRange(start: 1, end: 2)).spans,
+        <dynamic>[],
       );
     });
 
     test('''do not remove unexpandable span not collapsed''', () {
       expect(
-        (SpanController()
-              ..shift(0, 3)
-              ..add(sp(
-                  a, 1, 3, InsertBehavior.exclusive, InsertBehavior.exclusive))
-              ..collapse(TextRange(start: 1, end: 2)))
-            .spans,
+        SpanList([
+          sp(a, 1, 3, InsertBehavior.exclusive, InsertBehavior.exclusive)
+        ]).collapse(TextRange(start: 1, end: 2)).spans,
         [sp(a, 1, 2, InsertBehavior.exclusive, InsertBehavior.exclusive)],
       );
     });
@@ -108,57 +96,53 @@ void main() {
   group('shift', () {
     test('empty before-after', () {
       expect(
-          (SpanController()
-                ..add(sp(a, 0, 0, InsertBehavior.exclusive,
-                    InsertBehavior.inclusive))
-                ..shift(0, 2))
+          SpanList()
+              .merge(sp(
+                  a, 0, 0, InsertBehavior.exclusive, InsertBehavior.inclusive))
+              .shift(0, 2)
               .spans,
           [sp(a, 0, 2, InsertBehavior.exclusive, InsertBehavior.inclusive)]);
     });
 
     test('insertion before', () {
       expect(
-        (SpanController()
-              ..shift(0, 5)
-              ..add(sp(a, 3, 4))
-              ..shift(1, 3))
-            .spans,
+        SpanList().shift(0, 5).merge(sp(a, 3, 4)).shift(1, 3).spans,
         [sp(a, 6, 7)],
       );
     });
   });
 
-  group('add', () {
+  group('merge', () {
     test('merge touching', () {
-      final l = SpanController()..shift(0, 5);
+      final l = SpanList().shift(0, 5);
       final s1 = sp(a, 1, 2);
       final s2 = sp(a, 2, 3);
-      expect((l..add(s1)..add(s2)).spans, [sp(a, 1, 3)]);
+      expect(l.merge(s1).merge(s2).spans, [sp(a, 1, 3)]);
     });
     test('merge bridge', () {
-      final l = SpanController()..shift(0, 10);
+      final l = SpanList().shift(0, 10);
       final s1 = sp(a, 1, 3);
       final s2 = sp(a, 5, 8);
       final s3 = sp(a, 3, 5);
-      expect((l..add(s1)..add(s2)..add(s3)).spans, [sp(a, 1, 8)]);
+      expect(l.merge(s1).merge(s2).merge(s3).spans, [sp(a, 1, 8)]);
     });
     test('merge containing', () {
-      final l = SpanController()..shift(0, 10);
+      final l = SpanList().shift(0, 10);
       final s1 = sp(a, 1, 3);
       final s2 = sp(a, 5, 8);
       final s3 = sp(a, 0, 9);
-      expect((l..add(s1)..add(s2)..add(s3)).spans, [sp(a, 0, 9)]);
+      expect(l.merge(s1).merge(s2).merge(s3).spans, [sp(a, 0, 9)]);
     });
   });
 
   group('segments', () {
     test('empty', () {
-      expect(SpanController().segments, isEmpty);
+      expect(SpanList().getSegments(0), isEmpty);
     });
 
     test('plain', () {
-      expect((SpanController()..shift(0, 3)).segments,
-          [AttributeSegment([], TextRange(start: 0, end: 3))]);
+      expect(SpanList().getSegments(3),
+          [AttributeSegment.from([], TextRange(start: 0, end: 3))]);
     });
 
     test('complex', () {
@@ -170,32 +154,33 @@ void main() {
       final sf = sp(f, 2, 10);
 
       expect(
-          (SpanController()
-                ..shift(0, 10)
-                ..add(sa)
-                ..add(sb)
-                ..add(sc)
-                ..add(sd)
-                ..add(se)
-                ..add(sf)
-                ..shift(10, 3))
-              .segments,
+          (SpanList()
+                  .shift(0, 10)
+                  .merge(sa)
+                  .merge(sb)
+                  .merge(sc)
+                  .merge(sd)
+                  .merge(se)
+                  .merge(sf)
+                  .shift(10, 3))
+              .getSegments(13),
           <AttributeSegment>[
-            AttributeSegment([], TextRange(start: 0, end: 1)),
-            AttributeSegment(
+            AttributeSegment.from([], TextRange(start: 0, end: 1)),
+            AttributeSegment.from(
                 [sa.attribute, sb.attribute], TextRange(start: 1, end: 2)),
-            AttributeSegment([a, b, c, d, e, f], TextRange(start: 2, end: 5)),
-            AttributeSegment([a, b, e, f], TextRange(start: 5, end: 6)),
-            AttributeSegment([a, b, f], TextRange(start: 6, end: 7)),
-            AttributeSegment([b, f], TextRange(start: 7, end: 8)),
-            AttributeSegment([f], TextRange(start: 8, end: 10)),
-            AttributeSegment([], TextRange(start: 10, end: 13)),
+            AttributeSegment.from(
+                [a, b, c, d, e, f], TextRange(start: 2, end: 5)),
+            AttributeSegment.from([a, b, e, f], TextRange(start: 5, end: 6)),
+            AttributeSegment.from([a, b, f], TextRange(start: 6, end: 7)),
+            AttributeSegment.from([b, f], TextRange(start: 7, end: 8)),
+            AttributeSegment.from([f], TextRange(start: 8, end: 10)),
+            AttributeSegment.from([], TextRange(start: 10, end: 13)),
           ]);
     });
   });
 
   group('diff', () {
-    const diffStrings = SpannedTextController.diffStrings;
+    const diffStrings = SpannedTextEditingController.diffStrings;
     test('empty', () {
       expect(diffStrings('', '', 0), StringDiff(0, '', ''));
     });
@@ -223,8 +208,6 @@ void main() {
 }
 
 abstract class MockSpan extends TextAttribute {
-  @override
-  TextStyle apply(TextStyle style) => style;
 }
 
 AttributeSpan sp<T extends MockSpan>(

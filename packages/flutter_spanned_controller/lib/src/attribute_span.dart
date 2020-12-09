@@ -3,42 +3,100 @@ import 'dart:math' as math;
 import 'package:built_collection/built_collection.dart';
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/widgets.dart' show TextStyle, TextRange;
+import 'package:flutter/widgets.dart';
 import 'package:meta/meta.dart' show immutable, visibleForTesting;
 
 const _maxSpanLength = (2 << 32) - 1;
 
 /// An attribute to apply to a span of text.
 ///
-/// Override this class to define attributes.
-/// It is very strongly recommend you override the equality operator or
-/// use singletons for your attributes.
+/// Applying an attribute to a span of text can format or add gesture handlers
+/// to that span.
+///
+/// If you extend this class it is very strongly recommended you override [props]
+/// or the equality operator or use a singleton for the attribute.
 @immutable
-abstract class TextAttribute {
-  const TextAttribute();
+class TextAttribute extends Equatable {
+  /// Constant constructor for text attributes.
+  const TextAttribute({
+    this.debugName,
+    this.style,
+    this.onTap,
+    this.onSecondaryTap,
+    this.onDoubleTap,
+    this.onLongPress,
+  });
 
-  /// Apply this span to a [TextStyle].
-  TextStyle apply(TextStyle style);
+  /// Name of the attribute. Used only for debugging, does not affect equality.
+  final String? debugName;
+
+  /// Style to apply with this attribute.
+  final TextStyle? style;
+
+  /// Callback when tapping the span.
+  final GestureTapCallback? onTap;
+
+  /// Callback when secondary tapping the span (e.g. right mouse button).
+  final GestureTapCallback? onSecondaryTap;
+
+  /// Callback when double tapping the span.
+  final GestureTapCallback? onDoubleTap;
+
+  /// Callback when long pressing the span.
+  final GestureLongPressCallback? onLongPress;
+
+  /// True if any of the gesture callbacks is not null.
+  bool get hasGestures =>
+      onTap != null ||
+      onSecondaryTap != null ||
+      onDoubleTap != null ||
+      onLongPress != null;
+
   // TODO Conflict resolution
 
   @override
   String toString() {
-    return runtimeType.toString();
+    return debugName ?? super.toString();
   }
+
+  @override
+  List<Object?> get props => [
+        style,
+        onTap,
+        onSecondaryTap,
+        onDoubleTap,
+        onLongPress,
+      ];
 }
 
 /// The insert behavior of a span boundary determines how it behaves
 /// when [AttributeSpan.shift] is called at its index.
 enum InsertBehavior {
+  /// The span will expand at this boundary.
   inclusive,
+
+  /// The span will not expand at this boundary.
   exclusive,
   _fixed,
+}
+
+/// Data object that holds [InsertBehavior] for the start and end boundaries.
+class FullInsertBehavior {
+  /// Create a full insert behavior object.
+  const FullInsertBehavior(this.start, this.end);
+
+  /// Behavior at the start of the span.
+  final InsertBehavior start;
+
+  /// Behavior at the end of the span.
+  final InsertBehavior end;
 }
 
 /// Extensions for SpanAttachment.
 extension InsertBehaviorExtension on InsertBehavior {
   /// Returns a string that visually indicates how this span boundary behaves
   /// when shifted at its index.
+  // ignore: avoid_positional_boolean_parameters
   String toBracketStr(bool before) {
     if (this == InsertBehavior.inclusive && before) {
       return ']';
@@ -69,8 +127,10 @@ class AttributeSpan extends Equatable {
     this.endBehavior,
   )   : assert(range.isValid, 'Range must be valid.'),
         assert(range.isNormalized, 'Range must be normalized.'),
-        assert((startBehavior == InsertBehavior._fixed) ==
-            (endBehavior == InsertBehavior._fixed));
+        assert(
+            (startBehavior == InsertBehavior._fixed) ==
+                (endBehavior == InsertBehavior._fixed),
+            'Start and end behavior must either both be fixed or neither may be fixed.');
 
   /// Create a span that is fixed in place.
   AttributeSpan.fixed(
@@ -125,6 +185,8 @@ class AttributeSpan extends Equatable {
         endBehavior,
       ];
 
+  /// Creates a copy of this attribute span with the given fields replaced with
+  /// the new values.
   AttributeSpan copyWith({
     TextAttribute? attribute,
     TextRange? range,
@@ -167,7 +229,8 @@ class AttributeSpan extends Equatable {
 
   /// Return the resulting span after deleting source text in [collapseRange].
   AttributeSpan? collapse(TextRange collapseRange) {
-    assert(collapseRange.isValid && collapseRange.isNormalized);
+    assert(collapseRange.isValid && collapseRange.isNormalized,
+        'Range must be valid and normalized.');
     if (isFixed) {
       return this;
     } else {
@@ -180,7 +243,8 @@ class AttributeSpan extends Equatable {
 
   /// Returns true if this span is applied to the full range of text.
   bool isApplied(TextRange textRange) {
-    assert(textRange.isValid && textRange.isNormalized);
+    assert(textRange.isValid && textRange.isNormalized,
+        'Range must be valid and normalized.');
     if (textRange.isCollapsed) {
       return willApply(textRange.start);
     }
@@ -197,18 +261,22 @@ class AttributeSpan extends Equatable {
 
   @override
   String toString() {
-    return '${startBehavior.toBracketStr(true)}${range.start} ${range.end}${endBehavior.toBracketStr(false)} $attribute';
+    return '(${startBehavior.toBracketStr(true)}${range.start} ${range.end}${endBehavior.toBracketStr(false)} $attribute)';
   }
 }
 
 /// A range of the source text with all attributes that are applied to it.
 @immutable
-class AttributeSegment {
+class AttributeSegment extends Equatable {
   /// Create an attribute segment.
   const AttributeSegment(this.attributes, this.range);
 
+  /// Create an attribute segment.
+  AttributeSegment.from(Iterable<TextAttribute> attributes, this.range)
+      : this.attributes = attributes.toBuiltList();
+
   /// Attributes applied to this segment.
-  final Iterable<TextAttribute> attributes;
+  final BuiltList<TextAttribute> attributes;
 
   /// Range of text.
   final TextRange range;
@@ -219,14 +287,7 @@ class AttributeSegment {
   }
 
   @override
-  bool operator ==(other) {
-    if (other is! AttributeSegment) {
-      return false;
-    }
-
-    return range == other.range &&
-        const DeepCollectionEquality().equals(attributes, other.attributes);
-  }
+  List<Object?> get props => [range, attributes];
 }
 
 enum _TransitionType { start, end }
@@ -254,18 +315,37 @@ class _AttributeTransition {
 /// Note that SpanList is immutable. Any mutation operation will return a new
 /// SpanList.
 @immutable
-class SpanList {
-  /// Create a SpanController.
-  ///
-  /// [spans] must not be out of bounds. That means [AttributeSpan.range]'s
-  /// [TextRange.end] may not me larger than [length].
+class SpanList extends Equatable {
+  /// Create a SpanList.
   SpanList([
     Iterable<AttributeSpan>? spans,
   ]) : this._sortedList(spans == null
             ? BuiltList()
-            : spans
-                .sorted((a, b) => a.range.start - b.range.start)
-                .toBuiltList());
+            : spans.sorted((a, b) => a.range.start - b.range.start).build());
+
+  /// Create a SpanList from segments.
+  ///
+  /// Segments will be merged to create the [spans].
+  /// [getInsertBehavior] is used to determine insert behavior
+  /// for created spans, since [AttributeSegment] does not
+  /// store that information.
+  factory SpanList.fromSegments(
+    Iterable<AttributeSegment> segments,
+    FullInsertBehavior Function(TextAttribute) getInsertBehavior,
+  ) {
+    return segments.fold<SpanList>(SpanList(), (list, segment) {
+      return segment.attributes.fold<SpanList>(list, (list, attr) {
+        final insertBehavior = getInsertBehavior(attr);
+        final span = AttributeSpan(
+          attr,
+          segment.range,
+          insertBehavior.start,
+          insertBehavior.end,
+        );
+        return list.merge(span);
+      });
+    });
+  }
 
   SpanList._sorted(Iterable<AttributeSpan> spans)
       : this._sortedList(spans.toBuiltList());
@@ -274,8 +354,14 @@ class SpanList {
 
   final BuiltList<AttributeSpan> _spans;
 
+  /// Get the spans in this list.
   Iterable<AttributeSpan> get spans => _spans;
 
+  /// Get an iterator of the segments for this list.
+  ///
+  /// Segments represent the formatting of the text in a different way than
+  /// spans.
+  // TODO proper segments explanation
   Iterable<AttributeSegment> getSegments(int end) sync* {
     // We sweep over start and end points of all spans to build the segments.
     final transitions = spans.expand((s) sync* {
@@ -290,7 +376,7 @@ class SpanList {
     for (final transition in transitions) {
       if (transition.index > currentSegmentStart) {
         yield AttributeSegment(
-          List.of(activeAttribs),
+          BuiltList(activeAttribs),
           TextRange(start: currentSegmentStart, end: transition.index),
         );
         currentSegmentStart = transition.index;
@@ -305,7 +391,7 @@ class SpanList {
 
     if (currentSegmentStart < end) {
       yield AttributeSegment(
-        const [],
+        BuiltList(),
         TextRange(start: currentSegmentStart, end: end),
       );
     }
@@ -316,7 +402,8 @@ class SpanList {
   ///
   /// If range is collapsed, returns the result of [willApply] for [attribute].
   bool isApplied(TextAttribute attribute, TextRange range) {
-    assert(range.isValid && range.isNormalized);
+    assert(range.isValid && range.isNormalized,
+        'Range must be valid and normalized.');
     return _getSpansIn(range, attribute).any(
       (s) => s.isApplied(range.normalize()),
     );
@@ -438,40 +525,58 @@ class SpanList {
       }
     }));
   }
+
+  @override
+  String toString() {
+    return spans.join(', ');
+  }
+
+  @override
+  List<Object?> get props => [_spans];
 }
 
 /// Extensions for spans on text range.
 @visibleForTesting
 extension SpanRangeExtensions on TextRange {
+  /// Get the length of this range. Equal to [end] - [start].
   int get length {
-    assert(isValid && isNormalized);
+    assert(isValid && isNormalized, 'Range must be valid and normalized.');
     return end - start;
   }
 
+  /// Copy this range with the given fields replaced replaced with the new
+  /// values.
   TextRange copyWith({int? start, int? end}) =>
       TextRange(start: start ?? this.start, end: end ?? this.end);
 
+  /// True if this range does not touch or overlap [other].
   bool misses(TextRange other) {
-    assert(isValid && isNormalized);
+    assert(isValid && isNormalized, 'Range must be valid and normalized.');
     return start > other.end || end < other.start;
   }
 
+  /// True if this range touches [other], i.e. it either overlaps or one of its
+  /// endpoints is equal to an endpoint of [other].
   bool touches(TextRange other) {
-    assert(isValid && isNormalized);
+    assert(isValid && isNormalized, 'Range must be valid and normalized.');
     return !misses(other);
   }
 
+  /// True of this range overlaps with [other].
   bool overlaps(TextRange other) {
+    assert(isValid && isNormalized, 'Range must be valid and normalized.');
     return start < other.end && end > other.start;
   }
 
+  /// True if this range fully contains [other] (non-strictly).
   bool contains(TextRange other) {
-    assert(isValid && isNormalized);
+    assert(isValid && isNormalized, 'Range must be valid and normalized.');
     return start <= other.start && other.end <= end;
   }
 
+  /// Combine a touching range with this one and return the result.
   TextRange merge(TextRange other) {
-    assert(isValid && isNormalized);
+    assert(isValid && isNormalized, 'Range must be valid and normalized.');
     assert(touches(other), 'Ranges must touch to be merged.');
     return TextRange(
       start: math.min(start, other.start),
@@ -479,6 +584,10 @@ extension SpanRangeExtensions on TextRange {
     );
   }
 
+  /// Normalize this range. If [isNormalized] is false this returns a range
+  /// with [start] and [end] flipped.
+  ///
+  /// If this range is invalid this returns an identical range.
   TextRange normalize() {
     if (this.isNormalized) {
       return this;
@@ -487,9 +596,10 @@ extension SpanRangeExtensions on TextRange {
     return TextRange(start: end, end: start);
   }
 
-  // Get what's left after deleting a range from this range.
+  /// Get the result after deleting a range from this range.
   TextRange? splice(TextRange removedSegment) {
-    assert(removedSegment.isValid && removedSegment.isNormalized);
+    assert(removedSegment.isValid && removedSegment.isNormalized,
+        'Range must be valid and normalized.');
     if (this.start <= removedSegment.start && removedSegment.end <= this.end) {
       // deletion inside this range
       return copyWith(end: this.end - removedSegment.length);

@@ -16,7 +16,7 @@ packages:
     source: hosted
     version: "2.1.0-nullsafety.3"
   built_collection:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: built_collection
       url: "https://pub.dartlang.org"
@@ -72,7 +72,7 @@ packages:
   flutter_spanned_controller:
     dependency: "direct main"
     description:
-      path: ".."
+      path: "../flutter_spanned_controller"
       relative: true
     source: path
     version: "0.1.0"
@@ -108,7 +108,7 @@ packages:
       name: pedantic
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.10.0-nullsafety.3"
+    version: "1.9.2"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -172,3 +172,4 @@ packages:
     version: "2.1.0-nullsafety.5"
 sdks:
   dart: ">=2.12.0-0.0 <3.0.0"
+  flutter: ">=1.17.0 <2.0.0"
