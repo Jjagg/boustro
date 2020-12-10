@@ -1,6 +1,7 @@
 // Adapted from
 // https://github.com/jamesblasco/selection_controls_example/tree/09c5211589123353ff1945b78466e06e50ea19a5/lib/src/toolbar_context/controller.dart
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 /// Base class for items managed by a [NestedListController].
@@ -42,18 +43,24 @@ mixin NestedListItem<T extends NestedListItem<T>> {
 
 /// List of [NestedListItem] with their parent item.
 class NestedItemList<T extends NestedListItem<T>> {
+  /// Create a root nested item list without a parent.
   const NestedItemList(this._items) : parent = null;
-  NestedItemList.fromParent(T parent)
-      : parent = parent,
-        _items = parent.items;
 
+  /// Create a nested item list with a parent and its children.
+  NestedItemList.fromParent(T this.parent) : _items = parent.items;
+
+  /// Parent of the items or null if this is a root list.
   final T? parent;
+
   final List<T> _items;
+
+  /// Items in the list.
   List<T> get items => parent?.items ?? _items;
 }
 
 /// Manages a stack of lists for nested menus.
 class NestedListController<T extends NestedListItem<T>> extends ChangeNotifier {
+  /// Create a nested list controller with a list of root items.
   NestedListController({required List<T> rootItems})
       : _listStack = [NestedItemList(rootItems)];
 
@@ -97,38 +104,55 @@ class NestedListController<T extends NestedListItem<T>> extends ChangeNotifier {
   List<T> get currentItems => _listStack.last._items;
 }
 
+/// Widget that can be placed in the tree to expose a [NestedListController]
+/// to children through an inherited widget.
 class DefaultNestedListController<T extends NestedListItem<T>>
     extends StatefulWidget {
+  /// Create a default nested list controller with a list of root items.
   const DefaultNestedListController({
     Key? key,
     required this.rootItems,
     required this.child,
   }) : super(key: key);
 
+  /// Root items passed to the constructor.
   final List<T> rootItems;
+
+  /// The widget below this widget in the tree.
   final Widget child;
 
   @override
   _DefaultNestedListControllerState<T> createState() =>
       _DefaultNestedListControllerState<T>();
 
+  /// Use an ancestor [DefaultNestedListController] to get a
+  /// [NestedListController].
   static NestedListController<T>? of<T extends NestedListItem<T>>(
-      BuildContext context) {
+    BuildContext context,
+  ) {
     final defaultController = context
         .dependOnInheritedWidgetOfExactType<_NestedListControllerScope<T>>();
     return defaultController?.notifier;
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IterableProperty<T>('rootItems', rootItems))
+      ..add(DiagnosticsProperty<Widget>('child', child));
   }
 }
 
 class _DefaultNestedListControllerState<T extends NestedListItem<T>>
     extends State<DefaultNestedListController<T>> {
-  late final controller = NestedListController<T>(rootItems: widget.rootItems)
+  late final _controller = NestedListController<T>(rootItems: widget.rootItems)
     ..addListener(update);
 
   @override
   Widget build(BuildContext context) {
     return _NestedListControllerScope<T>(
-      controller: controller,
+      controller: _controller,
       child: widget.child,
     );
   }
@@ -139,7 +163,7 @@ class _DefaultNestedListControllerState<T extends NestedListItem<T>>
 
   @override
   void dispose() {
-    controller
+    _controller
       ..removeListener(update)
       ..dispose();
     super.dispose();

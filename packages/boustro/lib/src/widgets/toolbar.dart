@@ -80,9 +80,8 @@ class ToolbarItem extends StatelessWidget with NestedListItem<ToolbarItem> {
   /// If [ToolbarItem.sublist] is used, this will push the sublist
   /// to the stack of toolbar item lists and it will be shown on top of
   /// the toolbar this item is a part of.
-  ToolbarItemCallback? get onPressed => this.hasItems
-      ? ((context, _) => super.sublistCallback(context))
-      : _onPressed;
+  ToolbarItemCallback? get onPressed =>
+      hasItems ? ((context, _) => super.sublistCallback(context)) : _onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +113,7 @@ class ToolbarItem extends StatelessWidget with NestedListItem<ToolbarItem> {
     properties
       ..add(DiagnosticsProperty<Widget>('title', title))
       ..add(ObjectFlagProperty<ToolbarItemBuilder?>.has('builder', builder))
-      ..add(StringProperty('tooltip', tooltip))
+      ..add(StringProperty('tooltip', tooltip, defaultValue: null))
       ..add(IterableProperty<ToolbarItem>('items', items))
       ..add(
           ObjectFlagProperty<ToolbarItemCallback?>.has('onPressed', onPressed));
@@ -129,7 +128,9 @@ class _ToolbarScope extends InheritedWidget {
     required Widget child,
   }) : super(key: key, child: child);
 
+  // ignore: diagnostic_describe_all_properties
   final DocumentController controller;
+  // ignore: diagnostic_describe_all_properties
   final ToolbarItemBuilder defaultItemBuilder;
 
   static _ToolbarScope? of(BuildContext context) {
@@ -186,6 +187,15 @@ class Toolbar extends StatelessWidget {
   static void popMenu(BuildContext context) {
     DefaultNestedListController.of<ToolbarItem>(context)!.pop();
   }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<DocumentController>(
+        'documentController', documentController));
+    properties.add(ObjectFlagProperty<ToolbarItemBuilder>.has(
+        'defaultItemBuilder', defaultItemBuilder));
+  }
 }
 
 class _ToolbarItemsBuilder extends StatelessWidget {
@@ -196,7 +206,9 @@ class _ToolbarItemsBuilder extends StatelessWidget {
     required this.items,
   }) : super(key: key);
 
+  // ignore: diagnostic_describe_all_properties
   final DocumentController documentController;
+  // ignore: diagnostic_describe_all_properties
   final ToolbarItemBuilder defaultItemBuilder;
   final List<ToolbarItem> items;
 

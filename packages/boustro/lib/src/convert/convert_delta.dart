@@ -54,7 +54,7 @@ class EmbedCodec {
   /// Create an embed codec.
   const EmbedCodec(this.key, this.decoder, this.encoder);
 
-  /// Identifies the type of the embed. See [ParagraphEmbedBuilder.key].
+  /// Identifies the type of the embed. See [ParagraphEmbedBuilder.type].
   final String key;
 
   /// Decoder for the embed value.

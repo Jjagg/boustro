@@ -1,23 +1,52 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+import 'document.dart';
 import 'widgets/document_controller.dart';
+import 'widgets/editor.dart';
 
+/// Inherited widget that carries information about a boustro document.
+@immutable
 class BoustroScope extends InheritedWidget {
-  BoustroScope.editable({
-    required DocumentController controller,
+  /// Create a scope for an editable document with a document controller.
+  const BoustroScope.editable({
+    Key? key,
+    required DocumentController this.controller,
     required Widget child,
-  })   : controller = controller,
-        super(child: child);
+  })   : document = null,
+        super(key: key, child: child);
 
-  BoustroScope.readonly({
+  /// Create a scope for a read-only document with a boustro document controller.
+  const BoustroScope.readonly({
+    Key? key,
+    required BoustroDocument this.document,
     required Widget child,
   })   : controller = null,
-        super(child: child);
+        super(key: key, child: child);
 
+  /// Document controller of the editor. Null if [BoustroScope.readonly] was
+  /// used.
   final DocumentController? controller;
 
-  bool get editable => controller != null;
+  /// Document of the [BoustroView]. Null if [BoustroScope.readonly] was
+  /// used.
+  final BoustroDocument? document;
 
+  /// True if [BoustroScope.editable] was used, false if [BoustroScope.readonly]
+  /// was used.
+  bool get isEditable => controller != null;
+
+  /// Call [editable] if [isEditable] is true or [readonly] if it is not.
+  T match<T>({
+    required T Function(DocumentController) editable,
+    required T Function(BoustroDocument) readonly,
+  }) {
+    return isEditable ? editable(controller!) : readonly(document!);
+  }
+
+  /// Look for a boustro scope widget up the tree from [context].
+  ///
+  /// Throws if there is no [BoustroScope] ancestor.
   static BoustroScope of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<BoustroScope>();
     if (scope == null) {
@@ -42,6 +71,17 @@ class BoustroScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(covariant BoustroScope oldWidget) {
-    return editable != oldWidget.editable;
+    return isEditable != oldWidget.isEditable;
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<bool>('isEditable', isEditable))
+      ..add(DiagnosticsProperty<DocumentController?>('controller', controller,
+          defaultValue: null))
+      ..add(DiagnosticsProperty<BoustroDocument?>('document', document,
+          defaultValue: null));
   }
 }

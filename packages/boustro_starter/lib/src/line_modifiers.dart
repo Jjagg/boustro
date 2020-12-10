@@ -1,14 +1,25 @@
 import 'package:boustro/boustro.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+// TODO This was designed to mimic Android's paragraph styles, but with
+// composition, but I don't think it's that useful to have this granularity.
+// Should maybe remove these?
+
+/// Base class to compose in a [LineParagraphModifier] to order some widget
+/// before the text widget.
 class LeadingMarginModifier extends StatelessWidget {
+  /// Constant constructor for a leading margin modifier.
   const LeadingMarginModifier({
     Key? key,
     required this.leading,
     required this.child,
   }) : super(key: key);
 
+  /// Widget to display before [child].
   final Widget leading;
+
+  /// The text widget.
   final Widget child;
 
   @override
@@ -24,7 +35,11 @@ class LeadingMarginModifier extends StatelessWidget {
   }
 }
 
+/// Wraps a [LeadingMarginModifier] leading widget with the same padding that
+/// is applied to the text. Use this to align [leading] with the text widget.
 class TextAlignedLeadingMarginModifier extends StatelessWidget {
+  /// [paddingLeft] and [paddingRight] will use [padding] if they're null
+  /// 0 if [padding] is also null.
   const TextAlignedLeadingMarginModifier({
     Key? key,
     double? padding,
@@ -36,9 +51,16 @@ class TextAlignedLeadingMarginModifier extends StatelessWidget {
         paddingRight = paddingRight ?? padding ?? 0,
         super(key: key);
 
+  /// Padding to the left of [leading].
   final double paddingLeft;
+
+  /// Padding to the right of [leading].
   final double paddingRight;
+
+  /// Widget to display before [child].
   final Widget leading;
+
+  /// The text widget.
   final Widget child;
 
   @override
@@ -57,39 +79,78 @@ class TextAlignedLeadingMarginModifier extends StatelessWidget {
             child: leading),
         child: child);
   }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('paddingLeft', paddingLeft, defaultValue: 0))
+      ..add(DoubleProperty('paddingRight', paddingRight, defaultValue: 0))
+      ..add(DiagnosticsProperty<Widget>('leading', leading))
+      ..add(DiagnosticsProperty<Widget>('child', child));
+  }
 }
 
-class CharacterLeadingMarginModifier extends StatelessWidget {
-  const CharacterLeadingMarginModifier({
+/// A [TextAlignedLeadingMarginModifier] that has [Text] as its
+/// leading widget.
+class LeadingTextModifier extends StatelessWidget {
+  /// [paddingLeft] and [paddingRight] will use [padding] if they're null
+  /// 0 if [padding] is also null.
+  const LeadingTextModifier({
     Key? key,
     this.style,
     double? padding,
     double? paddingLeft,
     double? paddingRight,
-    required this.character,
+    required this.text,
     required this.child,
   })   : paddingLeft = paddingLeft ?? padding ?? 0,
         paddingRight = paddingRight ?? padding ?? 0,
         super(key: key);
 
+  /// Style for the text. Will be merged with [TextTheme.subtitle1] from
+  /// [Theme].
   final TextStyle? style;
+
+  /// Padding to the left of the text widget with [text].
   final double paddingLeft;
+
+  /// Padding to the right of the text widget with [text].
   final double paddingRight;
-  final String character;
+
+  /// String to put in the leading [Text] widget.
+  final String text;
+
+  /// The boustro text widget.
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    var textStyle = style;
-    if (textStyle == null) {
-      final theme = Theme.of(context);
-      textStyle = theme.primaryTextTheme.subtitle1;
+    final theme = Theme.of(context);
+    var textStyle = theme.primaryTextTheme.subtitle1;
+    if (style != null) {
+      if (textStyle == null) {
+        textStyle = style;
+      } else {
+        textStyle = textStyle.merge(style);
+      }
     }
+
     return TextAlignedLeadingMarginModifier(
       paddingLeft: paddingLeft,
       paddingRight: paddingRight,
-      leading: Text(character, style: textStyle),
+      leading: Text(text, style: textStyle),
       child: child,
     );
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<TextStyle?>('style', style, defaultValue: null))
+      ..add(DoubleProperty('paddingLeft', paddingLeft, defaultValue: 0))
+      ..add(DoubleProperty('paddingRight', paddingRight, defaultValue: 0))
+      ..add(StringProperty('text', text));
   }
 }

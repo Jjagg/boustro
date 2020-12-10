@@ -1,4 +1,4 @@
-# Boustro
+# boustro
 
 Boustro is a rich text editor for Flutter.
 
@@ -31,7 +31,7 @@ Boustro is split into 3 packages that are layered on top of each other.
 text possible and data structures to represent text formats and formatted
 text. The structure is similar to Android's [Spannable](https://developer.android.com/reference/android/text/Spannable).
 1. [boustro](packages/boustro): The actual rich text editor.
-1. [boustro_starter](packages/boustro_starter): Attributes, line modifiers and embeds to get started with.
+1. [boustro_starter](packages/boustro_starter): Attributes, line modifiers and embeds to get started with boustro.
 
 ## Limitations
 

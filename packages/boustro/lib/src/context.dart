@@ -4,7 +4,6 @@ import 'package:flutter/widgets.dart';
 
 import 'document.dart';
 import 'scope.dart';
-import 'widgets/document_controller.dart';
 import 'widgets/editor.dart';
 
 /// Determines how a [BoustroEditor] displays a
@@ -17,7 +16,7 @@ class BoustroContext {
     List<ParagraphEmbedBuilder>? embedHandlers,
   }) : this._(
           lineHandlers ?? const [],
-          {for (var h in embedHandlers ?? <ParagraphEmbedBuilder>[]) h.key: h},
+          {for (var h in embedHandlers ?? <ParagraphEmbedBuilder>[]) h.type: h},
         );
 
   BoustroContext._(
@@ -40,10 +39,11 @@ class BoustroContext {
 ///
 /// Each key should map to one handler.
 abstract class ParagraphEmbedBuilder {
+  /// Constant base constructor for implementations.
   const ParagraphEmbedBuilder();
 
   /// Identifier for this embed.
-  String get key;
+  String get type;
 
   /// Function that builds the embed widget.
   Widget buildEmbed(
@@ -53,7 +53,9 @@ abstract class ParagraphEmbedBuilder {
   ]);
 }
 
+/// Wraps a line to modify how it's displayed.
 abstract class LineParagraphModifier {
+  /// Constant base constructor for implementations.
   const LineParagraphModifier();
 
   /// Determines the order in which line handlers are applied.

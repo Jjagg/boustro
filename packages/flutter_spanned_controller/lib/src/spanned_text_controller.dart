@@ -1,6 +1,4 @@
 import 'dart:math' as math;
-import 'dart:ui' as ui show ParagraphBuilder, PlaceholderAlignment;
-
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
@@ -330,6 +328,7 @@ class SpannedString {
   /// This method will first [collapse] [StringDiff.deleted] and then [insert]
   /// [StringDiff.inserted].
   SpannedString applyDiff(StringDiff diff) {
+    // ignore: unnecessary_this
     return this
         .collapse(after: diff.index, before: diff.index + diff.deleted.length)
         .insert(diff.index, diff.inserted);

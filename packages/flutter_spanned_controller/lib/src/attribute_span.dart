@@ -190,14 +190,14 @@ class AttributeSpan extends Equatable {
   AttributeSpan copyWith({
     TextAttribute? attribute,
     TextRange? range,
-    InsertBehavior? startAttachment,
-    InsertBehavior? endAttachment,
+    InsertBehavior? startBehavior,
+    InsertBehavior? endBehavior,
   }) {
     return AttributeSpan(
       attribute ?? this.attribute,
       range ?? this.range,
-      startAttachment ?? this.startBehavior,
-      endAttachment ?? this.endBehavior,
+      startBehavior ?? this.startBehavior,
+      endBehavior ?? this.endBehavior,
     );
   }
 
@@ -217,9 +217,9 @@ class AttributeSpan extends Equatable {
     // If this span is collapsed we treat the shift as happening at the end
     // boundary. This way, a collapsed span with endBehavior inclusive can
     // still expand.
-    if (index < this.range.start ||
+    if (index < range.start ||
         (!range.isCollapsed &&
-            index == this.range.start &&
+            index == range.start &&
             startBehavior != InsertBehavior.inclusive)) {
       newRange = newRange.copyWith(start: range.start + length);
     }
@@ -249,7 +249,7 @@ class AttributeSpan extends Equatable {
       return willApply(textRange.start);
     }
 
-    return this.range.contains(textRange);
+    return range.contains(textRange);
   }
 
   /// Returns true if this span will apply to text inserted at [index].
@@ -273,7 +273,7 @@ class AttributeSegment extends Equatable {
 
   /// Create an attribute segment.
   AttributeSegment.from(Iterable<TextAttribute> attributes, this.range)
-      : this.attributes = attributes.toBuiltList();
+      : attributes = attributes.toBuiltList();
 
   /// Attributes applied to this segment.
   final BuiltList<TextAttribute> attributes;
@@ -589,7 +589,7 @@ extension SpanRangeExtensions on TextRange {
   ///
   /// If this range is invalid this returns an identical range.
   TextRange normalize() {
-    if (this.isNormalized) {
+    if (isNormalized) {
       return this;
     }
 
@@ -600,30 +600,30 @@ extension SpanRangeExtensions on TextRange {
   TextRange? splice(TextRange removedSegment) {
     assert(removedSegment.isValid && removedSegment.isNormalized,
         'Range must be valid and normalized.');
-    if (this.start <= removedSegment.start && removedSegment.end <= this.end) {
+    if (start <= removedSegment.start && removedSegment.end <= end) {
       // deletion inside this range
-      return copyWith(end: this.end - removedSegment.length);
+      return copyWith(end: end - removedSegment.length);
     }
-    if (removedSegment.start >= this.end) {
+    if (removedSegment.start >= end) {
       // deletion after this range
       return this;
     }
-    if (removedSegment.end <= this.start) {
+    if (removedSegment.end <= start) {
       // deletion before this range
       return TextRange(
           start: start - removedSegment.length,
           end: end - removedSegment.length);
     }
-    if (removedSegment.start <= this.start && removedSegment.end <= this.end) {
+    if (removedSegment.start <= start && removedSegment.end <= end) {
       // deletion with the start of this range
       return TextRange(
-          start: removedSegment.start, end: this.end - removedSegment.length);
+          start: removedSegment.start, end: end - removedSegment.length);
     }
-    if (this.start <= removedSegment.start && this.end <= removedSegment.end) {
+    if (start <= removedSegment.start && end <= removedSegment.end) {
       // deletion with the end of this range
       return copyWith(end: removedSegment.start);
     }
-    if (removedSegment.start <= this.start && this.end <= removedSegment.end) {
+    if (removedSegment.start <= start && end <= removedSegment.end) {
       // deletion of the full range
       return null;
     }

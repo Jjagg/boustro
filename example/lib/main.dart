@@ -1,5 +1,3 @@
-import 'package:boustro/src/scope.dart';
-import 'package:built_collection/built_collection.dart';
 import 'package:boustro/boustro.dart';
 import 'package:boustro_starter/boustro_starter.dart';
 import 'package:boustro_starter/toolbar_items.dart' as toolbar_items;
@@ -114,9 +112,9 @@ class BulletListParagraphHandler extends LineParagraphModifier {
     Map<String, Object> properties,
     Widget child,
   ) {
-    return CharacterLeadingMarginModifier(
+    return LeadingTextModifier(
       padding: 8,
-      character: '\u2022',
+      text: '\u2022',
       child: child,
     );
   }

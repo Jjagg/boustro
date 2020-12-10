@@ -92,6 +92,7 @@ class _BoustroViewState extends State<BoustroView> {
     final btheme = BoustroTheme.of(context);
     final editorPadding = btheme.editorPadding;
     return BoustroScope.readonly(
+      document: widget.document,
       child: Container(
         color: btheme.editorColor,
         child: ListView.builder(
@@ -266,7 +267,14 @@ class BoustroEditor extends StatelessWidget {
   }
 }
 
-/// Wraps a [child] and applies [LineParagraphModifier]s based on [properties].
+/// Widget that wraps a [child] and applies [LineParagraphModifier]s based on
+/// [properties].
+///
+/// Modifiers are only applied if [LineParagraphModifier.shouldBeApplied]
+/// returns true when called with [properties].
+///
+/// The order in which modifiers are applied is determined by
+/// [LineParagraphModifier.priority].
 class BoustroLineModifier extends StatelessWidget {
   /// Create a line modifier.
   const BoustroLineModifier({
@@ -277,9 +285,6 @@ class BoustroLineModifier extends StatelessWidget {
   }) : super(key: key);
 
   /// Nestable builders that modify how the child is wrapped.
-  ///
-  /// Handlers are applied if [LineParagraphModifier.shouldBeApplied] returns
-  /// true when called with [properties].
   final BuiltList<LineParagraphModifier> handlers;
 
   /// Determines which of [handlers] should be applied.
@@ -305,5 +310,15 @@ class BoustroLineModifier extends StatelessWidget {
             (line, h) => h.modify(context, properties.asMap(), line),
           ),
     );
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IterableProperty<LineParagraphModifier>('handlers', handlers))
+      ..add(IterableProperty<MapEntry<String, Object>>(
+          'properties', this.properties.entries,
+          ifEmpty: null));
   }
 }

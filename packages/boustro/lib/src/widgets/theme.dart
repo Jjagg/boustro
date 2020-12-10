@@ -5,9 +5,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
+import '../context.dart';
 import 'editor.dart';
 import 'toolbar.dart';
 
+/// Provides theming for boustro widgets.
 class BoustroTheme extends InheritedTheme {
   /// Creates a boustro theme that controls the configuration
   /// of various descendant boustro widgets.
@@ -44,15 +46,22 @@ class BoustroTheme extends InheritedTheme {
 
   @override
   bool updateShouldNotify(covariant BoustroTheme oldWidget) {
-    return oldWidget.data != this.data;
+    return oldWidget.data != data;
   }
 
   @override
   Widget wrap(BuildContext context, Widget child) {
     return BoustroTheme(data: data, child: child);
   }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<BoustroThemeData>('data', data));
+  }
 }
 
+/// Contains data for [BoustroTheme].
 class BoustroThemeData extends Equatable {
   /// Create a boustro theme with all properties set.
   const BoustroThemeData.raw({
@@ -99,6 +108,8 @@ class BoustroThemeData extends Equatable {
   factory BoustroThemeData.dark() =>
       BoustroThemeData.fallback(brightness: Brightness.dark);
 
+  /// Create a copy of this theme with passed fields replaced with the new
+  /// value.
   BoustroThemeData copyWith({
     Color? editorColor,
     EdgeInsetsGeometry? editorPadding,
@@ -170,6 +181,9 @@ class BoustroThemeData extends Equatable {
         embedPadding,
       ];
 
+  /// Linearly interpolate between two boustro themes.
+  ///
+  /// Used by [AnimatedBoustroTheme] to animate between themes.
   static BoustroThemeData lerp(
       BoustroThemeData a, BoustroThemeData b, double t) {
     return BoustroThemeData.raw(
@@ -236,20 +250,22 @@ class AnimatedBoustroTheme extends ImplicitlyAnimatedWidget {
     Duration duration = kThemeAnimationDuration,
     VoidCallback? onEnd,
     required this.child,
-  })   : assert(child != null),
-        assert(data != null),
-        super(key: key, curve: curve, duration: duration, onEnd: onEnd);
+  }) : super(key: key, curve: curve, duration: duration, onEnd: onEnd);
 
-  /// Specifies the color and typography values for descendant widgets.
+  /// The properties to apply to descendant boustro widgets.
   final BoustroThemeData data;
 
   /// The widget below this widget in the tree.
-  ///
-  /// {@macro flutter.widgets.ProxyWidget.child}
   final Widget child;
 
   @override
   _AnimatedBoustroThemeState createState() => _AnimatedBoustroThemeState();
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<BoustroThemeData>('data', data));
+  }
 }
 
 class _AnimatedBoustroThemeState

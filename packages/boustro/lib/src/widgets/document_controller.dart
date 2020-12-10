@@ -13,15 +13,19 @@ abstract class ParagraphState {
   /// Create a paragraph.
   const ParagraphState({required FocusNode focusNode}) : _focusNode = focusNode;
 
-  /// Use to focus this paragraph.
   final FocusNode _focusNode;
+
+  /// Manages focus for this paragraph.
   FocusNode get focusNode => _focusNode;
 
+  /// Discards resources used by this object.
   @mustCallSuper
   void dispose() {
     focusNode.dispose();
   }
 
+  /// Execute [line] if this is a [LineState] and [embed] if this is an
+  /// [EmbedState].
   T match<T>({
     required T Function(LineState) line,
     required T Function(EmbedState) embed,
@@ -29,6 +33,8 @@ abstract class ParagraphState {
 }
 
 /// Holds focus node and state for a line of text.
+///
+/// This is the editable variant of [BoustroLine].
 @immutable
 class LineState extends ParagraphState {
   /// Create a text line.
@@ -39,6 +45,8 @@ class LineState extends ParagraphState {
   })  : properties = properties ?? BuiltMap<String, Object>(),
         super(focusNode: focusNode);
 
+  /// Create a copy of this line state, but with properties set to the new
+  /// properties.
   LineState withProperties(
     Map<String, dynamic> properties,
   ) {
@@ -70,7 +78,9 @@ class LineState extends ParagraphState {
       line(this);
 }
 
-/// Holds [FocusNode] for a boustro embed.
+/// Holds [FocusNode] and content for a boustro embed.
+///
+/// This is the editable variant of [BoustroParagraphEmbed].
 @immutable
 class EmbedState extends ParagraphState {
   /// Create an embed.
@@ -79,6 +89,8 @@ class EmbedState extends ParagraphState {
     required this.content,
   }) : super(focusNode: focusNode);
 
+  /// Create a copy of this embed state, but with the value of its content set
+  /// to the new value.
   EmbedState withValue(Object value) {
     return EmbedState(
       focusNode: focusNode,
@@ -88,14 +100,6 @@ class EmbedState extends ParagraphState {
 
   /// Content of the embed.
   final BoustroParagraphEmbed content;
-
-  @override
-  void dispose() {
-    try {
-      (content.value as dynamic).dispose();
-    } catch (NoSuchMethodError) {}
-    super.dispose();
-  }
 
   @override
   T match<T>({
@@ -276,6 +280,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     return newLine;
   }
 
+  /// Set the [LineState.properties] for [line].
   void setLineProperties(LineState line, Map<String, dynamic> properties) {
     final lineIndex = paragraphs.indexWhere((l) => l is LineState && l == line);
     if (lineIndex < 0) {
@@ -290,6 +295,9 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     );
   }
 
+  /// Remove the focused paragraph.
+  ///
+  /// Does nothing if [focusedParagraph] is null.
   void removeCurrentParagraph() {
     final index = focusedParagraphIndex;
     if (index != null) {

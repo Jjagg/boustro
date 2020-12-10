@@ -87,21 +87,21 @@ ToolbarItem createToggleableToolbarItem(
   );
 }
 
-/// Toolbar item that toggles the [BoldAttribute] on the selected text.
+/// Toolbar item that toggles the [boldAttribute] on the selected text.
 final bold = createToggleableToolbarItem(
   'Bold',
   boldAttribute,
   Icons.format_bold_rounded,
 );
 
-/// Toolbar item that toggles the [ItalicAttribute] on the selected text.
+/// Toolbar item that toggles the [italicAttribute] on the selected text.
 final italic = createToggleableToolbarItem(
   'Italic',
   italicAttribute,
   Icons.format_italic_rounded,
 );
 
-/// Toolbar item that toggles the [UnderlineAttribute] on the selected text.
+/// Toolbar item that toggles the [underlineAttribute] on the selected text.
 final underline = createToggleableToolbarItem(
   'Underline',
   underlineAttribute,

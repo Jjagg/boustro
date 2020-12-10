@@ -1,10 +1,12 @@
 import 'package:boustro/boustro.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
+/// Embed that presents an image. Its key is 'image' and value should be an [ImageProvider].
 class ImageEmbed extends ParagraphEmbedBuilder {
   @override
-  String get key => 'image';
+  String get type => 'image';
 
   @override
   Widget buildEmbed(
@@ -21,19 +23,19 @@ class ImageEmbed extends ParagraphEmbedBuilder {
 }
 
 class _ImageEmbed extends StatelessWidget {
-  _ImageEmbed({
+  const _ImageEmbed({
     required this.scope,
     required this.embed,
     required this.focusNode,
   });
 
-  BoustroScope scope;
-  BoustroParagraphEmbed embed;
-  FocusNode? focusNode;
+  final BoustroScope scope;
+  final BoustroParagraphEmbed embed;
+  final FocusNode? focusNode;
 
   @override
   Widget build(BuildContext context) {
-    if (!scope.editable) {
+    if (!scope.isEditable) {
       return _buildContent(context, imageWrapper: _center);
     }
 
@@ -74,7 +76,7 @@ class _ImageEmbed extends StatelessWidget {
                   ? CrossFadeState.showSecond
                   : CrossFadeState.showFirst,
               duration: const Duration(milliseconds: 800),
-              firstChild: SizedBox(),
+              firstChild: const SizedBox(),
               secondChild: Stack(
                 children: [
                   Align(
@@ -153,126 +155,13 @@ class _ImageEmbed extends StatelessWidget {
       ),
     );
   }
-}
 
-//class OverlayButton extends StatefulWidget {
-//  @override
-//  _OverlayButtonState createState() => _OverlayButtonState();
-//}
-//
-//class _OverlayButtonState extends State<OverlayButton> {
-//  late final OverlayEntry? _overlayEntry = _createOverlayEntry();
-//  final LayerLink _layerLink = LayerLink();
-//  bool _overlayIsShown = false;
-//
-//  @override
-//  void dispose() {
-//    super.dispose();
-//    if (_overlayIsShown) {
-//      _hideOverlay();
-//    }
-//  }
-//
-//  void _showOverlay() {
-//    if (_overlayIsShown) return;
-//    Overlay.of(context).insert(_overlayEntry);
-//    _overlayIsShown = true;
-//  }
-//
-//  void _hideOverlay() {
-//    _overlayIsShown = false;
-//    _overlayEntry.remove();
-//  }
-//
-//  @override
-//  Widget build(BuildContext context) {
-//    return CompositedTransformTarget(
-//      link: _layerLink,
-//      child: RaisedButton(child: Text('Open Overlay'), onPressed: _showOverlay),
-//    );
-//  }
-//
-//  OverlayEntry _createOverlayEntry() {
-//    RenderBox renderBox = context.findRenderObject();
-//    var anchorSize = renderBox.size;
-//    return OverlayEntry(builder: (context) {
-//      // TODO: dynamically use the correct child width / height for
-//      // positioning us correctly on top + centered on the anchor
-//      var childWidth = 200.0;
-//      var childHeight = 40.0;
-//      var childOffset =
-//          Offset(-(childWidth - anchorSize.width) / 2, -(childHeight));
-//      return Row(
-//        children: <Widget>[
-//          CompositedTransformFollower(
-//            link: _layerLink,
-//            offset: childOffset,
-//            child: RaisedButton(
-//              child: Text('close'),
-//              onPressed: _hideOverlay,
-//            ),
-//          ),
-//        ],
-//      );
-//    });
-//  }
-//}
-//
-//class DeclarativeOverlayEntry extends StatefulWidget {
-//  const DeclarativeOverlayEntry({
-//    Key? key,
-//    required this.overlayBuilder,
-//    required this.child,
-//    this.overlayAnchor = Alignment.center,
-//    this.childAnchor = Alignment.center,
-//    this.visible = true,
-//  }) : super(key: key);
-//
-//  final WidgetBuilder overlayBuilder;
-//  final Widget child;
-//  final bool visible;
-//  final Alignment overlayAnchor;
-//  final Alignment childAnchor;
-//
-//  @override
-//  _DeclarativeOverlayEntryState createState() =>
-//      _DeclarativeOverlayEntryState();
-//}
-//
-//class _DeclarativeOverlayEntryState extends State<DeclarativeOverlayEntry> {
-//  late final overlayEntry = OverlayEntry(builder: widget.overlayBuilder);
-//
-//  @override
-//  void initState() {}
-//
-//  void showOverlayEntry() {
-//    if (!overlayEntry.mounted) {
-//      assert(() {
-//        if (context is! Overlay &&
-//            context.findAncestorWidgetOfExactType<Overlay>() == null) {
-//          throw FlutterError.fromParts(<DiagnosticsNode>[
-//            ErrorSummary('No Overlay found.'),
-//            ErrorDescription(
-//                'This widget requires an Overlay parent to add its '
-//                'overlay to'),
-//            ErrorHint(
-//                'Include an Overlay widget above this widget in the tree.'),
-//          ]);
-//        }
-//        return true;
-//      }(), 'unnreachable');
-//
-//      final overlay = Overlay.of(context)!;
-//      overlay.insert(overlayEntry);
-//    }
-//  }
-//
-//  @override
-//  Widget build(BuildContext context) {
-//    if (!widget.visible) {
-//      return widget.child;
-//    }
-//
-//    return Placeholder();
-//  }
-//}
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<BoustroScope>('scope', scope))
+      ..add(DiagnosticsProperty<BoustroParagraphEmbed>('embed', embed))
+      ..add(DiagnosticsProperty<FocusNode?>('focusNode', focusNode));
+  }
+}

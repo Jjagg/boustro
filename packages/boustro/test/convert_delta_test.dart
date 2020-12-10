@@ -1,9 +1,13 @@
 // ignore_for_file: implicit_dynamic_variable
+// ignore_for_file: missing_whitespace_between_adjacent_strings
+// ignore_for_file: prefer_const_constructors
+// ignore_for_file: prefer_const_literals_to_create_immutables
+// ignore_for_file: prefer_function_declarations_over_variables
+// ignore_for_file: avoid_types_on_closure_parameters
 import 'dart:convert';
 import 'dart:ui';
 
 import 'package:boustro/convert_delta.dart';
-import 'package:flutter/src/painting/text_style.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const doc3 =
