@@ -38,5 +38,5 @@ jobs:
         working-directory: ${{ matrix.package }}
 
       - name: Run tests
-        run: flutter test
+        run: flutter test -r expanded
         working-directory: ${{ matrix.package }}
