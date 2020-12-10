@@ -8,6 +8,5 @@ export 'src/scope.dart';
 
 export 'src/widgets/document_controller.dart';
 export 'src/widgets/editor.dart';
-export 'src/widgets/scaffold.dart';
 export 'src/widgets/theme.dart';
 export 'src/widgets/toolbar.dart';

@@ -151,104 +151,105 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Boustro'),
-        actions: [
-          Builder(
-            builder: (context) => IconButton(
-              icon: const Icon(Icons.check),
-              onPressed: () {
-                Navigator.of(context)
-                    .push<void>(MaterialPageRoute<void>(builder: (context) {
-                  return Scaffold(
-                    body: BoustroView(
-                      context: boustroContext,
-                      document: controller.toDocument(),
-                    ),
-                  );
-                }));
+    return AnimatedBoustroTheme(
+      data: BoustroTheme.of(context),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Boustro'),
+          actions: [
+            Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.check),
+                onPressed: () {
+                  Navigator.of(context)
+                      .push<void>(MaterialPageRoute<void>(builder: (context) {
+                    return Scaffold(
+                      body: BoustroView(
+                        context: boustroContext,
+                        document: controller.toDocument(),
+                      ),
+                    );
+                  }));
+                },
+              ),
+            )
+          ],
+        ),
+        body: BoustroEditor(
+          controller: controller,
+          context: boustroContext,
+        ),
+        bottomNavigationBar: Toolbar(
+          documentController: controller,
+          defaultItemBuilder: (context, controller, item) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+              child: Center(
+                child: IconButton(
+                  splashColor: Colors.transparent,
+                  onPressed: item.onPressed == null
+                      ? null
+                      : () => item.onPressed!(context, controller),
+                  icon: item.title,
+                  tooltip: item.tooltip,
+                ),
+              ),
+            );
+          },
+          items: [
+            toolbar_items.bold,
+            toolbar_items.italic,
+            toolbar_items.underline,
+            ToolbarItem.sublist(
+              title: const Icon(Icons.photo),
+              items: [
+                ToolbarItem(
+                  title: const Icon(Icons.photo_camera),
+                  onPressed: (context, controller) {
+                    final embed = controller
+                        .insertEmbedAtCurrent(const BoustroParagraphEmbed(
+                      'image',
+                      NetworkImage(
+                          'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
+                    ));
+                    embed?.focusNode.requestFocus();
+                    if (embed != null) {
+                      Toolbar.popMenu(context);
+                    }
+                  },
+                ),
+                ToolbarItem(
+                  title: const Icon(Icons.photo_library),
+                  onPressed: (_, __) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Left as an exercise to the reader.'),
+                      ),
+                    );
+                  },
+                ),
+              ],
+              tooltip: 'Insert image',
+            ),
+            ToolbarItem(
+              title: const Icon(Icons.list),
+              onPressed: (context, controller) {
+                final line = controller.focusedLine;
+                if (line != null) {
+                  final isBullet = line.properties['list'] == 'bullet';
+                  final props = isBullet
+                      ? line.properties.rebuild((r) => r.remove('list'))
+                      : line.properties.rebuild((r) => r['list'] = 'bullet');
+                  controller.setLineProperties(line, props.asMap());
+                }
               },
             ),
-          )
-        ],
-      ),
-      body: AnimatedBoustroTheme(
-        data: BoustroTheme.of(context),
-        child: BoustroEditorScaffold(
-          editor: BoustroEditor(
-            controller: controller,
-            context: boustroContext,
-          ),
-          toolbar: Toolbar(
-            documentController: controller,
-            defaultItemBuilder: (context, controller, item) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-                child: Center(
-                  child: IconButton(
-                    splashColor: Colors.transparent,
-                    onPressed: item.onPressed == null
-                        ? null
-                        : () => item.onPressed!(context, controller),
-                    icon: item.title,
-                    tooltip: item.tooltip,
-                  ),
-                ),
-              );
-            },
-            items: [
-              toolbar_items.bold,
-              toolbar_items.italic,
-              toolbar_items.underline,
-              ToolbarItem.sublist(
-                title: const Icon(Icons.photo),
-                items: [
-                  ToolbarItem(
-                    title: const Icon(Icons.photo_camera),
-                    onPressed: (_, controller) {
-                      final embed =
-                          controller.insertEmbedAtCurrent(BoustroParagraphEmbed(
-                        'image',
-                        NetworkImage(
-                            'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
-                      ));
-                      embed?.focusNode.requestFocus();
-                    },
-                  ),
-                  ToolbarItem(
-                    title: const Icon(Icons.photo_library),
-                    onPressed: (_, __) {},
-                  ),
-                ],
-                tooltip: 'Insert image',
-              ),
-              ToolbarItem(
-                title: const Icon(Icons.title_rounded),
-                onPressed: (context, controller) {
-                  final line = controller.focusedLine;
-                  if (line != null) {
-                    final isBullet = line.properties['list'] == 'bullet';
-                    final props = isBullet
-                        ? line.properties.rebuild((r) => r.remove('list'))
-                        : line.properties.rebuild((r) => r['list'] = 'bullet');
-                    controller.setLineProperties(line, props.asMap());
-                  }
-                },
-              ),
-              ToolbarItem(
-                title: const Icon(Icons.add),
-                onPressed: (context, controller) {
-                  controller.appendLine();
-                },
-              ),
-              ToolbarItem(
-                title: const Icon(Icons.wb_sunny),
-                onPressed: (context, __) =>
-                    ThemeModeScope.of(context).toggle(context),
-              ),
-            ],
-          ),
+            ToolbarItem(
+              title: const Icon(Icons.wb_sunny),
+              onPressed: (context, __) =>
+                  ThemeModeScope.of(context).toggle(context),
+            ),
+          ],
         ),
       ),
     );

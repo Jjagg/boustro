@@ -91,15 +91,17 @@ class _BoustroViewState extends State<BoustroView> {
   Widget build(BuildContext context) {
     final btheme = BoustroTheme.of(context);
     final editorPadding = btheme.editorPadding;
-    return BoustroScope(
-      editable: false,
-      child: ListView.builder(
-        padding: editorPadding,
-        shrinkWrap: true,
-        itemBuilder: (context, index) {
-          return _buildParagraph(context, widget.document.paragraphs[index]);
-        },
-        itemCount: widget.document.paragraphs.length,
+    return BoustroScope.readonly(
+      child: Container(
+        color: btheme.editorColor,
+        child: ListView.builder(
+          padding: editorPadding,
+          shrinkWrap: true,
+          itemBuilder: (context, index) {
+            return _buildParagraph(context, widget.document.paragraphs[index]);
+          },
+          itemCount: widget.document.paragraphs.length,
+        ),
       ),
     );
   }
@@ -124,7 +126,11 @@ class _BoustroViewState extends State<BoustroView> {
         throw UnsupportedError('Missing builder for embed ${embed.type}.');
       }
       final scope = BoustroScope.of(buildContext);
-      result = builder.buildEmbed(scope, embed);
+      final btheme = BoustroTheme.of(context);
+      result = Padding(
+        padding: btheme.embedPadding,
+        child: builder.buildEmbed(scope, embed),
+      );
     }
 
     return result;
@@ -148,12 +154,16 @@ class BoustroEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BoustroScope(
-      editable: true,
-      child: ValueListenableBuilder<BuiltList<ParagraphState>>(
-        valueListenable: controller,
-        builder: (context, paragraphs, __) =>
-            _buildParagraphs(context, paragraphs),
+    final btheme = BoustroTheme.of(context);
+    return BoustroScope.editable(
+      controller: controller,
+      child: Container(
+        color: btheme.editorColor,
+        child: ValueListenableBuilder<BuiltList<ParagraphState>>(
+          valueListenable: controller,
+          builder: (context, paragraphs, __) =>
+              _buildParagraphs(context, paragraphs),
+        ),
       ),
     );
   }

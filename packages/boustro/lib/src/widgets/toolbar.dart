@@ -142,7 +142,10 @@ class _ToolbarScope extends InheritedWidget {
   }
 }
 
+/// A horizontal bar that displays buttons to interact with a
+/// [DocumentController].
 class Toolbar extends StatelessWidget {
+  /// Create a toolbar.
   const Toolbar({
     Key? key,
     required this.documentController,
@@ -150,8 +153,14 @@ class Toolbar extends StatelessWidget {
     required this.items,
   }) : super(key: key);
 
+  /// The controller that the toolbar items will have access to to modify the
+  /// document or display document state.
   final DocumentController documentController;
+
+  /// Default builder for items that do not have [ToolbarItem.builder] set.
   final ToolbarItemBuilder defaultItemBuilder;
+
+  /// The toolbar items that are displayed by this toolbar.
   final List<ToolbarItem> items;
 
   @override
@@ -169,6 +178,13 @@ class Toolbar extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Pop a nested menu of the stack.
+  ///
+  /// To build nested menus use [ToolbarItem.sublist].
+  static void popMenu(BuildContext context) {
+    DefaultNestedListController.of<ToolbarItem>(context)!.pop();
   }
 }
 

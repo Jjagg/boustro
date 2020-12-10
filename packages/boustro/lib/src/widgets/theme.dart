@@ -1,13 +1,11 @@
 import 'dart:ui' as ui;
 
-import 'package:boustro/boustro.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 import 'editor.dart';
-import 'scaffold.dart';
 import 'toolbar.dart';
 
 class BoustroTheme extends InheritedTheme {
@@ -66,6 +64,7 @@ class BoustroThemeData extends Equatable {
     required this.toolbarPadding,
     required this.toolbarFadeDuration,
     required this.linePadding,
+    required this.embedPadding,
   });
 
   /// Default theme for [brightness].
@@ -88,6 +87,7 @@ class BoustroThemeData extends Equatable {
       toolbarPadding: const EdgeInsets.symmetric(horizontal: 4),
       toolbarFadeDuration: const Duration(milliseconds: 200),
       linePadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      embedPadding: const EdgeInsets.symmetric(vertical: 8),
     );
   }
 
@@ -109,6 +109,7 @@ class BoustroThemeData extends Equatable {
     EdgeInsetsGeometry? toolbarPadding,
     Duration? toolbarFadeDuration,
     EdgeInsetsGeometry? linePadding,
+    EdgeInsetsGeometry? embedPadding,
   }) {
     return BoustroThemeData.raw(
       editorColor: editorColor ?? this.editorColor,
@@ -119,10 +120,11 @@ class BoustroThemeData extends Equatable {
       toolbarPadding: toolbarPadding ?? this.toolbarPadding,
       toolbarFadeDuration: toolbarFadeDuration ?? this.toolbarFadeDuration,
       linePadding: linePadding ?? this.linePadding,
+      embedPadding: embedPadding ?? this.embedPadding,
     );
   }
 
-  /// Background color of a [BoustroEditor]. Applied by [BoustroEditorScaffold].
+  /// Background color of a [BoustroEditor].
   final Color editorColor;
 
   /// Padding inside the scrollable part of a [BoustroEditor].
@@ -152,6 +154,9 @@ class BoustroThemeData extends Equatable {
   /// them.
   final EdgeInsetsGeometry linePadding;
 
+  /// Padding for embeds.
+  final EdgeInsetsGeometry embedPadding;
+
   @override
   List<Object?> get props => [
         editorColor,
@@ -162,6 +167,7 @@ class BoustroThemeData extends Equatable {
         toolbarPadding,
         toolbarFadeDuration,
         linePadding,
+        embedPadding,
       ];
 
   static BoustroThemeData lerp(
@@ -180,6 +186,7 @@ class BoustroThemeData extends Equatable {
       toolbarFadeDuration:
           t < 0.5 ? a.toolbarFadeDuration : b.toolbarFadeDuration,
       linePadding: EdgeInsetsGeometry.lerp(a.linePadding, b.linePadding, t)!,
+      embedPadding: EdgeInsetsGeometry.lerp(a.embedPadding, b.embedPadding, t)!,
     );
   }
 }

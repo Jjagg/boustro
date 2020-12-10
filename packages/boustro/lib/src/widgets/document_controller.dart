@@ -91,7 +91,9 @@ class EmbedState extends ParagraphState {
 
   @override
   void dispose() {
-    (content.value as dynamic).dispose?.call();
+    try {
+      (content.value as dynamic).dispose();
+    } catch (NoSuchMethodError) {}
     super.dispose();
   }
 
@@ -159,13 +161,15 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   }
 
   /// Get the index of the focused paragraph or -1 if no paragrap has focus.
-  int get focusedParagraphIndex =>
-      paragraphs.indexWhere((p) => p.focusNode.hasPrimaryFocus);
+  int? get focusedParagraphIndex {
+    final index = paragraphs.indexWhere((p) => p.focusNode.hasPrimaryFocus);
+    return index == -1 ? null : index;
+  }
 
   /// Get the currently focused paragraph, if any.
   ParagraphState? get focusedParagraph {
     final index = focusedParagraphIndex;
-    return index == -1 ? null : paragraphs[index];
+    return index == null ? null : paragraphs[index];
   }
 
   /// Get the currently focused line. If there is no focused paragraph or the
@@ -286,8 +290,15 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     );
   }
 
-  /// Remove the line at [index].
-  void removeLine(int index) {
+  void removeCurrentParagraph() {
+    final index = focusedParagraphIndex;
+    if (index != null) {
+      removeParagraphAt(index);
+    }
+  }
+
+  /// Remove the paragraph at [index].
+  void removeParagraphAt(int index) {
     _rebuild((r) {
       final state = r.removeAt(index);
       // We defer disposal until after the next build, because the
@@ -308,15 +319,15 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   /// Insert an embed at the current index.
   EmbedState? insertEmbedAtCurrent(BoustroParagraphEmbed embed) {
     // We replace the current line if it's empty.
-    final index = focusedParagraphIndex;
-    if (index == -1) {
+    var index = focusedParagraphIndex;
+    if (index == null) {
       return null;
     }
-    if (0 < index && index < paragraphs.length) {
-      final p = paragraphs[index];
-      if (p is LineState && p.controller.text.isEmpty) {
-        removeLine(index);
-      }
+    final p = paragraphs[index];
+    if (p is LineState && p.controller.text.isEmpty) {
+      removeParagraphAt(index);
+    } else {
+      index += 1;
     }
     return insertEmbed(index, embed);
   }
@@ -326,15 +337,15 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     final focus = FocusNode();
     final state = EmbedState(focusNode: focus, content: embed);
 
+    if (index == paragraphs.length) {
+      appendLine();
+    }
     if (index == 0) {
       insertLine(0);
     }
     _rebuild((r) {
       r.insert(index == 0 ? 1 : index, state);
     });
-    if (index == paragraphs.length) {
-      appendLine();
-    }
     return state;
   }
 
@@ -389,7 +400,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
         c1.controller.spannedString.concat(c2.controller.spannedString);
 
     c1.controller.spannedString = concat;
-    removeLine(index + 1);
+    removeParagraphAt(index + 1);
     c1.focusNode.requestFocus();
 
     // Put the cursor at the insertion point

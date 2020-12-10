@@ -40,6 +40,7 @@ mixin NestedListItem<T extends NestedListItem<T>> {
   }
 }
 
+/// List of [NestedListItem] with their parent item.
 class NestedItemList<T extends NestedListItem<T>> {
   const NestedItemList(this._items) : parent = null;
   NestedItemList.fromParent(T parent)
@@ -58,14 +59,23 @@ class NestedListController<T extends NestedListItem<T>> extends ChangeNotifier {
 
   final List<NestedItemList<T>> _listStack;
 
-  int get depth => _listStack.length;
+  /// Number of menus deep we are nested.
+  ///
+  /// If there is only a root menu the depth is 0.
+  int get depth => _listStack.length - 1;
 
+  /// Push [parent]s children to the stack.
   void push(T parent) {
     assert(parent.hasItems, 'Only items with children can be nested');
     _listStack.add(NestedItemList.fromParent(parent));
     notifyListeners();
   }
 
+  /// Pop the last list of items from the stack. Always leaves one list on the
+  /// stack.
+  ///
+  /// Returns true if a list was actually popped, false if there was only one
+  /// list on the stack and this call had no effect (i.e. [isNested] was false).
   bool pop() {
     if (_listStack.length > 1) {
       _listStack.removeLast();
@@ -76,8 +86,14 @@ class NestedListController<T extends NestedListItem<T>> extends ChangeNotifier {
     return false;
   }
 
+  /// True if there is more than 1 list of items on the stack.
   bool get isNested => _listStack.length > 1;
+
+  /// Parent of the last item list in the stack. Null if the last list
+  /// is the root list.
   T? get currentParent => _listStack.last.parent;
+
+  /// Items from the last [NestedItemList] on the stack.
   List<T> get currentItems => _listStack.last._items;
 }
 

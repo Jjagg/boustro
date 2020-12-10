@@ -1,6 +1,6 @@
 name: example
 description: example
-publish_to: 'none'
+publish_to: none
 version: 1.0.0+1
 
 environment:
@@ -11,7 +11,10 @@ dependencies:
     sdk: flutter
 
   boustro_starter:
-    path: ../
+    path: ../packages/boustro_starter
+
+  image_picker: ^0.6.7+14
+  media_gallery: ^0.1.5
 
 dev_dependencies:
   flutter_test:
