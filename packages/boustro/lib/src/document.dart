@@ -4,27 +4,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
 /// Rich text represented as a list of [BoustroParagraph]s.
-class BoustroDocument extends ValueNotifier<BuiltList<BoustroParagraph>> {
+class BoustroDocument {
   /// Create a new boustro document.
-  BoustroDocument([List<BoustroParagraph> paragraphs = const []])
-      : super(BuiltList.of(paragraphs));
+  const BoustroDocument(this.paragraphs);
 
   /// The list of paragraphs in this document.
-  BuiltList<BoustroParagraph> get paragraphs => value;
-
-  /// Add the given [paragraph] at [index].
-  ///
-  /// Will throw [RangeError] if `index < 0` or `index > paragraphs.length`.
-  void insert(int index, BoustroParagraph paragraph) {
-    value = value.rebuild((b) => b.insert(index, paragraph));
-  }
-
-  /// Remove the paragraph at [index].
-  ///
-  /// Will throw [RangeError] if `index < 0` or `index >= paragraphs.length`.
-  void removeAt(int index) {
-    value = value.rebuild((b) => b.removeAt(index));
-  }
+  final BuiltList<BoustroParagraph> paragraphs;
 }
 
 /// A paragraph in a [BoustroDocument]. Is either a [BoustroLine] for rich text

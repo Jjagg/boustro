@@ -124,7 +124,7 @@ class _BoustroViewState extends State<BoustroView> {
         throw UnsupportedError('Missing builder for embed ${embed.type}.');
       }
       final scope = BoustroScope.of(buildContext);
-      result = builder(scope, embed);
+      result = builder.buildEmbed(scope, embed);
     }
 
     return result;
@@ -162,84 +162,89 @@ class BoustroEditor extends StatelessWidget {
       BuildContext buildContext, BuiltList<ParagraphState> paragraphs) {
     final btheme = BoustroTheme.of(buildContext);
     final directionality = Directionality.of(buildContext);
-    final linePadding = btheme.linePadding.resolve(directionality);
     final editorPadding = btheme.editorPadding.resolve(directionality);
 
     // We want taps in the free area below the listview to set focus
     // on the last editor. To do that we apply editorPadding in a special
     // way.
-    // - Horizontal padding is applied around the gesture detector
-    // - Top padding is applied to the first line so clicks are handled
-    //   by the TextField (also puts the cursor in the right position).
-    // - Bottom padding is applied in ListView.padding so it's part of the
-    //   scrollable. The cursor will always be put at the end of the line.
+    // - Horizontal and top padding is applied by SliverPadding
+    // - Bottom padding is applied through the SliverFillRemaining below it.
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: editorPadding.left,
-        right: editorPadding.right,
-      ),
-      child: GestureDetector(
-        onTap: () {
-          if (controller.paragraphs.isNotEmpty) {
-            controller.paragraphs.last.focusNode.requestFocus();
-          }
-        },
-        child: ListView.builder(
-          padding: EdgeInsets.only(bottom: editorPadding.bottom),
-          shrinkWrap: true,
-          addAutomaticKeepAlives: false,
-          controller: controller.scrollController,
-          itemBuilder: (buildContext, index) {
-            Widget result;
-            final value = paragraphs[index];
-            if (value is LineState) {
-              var textFieldPadding = EdgeInsets.only(
-                top: linePadding.top,
-                bottom: linePadding.bottom,
-              );
-              if (index == 0) {
-                textFieldPadding =
-                    textFieldPadding + EdgeInsets.only(top: editorPadding.top);
-              }
-              final key = GlobalObjectKey(value.controller);
-              result = BoustroLineModifier(
-                properties: value.properties,
-                handlers: context.lineHandlers,
-                child: TextField(
-                  key: key,
-                  controller: value.controller,
-                  focusNode: value.focusNode,
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
-                  textInputAction: TextInputAction.newline,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    contentPadding: textFieldPadding,
-                    border: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                  ),
-                ),
-              );
-            } else {
-              final embed = value as EmbedState;
-              final builder =
-                  context.paragraphEmbedBuilders[embed.content.type];
-              if (builder == null) {
-                throw UnsupportedError(
-                    'Missing builder for embed ${embed.content.type}.');
-              }
-              final scope = BoustroScope.of(buildContext);
-              result = builder(scope, embed.content, embed.focusNode);
-            }
-
-            return result;
-          },
-          itemCount: paragraphs.length,
+    return CustomScrollView(
+      shrinkWrap: true,
+      controller: controller.scrollController,
+      slivers: [
+        SliverPadding(
+          padding: editorPadding.copyWith(bottom: 0),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              _buildParagraph,
+              addAutomaticKeepAlives: false,
+              childCount: paragraphs.length,
+            ),
+          ),
         ),
-      ),
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              if (controller.paragraphs.isNotEmpty) {
+                controller.paragraphs.last.focusNode.requestFocus();
+              }
+            },
+            child: Container(
+              height: editorPadding.bottom,
+            ),
+          ),
+        )
+      ],
     );
+  }
+
+  Widget _buildParagraph(BuildContext buildContext, int index) {
+    final btheme = BoustroTheme.of(buildContext);
+    final directionality = Directionality.of(buildContext);
+    final linePadding = btheme.linePadding.resolve(directionality);
+
+    Widget result;
+    final value = controller.paragraphs[index];
+    if (value is LineState) {
+      final key = GlobalObjectKey(value.controller);
+      result = BoustroLineModifier(
+        properties: value.properties,
+        handlers: context.lineHandlers,
+        child: TextField(
+          key: key,
+          controller: value.controller,
+          focusNode: value.focusNode,
+          maxLines: null,
+          keyboardType: TextInputType.multiline,
+          textInputAction: TextInputAction.newline,
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.only(
+              top: linePadding.top,
+              bottom: linePadding.bottom,
+            ),
+            border: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            enabledBorder: InputBorder.none,
+          ),
+        ),
+      );
+    } else {
+      final embed = value as EmbedState;
+      final builder = context.paragraphEmbedBuilders[embed.content.type];
+      if (builder == null) {
+        throw UnsupportedError(
+            'Missing builder for embed ${embed.content.type}.');
+      }
+      final scope = BoustroScope.of(buildContext);
+      result = builder.buildEmbed(scope, embed.content, embed.focusNode);
+    }
+
+    return result;
   }
 
   @override
@@ -251,7 +256,7 @@ class BoustroEditor extends StatelessWidget {
   }
 }
 
-/// Wraps a [child] and applies [LineParagraphHandler]s based on [properties].
+/// Wraps a [child] and applies [LineParagraphModifier]s based on [properties].
 class BoustroLineModifier extends StatelessWidget {
   /// Create a line modifier.
   const BoustroLineModifier({
@@ -263,9 +268,9 @@ class BoustroLineModifier extends StatelessWidget {
 
   /// Nestable builders that modify how the child is wrapped.
   ///
-  /// Handlers are applied if [LineParagraphHandler.shouldBeApplied] returns
+  /// Handlers are applied if [LineParagraphModifier.shouldBeApplied] returns
   /// true when called with [properties].
-  final BuiltList<LineParagraphHandler> handlers;
+  final BuiltList<LineParagraphModifier> handlers;
 
   /// Determines which of [handlers] should be applied.
   final BuiltMap<String, Object> properties;

@@ -1,5 +1,4 @@
 import 'package:built_collection/built_collection.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -12,10 +11,11 @@ import 'editor.dart';
 @immutable
 abstract class ParagraphState {
   /// Create a paragraph.
-  const ParagraphState({required this.focusNode});
+  const ParagraphState({required FocusNode focusNode}) : _focusNode = focusNode;
 
   /// Use to focus this paragraph.
-  final FocusNode focusNode;
+  final FocusNode _focusNode;
+  FocusNode get focusNode => _focusNode;
 
   @mustCallSuper
   void dispose() {
@@ -140,6 +140,10 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   /// Get the scroll controller for the [ScrollView] containing the paragraphs.
   final ScrollController scrollController;
 
+  @protected
+  @override
+  BuiltList<ParagraphState> get value => super.value;
+
   /// Get the paragraphs in this docuent.
   ///
   /// Alias for [value].
@@ -154,9 +158,15 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     value = value.rebuild(updates);
   }
 
+  /// Get the index of the focused paragraph or -1 if no paragrap has focus.
+  int get focusedParagraphIndex =>
+      paragraphs.indexWhere((p) => p.focusNode.hasPrimaryFocus);
+
   /// Get the currently focused paragraph, if any.
-  ParagraphState? get focusedParagraph =>
-      paragraphs.firstWhereOrNull((p) => p.focusNode.hasPrimaryFocus);
+  ParagraphState? get focusedParagraph {
+    final index = focusedParagraphIndex;
+    return index == -1 ? null : paragraphs[index];
+  }
 
   /// Get the currently focused line. If there is no focused paragraph or the
   /// [focusedParagraph] is not a [LineState] this returns null.
@@ -216,6 +226,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     );
   }
 
+  /// Get the contents of this controller represented as a boustro document.
   BoustroDocument toDocument() {
     final paragraphs = this
         .paragraphs
@@ -224,7 +235,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
               // TODO need a controller to modify embed state.
               embed: (e) => e.content,
             ))
-        .toList();
+        .toBuiltList();
     return BoustroDocument(paragraphs);
   }
 
@@ -295,14 +306,26 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   }
 
   /// Insert an embed at the current index.
-  EmbedState insertEmbedAtCurrent(BoustroParagraphEmbed embed) {
-    return insertEmbed(0, embed);
+  EmbedState? insertEmbedAtCurrent(BoustroParagraphEmbed embed) {
+    // We replace the current line if it's empty.
+    final index = focusedParagraphIndex;
+    if (index == -1) {
+      return null;
+    }
+    if (0 < index && index < paragraphs.length) {
+      final p = paragraphs[index];
+      if (p is LineState && p.controller.text.isEmpty) {
+        removeLine(index);
+      }
+    }
+    return insertEmbed(index, embed);
   }
 
   /// Insert an embed at [index].
   EmbedState insertEmbed(int index, BoustroParagraphEmbed embed) {
     final focus = FocusNode();
     final state = EmbedState(focusNode: focus, content: embed);
+
     if (index == 0) {
       insertLine(0);
     }

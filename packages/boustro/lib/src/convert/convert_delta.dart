@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:ui' show TextRange;
 
-import 'package:boustro/src/context.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 import 'package:meta/meta.dart';
 
+import '../context.dart';
 import '../document.dart';
 import 'convert.dart';
 import 'ops.dart';
@@ -54,7 +54,7 @@ class EmbedCodec {
   /// Create an embed codec.
   const EmbedCodec(this.key, this.decoder, this.encoder);
 
-  /// Identifies the type of the embed. See [ParagraphEmbedHandler.key].
+  /// Identifies the type of the embed. See [ParagraphEmbedBuilder.key].
   final String key;
 
   /// Decoder for the embed value.
@@ -203,7 +203,7 @@ class BoustroDocumentDeltaDecoder extends Converter<List<Op>, BoustroDocument> {
       }
     }
 
-    return BoustroDocument(paragraphs);
+    return BoustroDocument(paragraphs.build());
   }
 
   Iterable<_DeltaLine> _groupByLines(List<Op> ops) sync* {

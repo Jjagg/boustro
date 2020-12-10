@@ -105,7 +105,7 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class BulletListParagraphHandler extends LineParagraphHandler {
+class BulletListParagraphHandler extends LineParagraphModifier {
   const BulletListParagraphHandler();
 
   @override
@@ -138,30 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final boustroContext = BoustroContext(
     lineHandlers: const [BulletListParagraphHandler()],
     embedHandlers: [
-      ParagraphEmbedHandler(
-        'image',
-        (scope, embed, [focusNode]) {
-          return GestureDetector(
-            onTap: focusNode == null
-                ? null
-                : () {
-                    if (focusNode.hasPrimaryFocus) {
-                      focusNode.unfocus();
-                    } else {
-                      focusNode.requestFocus();
-                    }
-                  },
-            child: Focus(
-              focusNode: focusNode,
-              child: Padding(
-                padding: EdgeInsets.all(
-                    (focusNode?.hasPrimaryFocus ?? false) ? 8.0 : 20.0),
-                child: Image.network(embed.value as String),
-              ),
-            ),
-          );
-        },
-      ),
+      ImageEmbed(),
     ],
   );
 
@@ -233,9 +210,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       final embed =
                           controller.insertEmbedAtCurrent(BoustroParagraphEmbed(
                         'image',
-                        'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg',
+                        NetworkImage(
+                            'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
                       ));
-                      embed.focusNode.requestFocus();
+                      embed?.focusNode.requestFocus();
                     },
                   ),
                   ToolbarItem(

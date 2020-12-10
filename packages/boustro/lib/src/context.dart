@@ -13,18 +13,18 @@ import 'widgets/editor.dart';
 class BoustroContext {
   /// Create a boustro context.
   BoustroContext({
-    List<LineParagraphHandler>? lineHandlers,
-    List<ParagraphEmbedHandler>? embedHandlers,
+    List<LineParagraphModifier>? lineHandlers,
+    List<ParagraphEmbedBuilder>? embedHandlers,
   }) : this._(
           lineHandlers ?? const [],
           {
-            for (var h in embedHandlers ?? <ParagraphEmbedHandler>[])
-              h.key: h.builder
+            for (var h in embedHandlers ?? <ParagraphEmbedBuilder>[])
+              h.key: h
           },
         );
 
   BoustroContext._(
-    List<LineParagraphHandler> lineHandlers,
+    List<LineParagraphModifier> lineHandlers,
     Map<String, ParagraphEmbedBuilder> paragraphEmbedBuilders,
   )   : lineHandlers =
             lineHandlers.sorted((l, r) => r.priority - l.priority).build(),
@@ -32,35 +32,32 @@ class BoustroContext {
 
   /// Supported line modifiers for this context.
   ///
-  /// These are always sorted by [LineParagraphHandler.priority].
-  final BuiltList<LineParagraphHandler> lineHandlers;
+  /// These are always sorted by [LineParagraphModifier.priority].
+  final BuiltList<LineParagraphModifier> lineHandlers;
 
   /// Maps supported embeds to their builders.
   final BuiltMap<String, ParagraphEmbedBuilder> paragraphEmbedBuilders;
 }
 
-/// Function that builds a paragraph embed.
-typedef ParagraphEmbedBuilder = Widget Function(
-  BoustroScope scope,
-  BoustroParagraphEmbed state, [
-  FocusNode? focusNode,
-]);
-
 /// Handler for building paragraph embeds.
 ///
 /// Each key should map to one handler.
-class ParagraphEmbedHandler {
-  const ParagraphEmbedHandler(this.key, this.builder);
+abstract class ParagraphEmbedBuilder {
+  const ParagraphEmbedBuilder();
 
   /// Identifier for this embed.
-  final String key;
+  String get key;
 
   /// Function that builds the embed widget.
-  final ParagraphEmbedBuilder builder;
+  Widget buildEmbed(
+    BoustroScope scope,
+    BoustroParagraphEmbed embed, [
+    FocusNode? focusNode,
+  ]);
 }
 
-abstract class LineParagraphHandler {
-  const LineParagraphHandler();
+abstract class LineParagraphModifier {
+  const LineParagraphModifier();
 
   /// Determines the order in which line handlers are applied.
   ///
