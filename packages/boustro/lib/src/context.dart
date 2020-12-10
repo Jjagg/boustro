@@ -17,10 +17,7 @@ class BoustroContext {
     List<ParagraphEmbedBuilder>? embedHandlers,
   }) : this._(
           lineHandlers ?? const [],
-          {
-            for (var h in embedHandlers ?? <ParagraphEmbedBuilder>[])
-              h.key: h
-          },
+          {for (var h in embedHandlers ?? <ParagraphEmbedBuilder>[]) h.key: h},
         );
 
   BoustroContext._(

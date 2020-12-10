@@ -207,8 +207,7 @@ void main() {
   });
 }
 
-abstract class MockSpan extends TextAttribute {
-}
+abstract class MockSpan extends TextAttribute {}
 
 AttributeSpan sp<T extends MockSpan>(
   T attr,

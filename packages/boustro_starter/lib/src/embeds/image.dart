@@ -146,7 +146,9 @@ class _ImageEmbed extends StatelessWidget {
     return ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 300),
       child: Container(
-        color: isDark ? Colors.deepPurple.shade900.withOpacity(0.2): Colors.brown.withOpacity(0.2),
+        color: isDark
+            ? Colors.deepPurple.shade900.withOpacity(0.2)
+            : Colors.brown.withOpacity(0.2),
         child: image,
       ),
     );
