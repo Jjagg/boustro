@@ -63,12 +63,12 @@ void main() {
   });
 
   group('collapse', () {
-    test('''do not remove expandable span at the end''', () {
+    test('''remove collapsed span at the end''', () {
       expect(
         SpanList([
           sp(a, 1, 2, InsertBehavior.exclusive, InsertBehavior.inclusive)
         ]).collapse(TextRange(start: 1, end: 3)).spans,
-        [sp(a, 1, 1, InsertBehavior.exclusive, InsertBehavior.inclusive)],
+        <dynamic>[],
       );
     });
 
@@ -101,16 +101,6 @@ void main() {
   });
 
   group('shift', () {
-    test('empty before-after', () {
-      expect(
-          SpanList()
-              .merge(sp(
-                  a, 0, 0, InsertBehavior.exclusive, InsertBehavior.inclusive))
-              .shift(0, 2)
-              .spans,
-          [sp(a, 0, 2, InsertBehavior.exclusive, InsertBehavior.inclusive)]);
-    });
-
     test('insertion before', () {
       expect(
         SpanList().shift(0, 5).merge(sp(a, 3, 4)).shift(1, 3).spans,
