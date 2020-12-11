@@ -24,8 +24,3 @@ dev_dependencies:
     sdk: flutter
 
   pedantic: ^1.0.0
-
-#dependency_overrides:
-  # Workaround for https://github.com/rrousselGit/freezed/issues/294
-  #analyzer: '0.40.4'
-

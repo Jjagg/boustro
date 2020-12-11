@@ -5,18 +5,28 @@ on:
   pull_request:
 
 jobs:
-  flutter:
+  packages:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
         channel:
-        - beta
+          - dev
         package:
           - packages/flutter_spanned_controller
           - packages/boustro
           - packages/boustro_starter
           - example
+        include: 
+          - channel: dev
+            package: packages/boustro
+            no-tests: true
+          - channel: dev
+            package: packages/boustro_starter
+            no-tests: true
+          - channel: dev
+            package: example
+            no-tests: true
 
     steps:
       - uses: actions/checkout@v2
@@ -38,5 +48,13 @@ jobs:
         working-directory: ${{ matrix.package }}
 
       - name: Run tests
-        run: flutter test -r expanded
+        run: flutter test -r expanded --coverage
         working-directory: ${{ matrix.package }}
+        if: ${{ !matrix.no-tests }}
+
+      - uses: codecov/codecov-action@v1
+        with:
+          file: ${{ format('./{0}/coverage/lcov.info', matrix.package) }}
+          name: ${{ matrix.package }}
+          fail_ci_if_error: true
+        if: ${{ !matrix.no-tests }}
