@@ -3,9 +3,8 @@ description: >
   A simple rich text editor for Flutter.
 
 publish_to: none
-version: 0.1.0
-author: Jesse Gielen
-homepage: https://github.com/Jjagg/boustro
+version: 0.1.0-0
+#homepage: https://github.com/Jjagg/boustro
 repository: https://github.com/Jjagg/boustro
 
 environment:

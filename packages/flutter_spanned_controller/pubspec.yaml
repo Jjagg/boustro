@@ -3,10 +3,8 @@ description: >
   TextEditingController implementation that allows for rich text styling
   in Flutter.
 
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-version: 0.1.0
-author: Jesse Gielen
-homepage: https://github.com/Jjagg/boustro
+version: 0.1.0-0
+#homepage: https://github.com/Jjagg/boustro
 repository: https://github.com/Jjagg/boustro
 
 environment:
@@ -14,10 +12,11 @@ environment:
 
 dependencies:
   built_collection: ^5.0.0-nullsafety.0
-  collection: any
+  collection: ^1.15.0-nullsafety.0
   equatable: ^2.0.0-nullsafety.0
   flutter:
     sdk: flutter
+  meta: ^1.2.4
 
 dev_dependencies:
   flutter_test:
