@@ -1,11 +1,17 @@
 
 <p align="center">
   <a href="https://github.com/Jjagg/boustro/actions"><img src="https://github.com/Jjagg/boustro/workflows/Build/badge.svg" alt="Build Status"></a>
+<a href="https://codecov.io/gh/Jjagg/boustro"><img src="https://codecov.io/gh/Jjagg/boustro/branch/main/graph/badge.svg" alt="codecov"></a>
 </p>
 
 # boustro
 
 Boustro is a rich text editor for Flutter.
+
+| **flutter_spanned_controller** | [![pub package](https://img.shields.io/pub/v/flutter_spanned_controller.svg?color=blue)](https://pub.dev/packages/flutter_spanned_controller) |
+| ------------------------------ | ----------- |
+| **boustro**                    | Unpublished |
+| **boustro_starter**            | Unpublished |
 
 ## Features
 
