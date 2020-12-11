@@ -278,7 +278,7 @@ class BoustroDocumentDeltaDecoder extends Converter<List<Op>, BoustroDocument> {
 
       final range = TextRange(
           start: buffer.length, end: buffer.length + insert.text.length);
-      final segment = AttributeSegment(attrs.toBuiltList(), range);
+      final segment = AttributeSegment(attrs.toBuiltSet(), range);
       segments.add(segment);
       buffer.write(insert.text);
     }

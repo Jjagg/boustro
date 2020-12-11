@@ -117,12 +117,20 @@ void main() {
       expect(l.merge(s1).merge(s2).spans, [sp(a, 1, 3)]);
     });
     test('merge bridge', () {
-      final l = SpanList().shift(0, 10);
+      final l = SpanList();
       final s1 = sp(a, 1, 3);
       final s2 = sp(a, 5, 8);
       final s3 = sp(a, 3, 5);
       expect(l.merge(s1).merge(s2).merge(s3).spans, [sp(a, 1, 8)]);
+      expect(SpanList([s1, s2, s3]).spans, [sp(a, 1, 8)]);
     });
+    test('constructor merges all', () {
+      final s1 = sp(a, 1, 3);
+      final s2 = sp(a, 5, 8);
+      final s3 = sp(a, 3, 5);
+      expect(SpanList([s1, s2, s3]).spans, [sp(a, 1, 8)]);
+    });
+
     test('merge containing', () {
       final l = SpanList().shift(0, 10);
       final s1 = sp(a, 1, 3);
@@ -142,29 +150,25 @@ void main() {
           [AttributeSegment.from([], TextRange(start: 0, end: 3))]);
     });
 
-    test('complex', () {
-      final sa = sp(a, 1, 7);
-      final sb = sp(b, 1, 8);
-      final sc = sp(c, 2, 5);
-      final sd = sp(d, 2, 5);
-      final se = sp(e, 2, 6);
-      final sf = sp(f, 2, 10);
+    test('spans can go past end', () {
+      expect(SpanList().getSegments(3),
+          [AttributeSegment.from([], TextRange(start: 0, end: 3))]);
+    });
 
+    test('complex', () {
       expect(
-          (SpanList()
-                  .shift(0, 10)
-                  .merge(sa)
-                  .merge(sb)
-                  .merge(sc)
-                  .merge(sd)
-                  .merge(se)
-                  .merge(sf)
-                  .shift(10, 3))
+          (SpanList([
+            sp(a, 1, 7),
+            sp(b, 1, 8),
+            sp(c, 2, 5),
+            sp(d, 2, 5),
+            sp(e, 2, 6),
+            sp(f, 2, 10),
+          ]).shift(10, 3))
               .getSegments(13),
           <AttributeSegment>[
             AttributeSegment.from([], TextRange(start: 0, end: 1)),
-            AttributeSegment.from(
-                [sa.attribute, sb.attribute], TextRange(start: 1, end: 2)),
+            AttributeSegment.from([a, b], TextRange(start: 1, end: 2)),
             AttributeSegment.from(
                 [a, b, c, d, e, f], TextRange(start: 2, end: 5)),
             AttributeSegment.from([a, b, e, f], TextRange(start: 5, end: 6)),
@@ -215,7 +219,8 @@ AttributeSpan sp<T extends MockSpan>(
 ]) =>
     AttributeSpan(
       attr,
-      TextRange(start: start, end: end),
+      start,
+      end,
       startAnchor,
       endAnchor,
     );

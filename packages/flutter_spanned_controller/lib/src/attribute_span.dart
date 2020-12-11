@@ -6,7 +6,13 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/widgets.dart';
 import 'package:meta/meta.dart' show immutable, visibleForTesting;
 
-const _maxSpanLength = (2 << 32) - 1;
+import 'spanned_text_controller.dart';
+
+/// Maximum length of a span.
+///
+/// This is a pretty arbitrary large number.
+/// Use this for virtually infinite size spans.
+const maxSpanLength = (2 << 32) - 1;
 
 /// An attribute to apply to a span of text.
 ///
@@ -120,34 +126,43 @@ class AttributeSpan extends Equatable {
   ///
   /// [range] must be valid and normalized.
   /// For an unattached span, use [AttributeSpan.fixed].
-  AttributeSpan(
+  const AttributeSpan(
     this.attribute,
-    this.range,
+    this.start,
+    this.end,
     this.startBehavior,
     this.endBehavior,
-  )   : assert(range.isValid, 'Range must be valid.'),
-        assert(range.isNormalized, 'Range must be normalized.'),
+  )   : assert(start >= 0 && end >= 0, 'Range must be valid.'),
+        assert(start <= end, 'Range must be normalized.'),
         assert(
             (startBehavior == InsertBehavior._fixed) ==
                 (endBehavior == InsertBehavior._fixed),
             'Start and end behavior must either both be fixed or neither may be fixed.');
 
   /// Create a span that is fixed in place.
-  AttributeSpan.fixed(
-    TextAttribute attribute,
-    TextRange range,
-  ) : this(attribute, range, InsertBehavior._fixed, InsertBehavior._fixed);
+  const AttributeSpan.fixed(TextAttribute attribute, int start, int end)
+      : this(attribute, start, end, InsertBehavior._fixed,
+            InsertBehavior._fixed);
 
   /// The attribute this span applies.
   final TextAttribute attribute;
 
-  /// Range where this span is applied.
-  final TextRange range;
+  /// Start of the range of this span.
+  final int start;
 
-  /// Behavior when [shift] is called at [TextRange.start] of [range].
+  /// End of the range of this span.
+  final int end;
+
+  /// Range where this span is applied.
+  TextRange get range => TextRange(start: start, end: end);
+
+  /// Size of the range of this span.
+  int get size => end - start;
+
+  /// Behavior when [shift] is called at the [start] of this span.
   final InsertBehavior startBehavior;
 
-  /// Behavior when [shift] is called at [TextRange.end] of [range].
+  /// Behavior when [shift] is called at the [end] of this span.
   final InsertBehavior endBehavior;
 
   /// Returns true if this span was created with [AttributeSpan.fixed];
@@ -156,10 +171,10 @@ class AttributeSpan extends Equatable {
   /// Returns true if the [range] of this span is collapsed.
   ///
   /// See [TextRange.isCollapsed].
-  bool get isCollapsed => range.isCollapsed;
+  bool get isCollapsed => start == end;
 
   /// Inverse of [isCollapsed].
-  bool get isNotCollapsed => !range.isCollapsed;
+  bool get isNotCollapsed => !isCollapsed;
 
   /// Returns true if [shift] can make the [range] of this span larger.
   bool get isExpandable =>
@@ -172,7 +187,7 @@ class AttributeSpan extends Equatable {
 
   /// Returns true if this span is not expandable and its [range] is collapsed.
   /// (see [isNotExpandable] and [TextRange.isCollapsed]).
-  bool get isUseless => isNotExpandable && range.isCollapsed;
+  bool get isUseless => isNotExpandable && isCollapsed;
 
   /// True if this span is not expandable
   bool get isNotUseless => !isUseless;
@@ -180,7 +195,8 @@ class AttributeSpan extends Equatable {
   @override
   List<Object?> get props => [
         attribute,
-        range,
+        start,
+        end,
         startBehavior,
         endBehavior,
       ];
@@ -189,13 +205,15 @@ class AttributeSpan extends Equatable {
   /// the new values.
   AttributeSpan copyWith({
     TextAttribute? attribute,
-    TextRange? range,
+    int? start,
+    int? end,
     InsertBehavior? startBehavior,
     InsertBehavior? endBehavior,
   }) {
     return AttributeSpan(
       attribute ?? this.attribute,
-      range ?? this.range,
+      start ?? this.start,
+      end ?? this.end,
       startBehavior ?? this.startBehavior,
       endBehavior ?? this.endBehavior,
     );
@@ -203,28 +221,39 @@ class AttributeSpan extends Equatable {
 
   /// Return the resulting span after inserting source text at [index] with [length].
   ///
-  /// If this span is collapsed [endBehavior] takes precedence to determine how
-  /// this span is expanded.
+  /// If this span is collapsed and [endBehavior] is [InsertBehavior.inclusive],
+  /// [startBehavior] is treated as [InsertBehavior.inclusive] always.
+  /// I.e. a shift at the index of a collapsed span \[\[ will result in \[o\[. Note
+  /// that the start is expanded even though the insert behavior is set to
+  /// [InsertBehavior.exclusive]. Because of this exception a collapsed span
+  /// with [endBehavior] inclusive can still expand.
+  // TODO this behavior should probably be symmetric, though start inclusive
+  // spans are not very useful in practice...
+  // Or maybe we can get rid of it altogether since the controller now has the
+  // override mechanism and collapsed spans are deleted by SpanList.
   AttributeSpan shift(int index, int length) {
     if (isFixed ||
-        index > range.end ||
-        (index == range.end && endBehavior != InsertBehavior.inclusive)) {
+        index > end ||
+        (index == end && endBehavior != InsertBehavior.inclusive)) {
       return this;
     }
 
-    var newRange = range.copyWith(end: range.end + length);
+    final newEnd = end + length;
+
+    final startBehavior = isCollapsed && endBehavior == InsertBehavior.inclusive
+        ? InsertBehavior.inclusive
+        : this.startBehavior;
 
     // If this span is collapsed we treat the shift as happening at the end
     // boundary. This way, a collapsed span with endBehavior inclusive can
     // still expand.
-    if (index < range.start ||
-        (!range.isCollapsed &&
-            index == range.start &&
-            startBehavior != InsertBehavior.inclusive)) {
-      newRange = newRange.copyWith(start: range.start + length);
+    if (index > start ||
+        (index == start && startBehavior == InsertBehavior.inclusive)) {
+      return copyWith(end: newEnd);
     }
 
-    return copyWith(range: newRange);
+    final newStart = start + length;
+    return copyWith(start: newStart, end: newEnd);
   }
 
   /// Return the resulting span after deleting source text in [collapseRange].
@@ -236,7 +265,7 @@ class AttributeSpan extends Equatable {
     } else {
       final spliced = range.splice(collapseRange);
       if (spliced != null) {
-        return copyWith(range: spliced);
+        return copyWith(start: spliced.start, end: spliced.end);
       }
     }
   }
@@ -254,18 +283,20 @@ class AttributeSpan extends Equatable {
 
   /// Returns true if this span will apply to text inserted at [index].
   bool willApply(int index) {
-    return (range.start < index && index < range.end) ||
-        !isCollapsed && startBehavior == InsertBehavior.inclusive ||
-        index == range.end && endBehavior == InsertBehavior.inclusive;
+    return (start < index && index < end) ||
+        (!isCollapsed &&
+            index == start &&
+            startBehavior == InsertBehavior.inclusive) ||
+        (index == end && endBehavior == InsertBehavior.inclusive);
   }
 
   @override
   String toString() {
-    return '(${startBehavior.toBracketStr(true)}${range.start} ${range.end}${endBehavior.toBracketStr(false)} $attribute)';
+    return '(${startBehavior.toBracketStr(true)}$start $end${endBehavior.toBracketStr(false)} $attribute)';
   }
 }
 
-/// A range of the source text with all attributes that are applied to it.
+/// A range of the source text with the set of attributes that are applied to it.
 @immutable
 class AttributeSegment extends Equatable {
   /// Create an attribute segment.
@@ -273,10 +304,10 @@ class AttributeSegment extends Equatable {
 
   /// Create an attribute segment.
   AttributeSegment.from(Iterable<TextAttribute> attributes, this.range)
-      : attributes = attributes.toBuiltList();
+      : attributes = attributes.toBuiltSet();
 
   /// Attributes applied to this segment.
-  final BuiltList<TextAttribute> attributes;
+  final BuiltSet<TextAttribute> attributes;
 
   /// Range of text.
   final TextRange range;
@@ -317,11 +348,17 @@ class _AttributeTransition {
 @immutable
 class SpanList extends Equatable {
   /// Create a SpanList.
-  SpanList([
+  ///
+  /// All spans are merged and sorted.
+  factory SpanList([
     Iterable<AttributeSpan>? spans,
-  ]) : this._sortedList(spans == null
-            ? BuiltList()
-            : spans.sorted((a, b) => a.range.start - b.range.start).build());
+  ]) {
+    return spans == null
+        ? SpanList._()
+        : spans.fold(SpanList._(), (l, s) => l.merge(s));
+  }
+
+  SpanList._() : _spans = BuiltList();
 
   /// Create a SpanList from segments.
   ///
@@ -338,7 +375,8 @@ class SpanList extends Equatable {
         final insertBehavior = getInsertBehavior(attr);
         final span = AttributeSpan(
           attr,
-          segment.range,
+          segment.range.start,
+          segment.range.end,
           insertBehavior.start,
           insertBehavior.end,
         );
@@ -359,24 +397,54 @@ class SpanList extends Equatable {
 
   /// Get an iterator of the segments for this list.
   ///
-  /// Segments represent the formatting of the text in a different way than
-  /// spans.
-  // TODO proper segments explanation
+  /// A segment is a part of the span with one set of attributes
+  /// applied to it. A segment maps to a Flutter [TextSpan].
+  ///
+  /// See [AttributeSegmentsExtensions].buildTextSpans.
+  ///
+  /// Imagine spans like this:
+  ///
+  /// ```
+  /// ___________
+  ///  ____
+  ///     _____
+  /// ```
+  ///
+  /// The corresponding segments will be:
+  ///
+  /// ```
+  /// _
+  ///  ___
+  ///     _
+  ///      ____
+  ///          __
+  /// ```
   Iterable<AttributeSegment> getSegments(int end) sync* {
-    // We sweep over start and end points of all spans to build the segments.
+    // We sweep over start and end points of all spans and keep track
+    // of what attributes are active, then yield a segment whenever
+    // our start point moves.
+
+    // _______
+    //  ___
     final transitions = spans.expand((s) sync* {
+      if (s.end > end) {
+        s = s.copyWith(end: end);
+      }
       yield _AttributeTransition(
-          s.attribute, _TransitionType.start, s.range.start);
-      yield _AttributeTransition(s.attribute, _TransitionType.end, s.range.end);
+        s.attribute,
+        _TransitionType.start,
+        s.start,
+      );
+      yield _AttributeTransition(s.attribute, _TransitionType.end, s.end);
     }).toList()
       ..sort((a, b) => a.index - b.index);
 
-    final activeAttribs = <TextAttribute>[];
+    final activeAttribs = <TextAttribute>{};
     var currentSegmentStart = 0;
     for (final transition in transitions) {
       if (transition.index > currentSegmentStart) {
         yield AttributeSegment(
-          BuiltList(activeAttribs),
+          activeAttribs.build(),
           TextRange(start: currentSegmentStart, end: transition.index),
         );
         currentSegmentStart = transition.index;
@@ -391,7 +459,7 @@ class SpanList extends Equatable {
 
     if (currentSegmentStart < end) {
       yield AttributeSegment(
-        BuiltList(),
+        BuiltSet(),
         TextRange(start: currentSegmentStart, end: end),
       );
     }
@@ -445,15 +513,17 @@ class SpanList extends Equatable {
         (s) => s.attribute == span.attribute && s.range.touches(span.range));
     final toMerge = touching.followedBy([span]);
     final start =
-        toMerge.fold<int>(_maxSpanLength, (m, s) => math.min(m, s.range.start));
-    final end = toMerge.fold<int>(-1, (m, s) => math.max(m, s.range.end));
+        toMerge.fold<int>(maxSpanLength, (m, s) => math.min(m, s.start));
+    final end = toMerge.fold<int>(-1, (m, s) => math.max(m, s.end));
     final merged = span.copyWith(
-      range: TextRange(start: start, end: end),
+      start: start,
+      end: end,
     );
     if (merged.isNotCollapsed) {
-      return SpanList(
-        _spans.whereNot(toMerge.contains).followedBy([merged]).sorted(
-            (a, b) => a.range.start - b.range.start),
+      return SpanList._sorted(
+        _spans
+            .whereNot(toMerge.contains)
+            .followedBy([merged]).sorted((a, b) => a.start - b.start),
       );
     } else {
       return SpanList._sorted(_spans.whereNot(touching.contains));
@@ -482,13 +552,11 @@ class SpanList extends Equatable {
             if (s.attribute != attribute || !s.range.overlaps(range)) {
               yield s;
             } else {
-              if (s.range.start < range.start) {
-                yield s.copyWith(
-                    range: TextRange(start: s.range.start, end: range.start));
+              if (s.start < range.start) {
+                yield s.copyWith(end: range.start);
               }
-              if (range.end < s.range.end) {
-                yield s.copyWith(
-                    range: TextRange(start: range.end, end: s.range.end));
+              if (range.end < s.end) {
+                yield s.copyWith(start: range.end);
               }
             }
           },

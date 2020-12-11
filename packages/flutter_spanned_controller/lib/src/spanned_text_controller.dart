@@ -199,7 +199,13 @@ extension SpannedTextEditingControllerExtension
     }
 
     final range = selection.normalize();
-    final span = AttributeSpan(attribute, range, startBehavior, endBehavior);
+    final span = AttributeSpan(
+      attribute,
+      range.start,
+      range.end,
+      startBehavior,
+      endBehavior,
+    );
     spans = spans.merge(span);
   }
 
@@ -277,8 +283,9 @@ class SpannedString {
         spans ?? this.spans,
       );
 
-  /// Insert text into this spanned text. The spans are shifted to accomodate
-  /// for the insertion.
+  /// Insert text into this spanned text.
+  ///
+  /// The spans are shifted to accomodate for the insertion.
   SpannedString insert(int index, String inserted) {
     assert(index >= 0, 'Index may not be negative.');
     if (inserted.isEmpty) {
@@ -291,8 +298,9 @@ class SpannedString {
     );
   }
 
-  /// Delete a part of this spanned text. The spans are shifted and deleted to
-  /// accomodate for the deletion.
+  /// Delete a part of this spanned text.
+  ///
+  /// The spans are shifted and deleted to accomodate for the deletion.
   SpannedString collapse({int? after, int? before}) {
     assert(after != null || before != null,
         'after and before may not both be null.');
@@ -337,9 +345,10 @@ class SpannedString {
   /// Apply the attributes to [text] and return the resulting [TextSpan].
   ///
   /// See [AttributeSegmentsExtensions].
-  TextSpan buildTextSpans(
-      {required TextStyle style,
-      Map<TextAttribute, GestureRecognizer>? recognizers}) {
+  TextSpan buildTextSpans({
+    required TextStyle style,
+    Map<TextAttribute, GestureRecognizer>? recognizers,
+  }) {
     final segments = spans.getSegments(text.length);
     return segments.buildTextSpans(
         text: text, style: style, recognizers: recognizers);
@@ -398,6 +407,7 @@ class SpannedTextEditingController implements TextEditingController {
   }
 
   /// The attribute that's applied to the active composition.
+  ///
   /// By default this adds an underline decoration.
   final TextAttribute compositionAttribute;
 
@@ -518,12 +528,15 @@ class SpannedTextEditingController implements TextEditingController {
             !withComposing ||
             value.composing.isCollapsed
         ? spans.getSegments(text.length)
-        : (spans.merge(AttributeSpan(
-            compositionAttribute,
-            value.composing,
-            InsertBehavior.exclusive,
-            InsertBehavior.exclusive,
-          ))).getSegments(text.length);
+        : (spans.merge(
+            AttributeSpan(
+              compositionAttribute,
+              value.composing.start,
+              value.composing.end,
+              InsertBehavior.exclusive,
+              InsertBehavior.exclusive,
+            ),
+          )).getSegments(text.length);
 
     // We don't pass gesture recognizers here, because we don't
     // want gestures on spans to be handled while editing.
@@ -573,7 +586,8 @@ class SpannedTextEditingController implements TextEditingController {
       if (ao.type == OverrideType.apply) {
         final span = AttributeSpan(
           ao.attribute,
-          range,
+          range.start,
+          range.end,
           ao.startBehavior,
           ao.endBehavior,
         );

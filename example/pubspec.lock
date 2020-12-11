@@ -28,7 +28,7 @@ packages:
       path: "../packages/boustro_starter"
       relative: true
     source: path
-    version: "0.0.1"
+    version: "0.1.0"
   built_collection:
     dependency: transitive
     description:

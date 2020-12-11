@@ -1,2 +1,13 @@
+# Test coverage
 coverage/
+
+# VS Code
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# Vim
+*.swp
+*.swo
+*~
 

@@ -18,14 +18,9 @@ jobs:
           - packages/boustro_starter
           - example
         include: 
-          - channel: dev
-            package: packages/boustro
+          - package: packages/boustro_starter
             no-tests: true
-          - channel: dev
-            package: packages/boustro_starter
-            no-tests: true
-          - channel: dev
-            package: example
+          - package: example
             no-tests: true
 
     steps:

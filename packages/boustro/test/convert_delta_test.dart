@@ -5,7 +5,6 @@
 // ignore_for_file: prefer_function_declarations_over_variables
 // ignore_for_file: avoid_types_on_closure_parameters
 import 'dart:convert';
-import 'dart:ui';
 
 import 'package:boustro/convert_delta.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -55,7 +54,8 @@ void main() {
       // '''{"insert":{"image":{"path": "some_image", "alt": "some alt text"}}}''';
       final objOp = ops.first as InsertObjectOp;
       expect(objOp.type, 'image');
-      expect(objOp.value, {'path': 'some_image', 'alt': 'some alt text'});
+      expect(
+          objOp.value.asMap(), {'path': 'some_image', 'alt': 'some alt text'});
       expect(objOp.attributes, isEmpty);
     });
   });
@@ -72,7 +72,8 @@ void main() {
 
   final createBold = (int start, int end) => AttributeSpan(
         bold,
-        TextRange(start: start, end: end),
+        start,
+        end,
         InsertBehavior.exclusive,
         InsertBehavior.inclusive,
       );

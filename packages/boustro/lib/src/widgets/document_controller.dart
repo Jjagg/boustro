@@ -211,9 +211,12 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     while ((newLineIndex = t.text.lastIndexOf('\n')) >= 0) {
       final nextLine = t.collapse(before: newLineIndex + 1);
       insertLine(
-          lineIndex + 1,
-          BoustroLine.fromSpanned(nextLine,
-              properties: currentLine.properties));
+        lineIndex + 1,
+        BoustroLine.fromSpanned(
+          nextLine,
+          properties: currentLine.properties,
+        ),
+      );
       t = t.collapse(after: newLineIndex);
       toFocus ??= paragraphs[lineIndex + 1] as LineState;
     }
@@ -278,6 +281,29 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
 
     _rebuild((r) => r.insert(index, newLine));
     return newLine;
+  }
+
+  /// Apply a text attribute to the currently focused line, if there is one.
+  void setCurrentLineStyle(TextAttribute attribute) {
+    final line = focusedLine;
+    if (line != null) {
+      final ctrl = line.controller;
+      final span = AttributeSpan.fixed(
+        attribute,
+        0,
+        maxSpanLength,
+      );
+      ctrl.spans = ctrl.spans.merge(span);
+    }
+  }
+
+  /// Remove a text attribute from the currently focused line, if there is one.
+  void unsetCurrentLineStyle(TextAttribute attribute) {
+    final line = focusedLine;
+    if (line != null) {
+      final ctrl = line.controller;
+      ctrl.spans = ctrl.spans.removeAll(attribute);
+    }
   }
 
   /// Set the [LineState.properties] for [line].

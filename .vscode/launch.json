@@ -6,11 +6,9 @@
     "configurations": [
         {
             "name": "example",
-            //"cwd": "example",
-            "cwd": "packages/boustro_starter/example",
+            "cwd": "example",
             "request": "launch",
             "type": "dart",
-            
         }
     ]
 }
