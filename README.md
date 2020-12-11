@@ -1,5 +1,5 @@
 
-<p style="text-align: center">
+<p align="center">
   <a href="https://github.com/Jjagg/boustro/actions"><img src="https://github.com/Jjagg/boustro/workflows/Build/badge.svg" alt="Build Status"></a>
 </p>
 
