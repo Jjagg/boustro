@@ -306,6 +306,27 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     }
   }
 
+  /// Toggle an attribute for the current line.
+  ///
+  /// Calls either [setCurrentLineStyle] or [unsetCurrentLineStyle] depending
+  /// on whether the attribute is already applied.
+  void toggleCurrentLineStyle(TextAttribute attribute) {
+    final line = focusedLine;
+    if (line != null) {
+      final ctrl = line.controller;
+      if (line.controller.isApplied(attribute)) {
+        ctrl.spans = ctrl.spans.removeAll(attribute);
+      } else {
+        final span = AttributeSpan.fixed(
+          attribute,
+          0,
+          maxSpanLength,
+        );
+        ctrl.spans = ctrl.spans.merge(span);
+      }
+    }
+  }
+
   /// Set the [LineState.properties] for [line].
   void setLineProperties(LineState line, Map<String, dynamic> properties) {
     final lineIndex = paragraphs.indexWhere((l) => l is LineState && l == line);
