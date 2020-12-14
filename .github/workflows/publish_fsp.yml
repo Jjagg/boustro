@@ -1,66 +1,54 @@
-name: Publish flutter_spanned_controller
+name: Publish
 
 on:
-  workflow_dispatch:
+  workflow_run:
+    workflows: ["Build"]
+    branches: [main]
+    types: [completed]
 
-defaults:
-  run:
-    working-directory: packages/flutter_spanned_controller
-    
 env:
   channel: dev
 
 jobs:
-  validate:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - uses: subosito/flutter-action@v1
-        with:
-          channel: ${{env.channel}}
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Check format
-        run: flutter format --set-exit-if-changed .
-
-      - name: Analyze
-        run: flutter analyze
-
-      - name: Run tests
-        run: flutter test -r expanded
-
   publish:
-    needs: validate
+    if: github.event.workflow_run.conclusion == 'success'
 
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        package:
+          - packages/flutter_spanned_controller
+ 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Extract version
-        uses: CumulusDS/get-yaml-paths-action@v0.1.0
-        id: version
-        with:
-          file: packages/flutter_spanned_controller/pubspec.yaml
-          version: version
-      
-      - name: Print version
-        run: |
-          echo Publishing flutter_spanned_controller '${{steps.version.outputs.version}}'
-
+        
       - name: Install Flutter
         uses: subosito/flutter-action@v1
         with:
           channel: ${{env.channel}}
 
+      - name: Extract version
+        uses: CumulusDS/get-yaml-paths-action@v0.1.0
+        id: pubspec
+        with:
+          file: packages/flutter_spanned_controller/pubspec.yaml
+          name: name
+          version: version
+
+      - name: Fetch remote version
+        run: |
+          echo "CURRENT_VERSION=`flutter pub global activate ${{steps.pubspec.outputs.name}} | tail -n 1 | perl -ne '/Activated .* (.*)\./ && print $1'`" >> $GITHUB_ENV
+
+      - name: Info
+        run: |
+          echo Upgrading ${{steps.pubspec.outputs.name}} v${{env.CURRENT_VERSION}} -> v${{steps.pubspec.outputs.version}}
+
       - name: Publish dry run
         run: flutter pub publish --dry-run
+        working-directory: ${{ matrix.package }}
+        if: steps.pubspec.outputs.version != env.CURRENT_VERSION
 
       # Create a tag
       - name: Create release tag
@@ -79,23 +67,31 @@ jobs:
                 id
               }
             }}
-          name: ${{format('refs/tags/release_fsp_v{0}', steps.version.outputs.version)}}
+          name: ${{format('refs/tags/release_fsp_v{0}', steps.pubspec.outputs.version)}}
           sha: ${{github.sha}}
+        if: steps.pubspec.outputs.version != env.CURRENT_VERSION
 
       - name: Set Credentials
-        run: ${{secrets.PUB_CREDENTIALS}} > ~/.pub-cache/credentials.json
+        run: |
+          mkdir -p ~/.pub-cache
+          echo "${{secrets.PUB_CREDENTIALS}}" > ~/.pub-cache/credentials.json
+        if: steps.pubspec.outputs.version != env.CURRENT_VERSION
 
       # Publish to pub.dev
       - name: Publish
         run: flutter pub publish -f
+        working-directory: ${{ matrix.package }}
+        if: steps.pubspec.outputs.version != env.CURRENT_VERSION
 
       # Update refreshed pub credentials secret
       - name: Set Credentials Environment Variable
-        run: echo PUB_CREDENTIALS=`cat ~/.pub-cache/credentials.json` >> $GITHUB_ENV
-      
+        run: echo "PUB_CREDENTIALS='`cat ~/.pub-cache/credentials.json`'" >> $GITHUB_ENV
+        if: steps.pubspec.outputs.version != env.CURRENT_VERSION
+
       - name: Update Credentials
         uses: hmanzur/actions-set-secret@2.0.2
         with:
           name: PUB_CREDENTIALS
-          value: $credentials
+          value: ${{env.PUB_CREDENTIALS}}
           token: ${{secrets.REPO_TOKEN}}
+        if: steps.pubspec.outputs.version != env.CURRENT_VERSION
