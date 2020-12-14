@@ -145,6 +145,12 @@ class SpannedStringBuilder {
     templates.forEach(end);
   }
 
+  /// Apply an attribute to all text, including text written after calling this
+  /// method.
+  void lineStyle(TextAttribute attr) {
+    _spanList = _spanList.merge(AttributeSpan.fixed(attr, 0, maxSpanLength));
+  }
+
   void _end(TextAttribute attribute) {
     final span =
         _spanList.spans.firstWhereOrNull((span) => span.attribute == attribute);
