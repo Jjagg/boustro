@@ -82,16 +82,3 @@ jobs:
           name: ${{format('refs/tags/release_fsp_v{0}', steps.pubspec.outputs.version)}}
           sha: ${{github.sha}}
         if: steps.pubspec.outputs.version != env.CURRENT_VERSION
-
-      # Update refreshed pub credentials secret
-      - name: Set Credentials Environment Variable
-        run: echo "PUB_CREDENTIALS='`cat $FLUTTER_HOME/.pub-cache/credentials.json`'" >> $GITHUB_ENV
-        if: steps.pubspec.outputs.version != env.CURRENT_VERSION
-
-      - name: Update Credentials
-        uses: hmanzur/actions-set-secret@v2.0.1
-        with:
-          name: PUB_CREDENTIALS
-          value: ${{env.PUB_CREDENTIALS}}
-          token: ${{secrets.REPO_TOKEN}}
-        if: steps.pubspec.outputs.version != env.CURRENT_VERSION
