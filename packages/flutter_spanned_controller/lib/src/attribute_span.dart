@@ -3,10 +3,9 @@ import 'dart:math' as math;
 import 'package:built_collection/built_collection.dart';
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
-import 'package:meta/meta.dart' show immutable, visibleForTesting;
-
-import 'spanned_text_controller.dart';
+import 'package:meta/meta.dart';
 
 /// Maximum length of a span.
 ///
@@ -293,6 +292,33 @@ class AttributeSpan extends Equatable {
   @override
   String toString() {
     return '(${startBehavior.toBracketStr(true)}$start $end${endBehavior.toBracketStr(false)} $attribute)';
+  }
+}
+
+/// A text attribute with [InsertBehavior] at start and end boundaries.
+///
+/// Can be converted to an [AttributeSpan] with [toSpan] by providing a range
+/// where the attribute should be applied.
+@immutable
+class AttributeSpanTemplate {
+  /// Create an attribute span template.
+  const AttributeSpanTemplate(
+      this.attribute, this.startBehavior, this.endBehavior);
+
+  /// The attribute spans created from this template will apply.
+  ///
+  /// See [AttributeSpan.attribute].
+  final TextAttribute attribute;
+
+  /// See [AttributeSpan.startBehavior].
+  final InsertBehavior startBehavior;
+
+  /// See [AttributeSpan.endBehavior].
+  final InsertBehavior endBehavior;
+
+  /// Create a span from this template.
+  AttributeSpan toSpan(int start, int end) {
+    return AttributeSpan(attribute, start, end, startBehavior, endBehavior);
   }
 }
 
@@ -695,5 +721,68 @@ extension SpanRangeExtensions on TextRange {
       // deletion of the full range
       return null;
     }
+  }
+}
+
+/// Implements [buildTextSpans] for attribute segments.
+extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
+  /// Apply the attributes to [text] and return the resulting [TextSpan].
+  ///
+  /// If [recognizers] is not null, it should contain a mapping
+  /// from each text attribute that wants to apply a gesture to a
+  /// corresponding gesture recognizer. The caller is espected to
+  /// properly initialize this map and manage the lifetimes of the gesture
+  /// recognizers.
+  ///
+  /// If [recognizers] is null no gesture recognizers will be put on the
+  /// spans.
+  TextSpan buildTextSpans({
+    required String text,
+    required TextStyle style,
+    Map<TextAttribute, GestureRecognizer>? recognizers,
+  }) {
+    // TODO multiple gestures
+    // TODO WidgetSpan support
+
+    // Flutter issues:
+    // - Support WidgetSpan in SelectableText: https://github.com/flutter/flutter/issues/38474
+    // - Support WidgetSpan in EditableText: https://github.com/flutter/flutter/issues/30688
+    //   I don't think we need gesture recognizers while editing, but this blocks
+    //   inline embeds.
+
+    final span = TextSpan(
+      style: style,
+      children: map((segment) {
+        final spanText = segment.range.textInside(text);
+
+        GestureRecognizer? spanRecognizer;
+
+        final style = segment.attributes.fold<TextStyle>(
+          const TextStyle(),
+          (style, attr) => style.merge(attr.style),
+        );
+
+        if (recognizers != null) {
+          final spanRecognizers = segment.attributes
+              .map((attr) => recognizers[attr])
+              .whereNotNull()
+              .toList();
+          if (spanRecognizers.length > 1) {
+            throw Exception(
+                'Tried to have more than 1 gesture recognizers on a single span.');
+          } else if (spanRecognizers.length == 1) {
+            spanRecognizer = spanRecognizers.first;
+          }
+        }
+
+        return TextSpan(
+          text: spanText,
+          style: style,
+          recognizer: spanRecognizer,
+        );
+      }).toList(),
+    );
+
+    return span;
   }
 }

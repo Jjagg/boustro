@@ -2,11 +2,11 @@ import 'dart:math' as math;
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 import 'attribute_span.dart';
+import 'spanned_string.dart';
 
 /// Result of [SpannedTextEditingController.diffStrings].
 class StringDiff extends Equatable {
@@ -91,69 +91,6 @@ class AttributeListener {
     for (final entry in _notifiers) {
       entry.notifier.dispose();
     }
-  }
-}
-
-/// Implements [buildTextSpans] for attribute segments.
-extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
-  /// Apply the attributes to [text] and return the resulting [TextSpan].
-  ///
-  /// If [recognizers] is not null, it should contain a mapping
-  /// from each text attribute that wants to apply a gesture to a
-  /// corresponding gesture recognizer. The caller is espected to
-  /// properly initialize this map and manage the lifetimes of the gesture
-  /// recognizers.
-  ///
-  /// If [recognizers] is null no gesture recognizers will be put on the
-  /// spans.
-  TextSpan buildTextSpans({
-    required String text,
-    required TextStyle style,
-    Map<TextAttribute, GestureRecognizer>? recognizers,
-  }) {
-    // TODO multiple gestures
-    // TODO WidgetSpan support
-
-    // Flutter issues:
-    // - Support WidgetSpan in SelectableText: https://github.com/flutter/flutter/issues/38474
-    // - Support WidgetSpan in EditableText: https://github.com/flutter/flutter/issues/30688
-    //   I don't think we need gesture recognizers while editing, but this blocks
-    //   inline embeds.
-
-    final span = TextSpan(
-      style: style,
-      children: map((segment) {
-        final spanText = segment.range.textInside(text);
-
-        GestureRecognizer? spanRecognizer;
-
-        final style = segment.attributes.fold<TextStyle>(
-          const TextStyle(),
-          (style, attr) => style.merge(attr.style),
-        );
-
-        if (recognizers != null) {
-          final spanRecognizers = segment.attributes
-              .map((attr) => recognizers[attr])
-              .whereNotNull()
-              .toList();
-          if (spanRecognizers.length > 1) {
-            throw Exception(
-                'Tried to have more than 1 gesture recognizers on a single span.');
-          } else if (spanRecognizers.length == 1) {
-            spanRecognizer = spanRecognizers.first;
-          }
-        }
-
-        return TextSpan(
-          text: spanText,
-          style: style,
-          recognizer: spanRecognizer,
-        );
-      }).toList(),
-    );
-
-    return span;
   }
 }
 
@@ -258,105 +195,6 @@ extension SpannedTextEditingControllerExtension
     }
 
     return !applied;
-  }
-}
-
-/// Rich text represented with a [String] and a [SpanList].
-@immutable
-class SpannedString {
-  /// Create a spanned string.
-  const SpannedString(this.text, this.spans);
-
-  /// Plain text of this spanned string.
-  final String text;
-
-  /// Formatting of this spanned string.
-  final SpanList spans;
-
-  /// Length of this spanned string. This is equal to the length of [text].
-  int get length => text.length;
-
-  /// Creates a copy of this spanned string, but with the given fields replaced
-  /// with the new values.
-  SpannedString copyWith({String? text, SpanList? spans}) => SpannedString(
-        text ?? this.text,
-        spans ?? this.spans,
-      );
-
-  /// Insert text into this spanned text.
-  ///
-  /// The spans are shifted to accomodate for the insertion.
-  SpannedString insert(int index, String inserted) {
-    assert(index >= 0, 'Index may not be negative.');
-    if (inserted.isEmpty) {
-      return this;
-    }
-
-    return SpannedString(
-      text.substring(0, index) + inserted + text.substring(index),
-      spans.shift(index, inserted.length),
-    );
-  }
-
-  /// Delete a part of this spanned text.
-  ///
-  /// The spans are shifted and deleted to accomodate for the deletion.
-  SpannedString collapse({int? after, int? before}) {
-    assert(after != null || before != null,
-        'after and before may not both be null.');
-    after ??= 0;
-    before ??= text.length;
-    final range = TextRange(start: after, end: before);
-
-    if (range.isCollapsed) {
-      return this;
-    }
-
-    return SpannedString(
-      text.substring(0, after) + text.substring(before),
-      spans.collapse(range),
-    );
-  }
-
-  /// Concatenate another spanned string with this one and return the result.
-  ///
-  /// Touching spans with the same attribute will be merged.
-  SpannedString concat(SpannedString other) {
-    return SpannedString(
-      text + other.text,
-      other.spans
-          .shift(0, text.length)
-          .spans
-          .fold(spans, (ls, s) => ls.merge(s)),
-    );
-  }
-
-  /// Apply [diff] to this spanned string and return the result.
-  ///
-  /// This method will first [collapse] [StringDiff.deleted] and then [insert]
-  /// [StringDiff.inserted].
-  SpannedString applyDiff(StringDiff diff) {
-    // ignore: unnecessary_this
-    return this
-        .collapse(after: diff.index, before: diff.index + diff.deleted.length)
-        .insert(diff.index, diff.inserted);
-  }
-
-  /// Apply the attributes to [text] and return the resulting [TextSpan].
-  ///
-  /// See [AttributeSegmentsExtensions].
-  TextSpan buildTextSpans({
-    required TextStyle style,
-    Map<TextAttribute, GestureRecognizer>? recognizers,
-  }) {
-    final segments = spans.getSegments(text.length);
-    return segments.buildTextSpans(
-        text: text, style: style, recognizers: recognizers);
-  }
-
-  @override
-  String toString() {
-    return '$text <$spans>';
   }
 }
 
