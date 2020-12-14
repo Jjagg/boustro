@@ -149,3 +149,35 @@ class BoustroParagraphEmbed extends BoustroParagraph {
   @override
   List<Object?> get props => [type, value];
 }
+
+/// Builds a [BoustroDocument]. Can be used fluently with cascades.
+class DocumentBuilder {
+  final List<BoustroParagraph> _paragraphs = [];
+  final SpannedStringBuilder _lineBuilder = SpannedStringBuilder();
+
+  /// Add a line of rich text to the document.
+  void line(
+    void Function(SpannedStringBuilder) build, [
+    Map<String, Object> properties = const {},
+  ]) {
+    build(_lineBuilder);
+    final str = _lineBuilder.build();
+    final line = BoustroLine.fromSpanned(str, properties: properties.build());
+    _paragraphs.add(line);
+  }
+
+  /// Add an embed to the document.
+  void embed(String type, Object value) {
+    final embed = BoustroParagraphEmbed(type, value);
+    _paragraphs.add(embed);
+  }
+
+  /// Finishes building and returns the created document.
+  ///
+  /// The builder will be reset and can be reused.
+  BoustroDocument build() {
+    final doc = BoustroDocument(_paragraphs.build());
+    _paragraphs.clear();
+    return doc;
+  }
+}
