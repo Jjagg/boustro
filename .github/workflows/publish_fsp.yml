@@ -50,6 +50,18 @@ jobs:
         working-directory: ${{ matrix.package }}
         if: steps.pubspec.outputs.version != env.CURRENT_VERSION
 
+      - name: Set Credentials
+        run: |
+          mkdir -p $FLUTTER_HOME/.pub-cache
+          echo '${{secrets.PUB_CREDENTIALS}}' > $FLUTTER_HOME/.pub-cache/credentials.json
+        if: steps.pubspec.outputs.version != env.CURRENT_VERSION
+
+      # Publish to pub.dev
+      - name: Publish
+        run: flutter pub publish -f
+        working-directory: ${{ matrix.package }}
+        if: steps.pubspec.outputs.version != env.CURRENT_VERSION
+
       # Create a tag
       - name: Create release tag
         uses: octokit/graphql-action@v2.2.1
@@ -71,21 +83,9 @@ jobs:
           sha: ${{github.sha}}
         if: steps.pubspec.outputs.version != env.CURRENT_VERSION
 
-      - name: Set Credentials
-        run: |
-          mkdir -p ~/.pub-cache
-          echo "${{secrets.PUB_CREDENTIALS}}" > ~/.pub-cache/credentials.json
-        if: steps.pubspec.outputs.version != env.CURRENT_VERSION
-
-      # Publish to pub.dev
-      - name: Publish
-        run: flutter pub publish -f
-        working-directory: ${{ matrix.package }}
-        if: steps.pubspec.outputs.version != env.CURRENT_VERSION
-
       # Update refreshed pub credentials secret
       - name: Set Credentials Environment Variable
-        run: echo "PUB_CREDENTIALS='`cat ~/.pub-cache/credentials.json`'" >> $GITHUB_ENV
+        run: echo "PUB_CREDENTIALS='`cat $FLUTTER_HOME/.pub-cache/credentials.json`'" >> $GITHUB_ENV
         if: steps.pubspec.outputs.version != env.CURRENT_VERSION
 
       - name: Update Credentials
