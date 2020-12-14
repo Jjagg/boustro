@@ -18,13 +18,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Set HEAD SHA
-        run: HEAD_SHA=`git rev-parse ${{github.event.ref}}` >> $GITHUB_ENV
-
-      - name: Print sha
-        run: |
-          echo sha '${{env.HEAD_SHA}}'
-
       - uses: subosito/flutter-action@v1
         with:
           channel: ${{env.channel}}
@@ -41,8 +34,6 @@ jobs:
       - name: Run tests
         run: flutter test -r expanded
 
-    outputs:
-      head-sha: ${{ env.HEAD_SHA }}
   publish:
     needs: validate
 
@@ -74,6 +65,8 @@ jobs:
       # Create a tag
       - name: Create release tag
         uses: octokit/graphql-action@v2.2.1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
           query: |
             mutation createTag($name:String!,$sha:String!) {
@@ -87,14 +80,14 @@ jobs:
               }
             }}
           name: ${{format('refs/tags/release_fsp_v{0}', steps.version.outputs.version)}}
-          sha: ${{needs.validate.outputs.head-sha}}
+          sha: ${{github.sha}}
 
       - name: Set Credentials
         run: ${{secrets.PUB_CREDENTIALS}} > ~/.pub-cache/credentials.json
 
       # Publish to pub.dev
       - name: Publish
-        run: flutter pub publish
+        run: flutter pub publish -f
 
       # Update refreshed pub credentials secret
       - name: Set Credentials Environment Variable
