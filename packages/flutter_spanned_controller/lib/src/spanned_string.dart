@@ -128,7 +128,10 @@ class SpannedStringBuilder {
   ///
   /// Applies any active templates (templates for which [start] was called, but
   /// [end] was not yet called) and the additional templates passed.
-  void write(Object? obj, [List<AttributeSpanTemplate> templates = const []]) {
+  void write(
+    Object? obj, [
+    Iterable<AttributeSpanTemplate> templates = const [],
+  ]) {
     templates.forEach(start);
     _buffer.write(obj);
     templates.forEach(end);
@@ -139,7 +142,7 @@ class SpannedStringBuilder {
   /// Applies any active templates (templates for which [start] was called, but
   /// [end] was not yet called) and the additional templates passed.
   void writeln(Object? obj,
-      [List<AttributeSpanTemplate> templates = const []]) {
+      [Iterable<AttributeSpanTemplate> templates = const []]) {
     templates.forEach(start);
     _buffer.writeln(obj);
     templates.forEach(end);
