@@ -1,0 +1,108 @@
+name: Publish flutter_spanned_controller
+
+on:
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: packages/flutter_spanned_controller
+    
+env:
+  channel: dev
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set HEAD SHA
+        run: HEAD_SHA=`git rev-parse ${{github.event.ref}}` >> $GITHUB_ENV
+
+      - name: Print sha
+        run: |
+          echo sha '${{env.HEAD_SHA}}'
+
+      - uses: subosito/flutter-action@v1
+        with:
+          channel: ${{env.channel}}
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Check format
+        run: flutter format --set-exit-if-changed .
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test -r expanded
+
+    outputs:
+      head-sha: ${{ env.HEAD_SHA }}
+  publish:
+    needs: validate
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Extract version
+        uses: CumulusDS/get-yaml-paths-action@v0.1.0
+        id: version
+        with:
+          file: packages/flutter_spanned_controller/pubspec.yaml
+          version: version
+      
+      - name: Print version
+        run: |
+          echo Publishing flutter_spanned_controller '${{steps.version.outputs.version}}'
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v1
+        with:
+          channel: ${{env.channel}}
+
+      - name: Publish dry run
+        run: flutter pub publish --dry-run
+
+      # Create a tag
+      - name: Create release tag
+        uses: octokit/graphql-action@v2.2.1
+        with:
+          query: |
+            mutation createTag($name:String!,$sha:String!) {
+              createRef(input: {
+              repositoryId: "MDEwOlJlcG9zaXRvcnkzMTU5Njk0ODE="
+              name: $name
+              oid: $sha
+            }) {
+              ref {
+                id
+              }
+            }}
+          name: ${{format('refs/tags/release_fsp_v{0}', steps.version.outputs.version)}}
+          sha: ${{needs.validate.outputs.head-sha}}
+
+      - name: Set Credentials
+        run: ${{secrets.PUB_CREDENTIALS}} > ~/.pub-cache/credentials.json
+
+      # Publish to pub.dev
+      - name: Publish
+        run: flutter pub publish
+
+      # Update refreshed pub credentials secret
+      - name: Set Credentials Environment Variable
+        run: echo PUB_CREDENTIALS=`cat ~/.pub-cache/credentials.json` >> $GITHUB_ENV
+      
+      - name: Update Credentials
+        uses: hmanzur/actions-set-secret@2.0.2
+        with:
+          name: PUB_CREDENTIALS
+          value: $credentials
+          token: ${{secrets.REPO_TOKEN}}
