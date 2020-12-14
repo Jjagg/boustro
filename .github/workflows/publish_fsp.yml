@@ -89,7 +89,7 @@ jobs:
         if: steps.pubspec.outputs.version != env.CURRENT_VERSION
 
       - name: Update Credentials
-        uses: hmanzur/actions-set-secret@2.0.2
+        uses: hmanzur/actions-set-secret@v2.0.1
         with:
           name: PUB_CREDENTIALS
           value: ${{env.PUB_CREDENTIALS}}
