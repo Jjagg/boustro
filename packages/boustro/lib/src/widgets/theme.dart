@@ -25,12 +25,6 @@ class BoustroTheme extends InheritedTheme {
   /// Returns the [data] from the closest [BoustroTheme] ancestor. If there is
   /// no ancestor, it returns [BoustroThemeData.light] or
   /// [BoustroThemeData.dark] depending on the [Theme]'s brightness.
-  ///
-  /// Typical usage is as follows:
-  ///
-  /// ```dart
-  /// BoustroThemeData theme = BoustroTheme.of(context);
-  /// ```
   static BoustroThemeData of(BuildContext context) {
     final boustroTheme =
         context.dependOnInheritedWidgetOfExactType<BoustroTheme>();
