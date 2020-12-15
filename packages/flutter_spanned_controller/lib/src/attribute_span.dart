@@ -167,6 +167,118 @@ extension InsertBehaviorExtension on InsertBehavior {
   }
 }
 
+/// A range with a [start] and [end] index.
+class Range extends Equatable {
+  /// Create a range.
+  const Range(this.start, this.end)
+      : assert(start >= 0 && end >= 0, 'Start and end may not be negative.'),
+        assert(start <= end, 'End must be larger than or equal to start.');
+
+  /// Create a range with the same start and end point.
+  const Range.collapsed(int index) : this(index, index);
+
+  /// Start of the range.
+  final int start;
+
+  /// End of the range.
+  final int end;
+
+  /// Create a range with the given [start] and the end from this range.
+  Range withStart(int start) => Range(start, end);
+
+  /// Create a range with the start from this range and the given [end].
+  Range withEnd(int end) => Range(start, end);
+
+  /// True if `start == end`;
+  bool get isCollapsed => start == end;
+
+  /// Get the size of this range. Equal to [end] - [start].
+  int get size {
+    return end - start;
+  }
+
+  /// Copy this range with the given fields replaced replaced with the new
+  /// values.
+  Range copyWith({int? start, int? end}) =>
+      Range(start ?? this.start, end ?? this.end);
+
+  /// True if this range does not touch or overlap [other].
+  bool misses(Range other) {
+    return start > other.end || end < other.start;
+  }
+
+  /// True if this range touches [other], i.e. it either overlaps or one of its
+  /// endpoints is equal to an endpoint of [other].
+  bool touches(Range other) {
+    return !misses(other);
+  }
+
+  /// True of this range overlaps with [other].
+  bool overlaps(Range other) {
+    return start < other.end && end > other.start;
+  }
+
+  /// True if this range fully contains [other] (non-strictly).
+  bool contains(Range other) {
+    return start <= other.start && other.end <= end;
+  }
+
+  /// Combine a touching range with this one and return the result.
+  Range merge(Range other) {
+    assert(touches(other), 'Ranges must touch to be merged.');
+    return Range(
+      math.min(start, other.start),
+      math.max(end, other.end),
+    );
+  }
+
+  // Normalize this range. If [isNormalized] is false this returns a range
+  // with [start] and [end] flipped.
+  //
+  // If this range is invalid this returns an identical range.
+  //Range normalize() {
+  //  if (isNormalized) {
+  //    return this;
+  //  }
+
+  //  return TextRange(start: end, end: start);
+  //}
+
+  /// Get the result after deleting a range from this range.
+  Range? splice(Range removedSegment) {
+    if (start <= removedSegment.start && removedSegment.end <= end) {
+      // deletion inside this range
+      return withEnd(end - removedSegment.size);
+    }
+    if (removedSegment.start >= end) {
+      // deletion after this range
+      return this;
+    }
+    if (removedSegment.end <= start) {
+      // deletion before this range
+      return Range(
+          start - removedSegment.size,
+          end - removedSegment.size);
+    }
+    if (removedSegment.start <= start && removedSegment.end <= end) {
+      // deletion with the start of this range
+      return Range(
+          removedSegment.start, end - removedSegment.size);
+    }
+    if (start <= removedSegment.start && end <= removedSegment.end) {
+      // deletion with the end of this range
+      return copyWith(end: removedSegment.start);
+    }
+    if (removedSegment.start <= start && end <= removedSegment.end) {
+      // deletion of the full range
+      return null;
+    }
+  }
+
+  @override
+  List<Object?> get props => [start, end];
+}
+
 /// A [TextAttribute] applied to a [range] of text with rules for
 /// expansion on [shift].
 @immutable
@@ -203,7 +315,7 @@ class AttributeSpan extends Equatable {
   final int end;
 
   /// Range where this span is applied.
-  TextRange get range => TextRange(start: start, end: end);
+  Range get range => Range(start, end);
 
   /// Size of the range of this span.
   int get size => end - start;
@@ -219,7 +331,7 @@ class AttributeSpan extends Equatable {
 
   /// Returns true if the [range] of this span is collapsed.
   ///
-  /// See [TextRange.isCollapsed].
+  /// See [Range.isCollapsed].
   bool get isCollapsed => start == end;
 
   /// Inverse of [isCollapsed].
@@ -235,7 +347,7 @@ class AttributeSpan extends Equatable {
   bool get isNotExpandable => !isExpandable;
 
   /// Returns true if this span is not expandable and its [range] is collapsed.
-  /// (see [isNotExpandable] and [TextRange.isCollapsed]).
+  /// (see [isNotExpandable] and [Range.isCollapsed]).
   bool get isUseless => isNotExpandable && isCollapsed;
 
   /// True if this span is not expandable
@@ -306,9 +418,7 @@ class AttributeSpan extends Equatable {
   }
 
   /// Return the resulting span after deleting source text in [collapseRange].
-  AttributeSpan? collapse(TextRange collapseRange) {
-    assert(collapseRange.isValid && collapseRange.isNormalized,
-        'Range must be valid and normalized.');
+  AttributeSpan? collapse(Range collapseRange) {
     if (isFixed) {
       return this;
     } else {
@@ -320,9 +430,7 @@ class AttributeSpan extends Equatable {
   }
 
   /// Returns true if this span is applied to the full range of text.
-  bool isApplied(TextRange textRange) {
-    assert(textRange.isValid && textRange.isNormalized,
-        'Range must be valid and normalized.');
+  bool isApplied(Range textRange) {
     if (textRange.isCollapsed) {
       return willApply(textRange.start);
     }
@@ -545,22 +653,20 @@ class SpanList extends Equatable {
   /// full range of text.
   ///
   /// If range is collapsed, returns the result of [willApply] for [attribute].
-  bool isApplied(TextAttribute attribute, TextRange range) {
-    assert(range.isValid && range.isNormalized,
-        'Range must be valid and normalized.');
+  bool isApplied(TextAttribute attribute, Range range) {
     return _getSpansIn(range, attribute).any(
-      (s) => s.isApplied(range.normalize()),
+      (s) => s.isApplied(range),
     );
   }
 
   /// Returns true if an insertion at [index] would get [attribute] applied
   /// to it due to a spans [InsertBehavior].
   bool willApply(TextAttribute attribute, int index) {
-    return _getSpansIn(TextRange.collapsed(index), attribute)
+    return _getSpansIn(Range.collapsed(index), attribute)
         .any((s) => s.willApply(index));
   }
 
-  Iterable<AttributeSpan> _getSpansIn(TextRange range, TextAttribute attr) =>
+  Iterable<AttributeSpan> _getSpansIn(Range range, TextAttribute attr) =>
       _getSpans(
         spans.where((s) => s.range.touches(range)),
         attr,
@@ -620,7 +726,7 @@ class SpanList extends Equatable {
   ///
   /// This method can remove parts of spans if the range does not cover
   /// the range of matching spans.
-  SpanList removeFrom(TextRange range, TextAttribute attribute) {
+  SpanList removeFrom(Range range, TextAttribute attribute) {
     return SpanList(
       _spans.rebuild(
         (b) => b.expand(
@@ -653,12 +759,7 @@ class SpanList extends Equatable {
   }
 
   /// Collapse span with a deletion at [range].
-  SpanList collapse(TextRange range) {
-    if (!range.isValid || !range.isNormalized) {
-      throw ArgumentError.value(
-          range, 'range', 'Range must be valid and normalized.');
-    }
-
+  SpanList collapse(Range range) {
     if (range.isCollapsed) {
       return this;
     }
@@ -677,101 +778,6 @@ class SpanList extends Equatable {
 
   @override
   List<Object?> get props => [_spans];
-}
-
-/// Extensions for spans on text range.
-@visibleForTesting
-extension SpanRangeExtensions on TextRange {
-  /// Get the length of this range. Equal to [end] - [start].
-  int get length {
-    assert(isValid && isNormalized, 'Range must be valid and normalized.');
-    return end - start;
-  }
-
-  /// Copy this range with the given fields replaced replaced with the new
-  /// values.
-  TextRange copyWith({int? start, int? end}) =>
-      TextRange(start: start ?? this.start, end: end ?? this.end);
-
-  /// True if this range does not touch or overlap [other].
-  bool misses(TextRange other) {
-    assert(isValid && isNormalized, 'Range must be valid and normalized.');
-    return start > other.end || end < other.start;
-  }
-
-  /// True if this range touches [other], i.e. it either overlaps or one of its
-  /// endpoints is equal to an endpoint of [other].
-  bool touches(TextRange other) {
-    assert(isValid && isNormalized, 'Range must be valid and normalized.');
-    return !misses(other);
-  }
-
-  /// True of this range overlaps with [other].
-  bool overlaps(TextRange other) {
-    assert(isValid && isNormalized, 'Range must be valid and normalized.');
-    return start < other.end && end > other.start;
-  }
-
-  /// True if this range fully contains [other] (non-strictly).
-  bool contains(TextRange other) {
-    assert(isValid && isNormalized, 'Range must be valid and normalized.');
-    return start <= other.start && other.end <= end;
-  }
-
-  /// Combine a touching range with this one and return the result.
-  TextRange merge(TextRange other) {
-    assert(isValid && isNormalized, 'Range must be valid and normalized.');
-    assert(touches(other), 'Ranges must touch to be merged.');
-    return TextRange(
-      start: math.min(start, other.start),
-      end: math.max(end, other.end),
-    );
-  }
-
-  /// Normalize this range. If [isNormalized] is false this returns a range
-  /// with [start] and [end] flipped.
-  ///
-  /// If this range is invalid this returns an identical range.
-  TextRange normalize() {
-    if (isNormalized) {
-      return this;
-    }
-
-    return TextRange(start: end, end: start);
-  }
-
-  /// Get the result after deleting a range from this range.
-  TextRange? splice(TextRange removedSegment) {
-    assert(removedSegment.isValid && removedSegment.isNormalized,
-        'Range must be valid and normalized.');
-    if (start <= removedSegment.start && removedSegment.end <= end) {
-      // deletion inside this range
-      return copyWith(end: end - removedSegment.length);
-    }
-    if (removedSegment.start >= end) {
-      // deletion after this range
-      return this;
-    }
-    if (removedSegment.end <= start) {
-      // deletion before this range
-      return TextRange(
-          start: start - removedSegment.length,
-          end: end - removedSegment.length);
-    }
-    if (removedSegment.start <= start && removedSegment.end <= end) {
-      // deletion with the start of this range
-      return TextRange(
-          start: removedSegment.start, end: end - removedSegment.length);
-    }
-    if (start <= removedSegment.start && end <= removedSegment.end) {
-      // deletion with the end of this range
-      return copyWith(end: removedSegment.start);
-    }
-    if (removedSegment.start <= start && end <= removedSegment.end) {
-      // deletion of the full range
-      return null;
-    }
-  }
 }
 
 /// Implements [buildTextSpans] for attribute segments.
