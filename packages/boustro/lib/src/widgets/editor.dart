@@ -44,17 +44,21 @@ class BoustroView extends StatefulWidget {
 }
 
 class _BoustroViewState extends State<BoustroView> {
-  late final Map<TextAttribute, GestureRecognizer> _recognizers =
+  late final Map<TextAttributeValue, GestureRecognizer> _recognizers =
       _createRecognizers();
 
-  Map<TextAttribute, GestureRecognizer> _createRecognizers() {
-    final attributes = widget.document.paragraphs.expand<TextAttribute>((p) {
-      return p.match<Iterable<TextAttribute>>(
-          embed: (e) => [],
-          line: (l) => l.spanList.spans.map((s) => s.attribute));
+  Map<TextAttributeValue, GestureRecognizer> _createRecognizers() {
+    final attributes =
+        widget.document.paragraphs.expand<TextAttributeValue>((p) {
+      final attributeTheme = AttributeTheme.of(context);
+      return p
+          .match<Iterable<TextAttribute>>(
+              embed: (e) => [],
+              line: (l) => l.spanList.spans.map((s) => s.attribute))
+          .map((attr) => attr.resolve(attributeTheme));
     }).toSet();
 
-    final recognizers = <TextAttribute, GestureRecognizer>{};
+    final recognizers = <TextAttributeValue, GestureRecognizer>{};
     for (final attr in attributes) {
       if (attr.hasGestures) {
         GestureRecognizer? recognizer;

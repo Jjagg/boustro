@@ -779,7 +779,7 @@ extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
   /// Apply the attributes to [text] and return the resulting [TextSpan].
   ///
   /// If [recognizers] is not null, it should contain a mapping
-  /// from each text attribute that wants to apply a gesture to a
+  /// from each text attribute value that wants to apply a gesture to a
   /// corresponding gesture recognizer. The caller is espected to
   /// properly initialize this map and manage the lifetimes of the gesture
   /// recognizers.
@@ -790,7 +790,7 @@ extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
     required String text,
     required TextStyle style,
     AttributeThemeData? attributeTheme,
-    Map<TextAttribute, GestureRecognizer>? recognizers,
+    Map<TextAttributeValue, GestureRecognizer>? recognizers,
   }) {
     // TODO multiple gestures
     // TODO WidgetSpan support
@@ -810,18 +810,17 @@ extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
 
         final theme = attributeTheme ?? AttributeThemeData.empty;
 
-        final style = segment.attributes
-            .map((attr) => attr.resolve(theme))
-            .fold<TextStyle>(
-              const TextStyle(),
-              (style, attr) => style.merge(attr.style),
-            );
+        final attrs =
+            segment.attributes.map((attr) => attr.resolve(theme)).toList();
+
+        final style = attrs.fold<TextStyle>(
+          const TextStyle(),
+          (style, attr) => style.merge(attr.style),
+        );
 
         if (recognizers != null) {
-          final spanRecognizers = segment.attributes
-              .map((attr) => recognizers[attr])
-              .whereNotNull()
-              .toList();
+          final spanRecognizers =
+              attrs.map((attr) => recognizers[attr]).whereNotNull().toList();
           if (spanRecognizers.length > 1) {
             throw Exception(
                 'Tried to have more than 1 gesture recognizers on a single span.');

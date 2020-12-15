@@ -93,9 +93,8 @@ class SpannedString {
   /// See [AttributeSegmentsExtensions].
   TextSpan buildTextSpans({
     required TextStyle style,
-    required BuildContext context,
     AttributeThemeData? attributeTheme,
-    Map<TextAttribute, GestureRecognizer>? recognizers,
+    Map<TextAttributeValue, GestureRecognizer>? recognizers,
   }) {
     final segments = spans.getSegments(text.length);
     return segments.buildTextSpans(

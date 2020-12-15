@@ -157,4 +157,9 @@ void main() {
   });
 }
 
-class TestAttribute extends TextAttribute {}
+class TestAttribute extends TextAttribute {
+  @override
+  TextAttributeValue resolve(AttributeThemeData theme) {
+    throw UnimplementedError();
+  }
+}
