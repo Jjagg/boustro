@@ -8,6 +8,7 @@
 import 'package:flutter_spanned_controller/src/attribute_span.dart';
 import 'package:flutter_spanned_controller/src/spanned_text_controller.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_spanned_controller/src/theme.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -208,7 +209,12 @@ void main() {
   });
 }
 
-abstract class MockSpan extends TextAttribute {}
+abstract class MockSpan extends TextAttribute {
+  @override
+  TextAttributeValue resolve(AttributeThemeData theme) {
+    throw UnimplementedError();
+  }
+}
 
 AttributeSpan sp<T extends MockSpan>(
   T attr,

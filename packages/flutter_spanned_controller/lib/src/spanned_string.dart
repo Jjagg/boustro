@@ -5,6 +5,7 @@ import 'package:meta/meta.dart';
 
 import 'attribute_span.dart';
 import 'spanned_text_controller.dart';
+import 'theme.dart';
 
 /// Rich text represented with a [String] and a [SpanList].
 @immutable
@@ -92,11 +93,17 @@ class SpannedString {
   /// See [AttributeSegmentsExtensions].
   TextSpan buildTextSpans({
     required TextStyle style,
+    required BuildContext context,
+    AttributeThemeData? attributeTheme,
     Map<TextAttribute, GestureRecognizer>? recognizers,
   }) {
     final segments = spans.getSegments(text.length);
     return segments.buildTextSpans(
-        text: text, style: style, recognizers: recognizers);
+      text: text,
+      style: style,
+      attributeTheme: attributeTheme,
+      recognizers: recognizers,
+    );
   }
 
   @override
@@ -141,8 +148,10 @@ class SpannedStringBuilder {
   ///
   /// Applies any active templates (templates for which [start] was called, but
   /// [end] was not yet called) and the additional templates passed.
-  void writeln(Object? obj,
-      [Iterable<AttributeSpanTemplate> templates = const []]) {
+  void writeln(
+    Object? obj, [
+    Iterable<AttributeSpanTemplate> templates = const [],
+  ]) {
     templates.forEach(start);
     _buffer.writeln(obj);
     templates.forEach(end);

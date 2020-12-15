@@ -3,9 +3,12 @@ import 'dart:math' as math;
 import 'package:built_collection/built_collection.dart';
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:meta/meta.dart';
+
+import 'theme.dart';
 
 /// Maximum length of a span.
 ///
@@ -18,12 +21,59 @@ const maxSpanLength = (2 << 32) - 1;
 /// Applying an attribute to a span of text can format or add gesture handlers
 /// to that span.
 ///
-/// If you extend this class it is very strongly recommended you override [props]
-/// or the equality operator or use a singleton for the attribute.
+/// If you extend this class it is very strongly recommended you override
+/// the equality operator or use a singleton for the attribute, because
+/// the span system uses equality tests for operations like [SpanList.merge]
+/// and [SpanList.isApplied]/[SpanList.willApply].
+abstract class TextAttribute {
+  /// Base constant constructor for inheritors that have a constant constructor.
+  const TextAttribute();
+
+  /// Constructor for attributes that always return the same value in [resolve].
+  factory TextAttribute.simple({
+    String? debugName,
+    TextStyle? style,
+    GestureTapCallback? onTap,
+    GestureTapCallback? onSecondaryTap,
+    GestureTapCallback? onDoubleTap,
+    GestureLongPressCallback? onLongPress,
+  }) {
+    return _SimpleTextAttribute(TextAttributeValue(
+      debugName: debugName,
+      style: style,
+      onTap: onTap,
+      onSecondaryTap: onSecondaryTap,
+      onDoubleTap: onDoubleTap,
+      onLongPress: onLongPress,
+    ));
+  }
+
+  /// Returns a text attribute value that can depend on [theme].
+  TextAttributeValue resolve(AttributeThemeData theme);
+}
+
+/// A text attribute with a value that does not depend on a [BuildContext].
+class _SimpleTextAttribute extends TextAttribute with EquatableMixin {
+  /// Create a simple text attribute.
+  const _SimpleTextAttribute(this.value);
+
+  /// The value that will be returned by [resolve].
+  final TextAttributeValue value;
+
+  @override
+  TextAttributeValue resolve(AttributeThemeData theme) => value;
+
+  @override
+  List<Object?> get props => [value];
+}
+
+/// Style and gesture handlers that can be applied to a [TextSpan].
+///
+/// Produced by [TextAttribute.resolve].
 @immutable
-class TextAttribute extends Equatable {
+class TextAttributeValue extends Equatable {
   /// Constant constructor for text attributes.
-  const TextAttribute({
+  const TextAttributeValue({
     this.debugName,
     this.style,
     this.onTap,
@@ -734,11 +784,12 @@ extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
   /// properly initialize this map and manage the lifetimes of the gesture
   /// recognizers.
   ///
-  /// If [recognizers] is null no gesture recognizers will be put on the
+  /// If [recognizers] is null, no gesture recognizers will be put on the
   /// spans.
   TextSpan buildTextSpans({
     required String text,
     required TextStyle style,
+    AttributeThemeData? attributeTheme,
     Map<TextAttribute, GestureRecognizer>? recognizers,
   }) {
     // TODO multiple gestures
@@ -757,10 +808,14 @@ extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
 
         GestureRecognizer? spanRecognizer;
 
-        final style = segment.attributes.fold<TextStyle>(
-          const TextStyle(),
-          (style, attr) => style.merge(attr.style),
-        );
+        final theme = attributeTheme ?? AttributeThemeData.empty;
+
+        final style = segment.attributes
+            .map((attr) => attr.resolve(theme))
+            .fold<TextStyle>(
+              const TextStyle(),
+              (style, attr) => style.merge(attr.style),
+            );
 
         if (recognizers != null) {
           final spanRecognizers = segment.attributes

@@ -7,19 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-## [0.2.0-0] - 2020-12-14
-
 ### Added
 
-- SpannedStringBuilder to fluently build SpannedText.
-
-## [0.1.1-0] - 2020-12-14
+- AttributeTheme to customize TextAttributes.
 
 ### Changed
 
-- Replaced template readme with short explanation
+- TextAttribute now has a resolve method that returns the actual information for
+  applying the attribute in the form of TextAttributeValue.
 
-## [0.1.0-0] - 2020-12-11
+## [0.2.0-0] — 2020-12-14
+
+### Added
+
+- SpannedStringBuilder to fluently build SpannedString.
+
+## [0.1.1-0] — 2020-12-14
+
+### Changed
+
+- Replaced template README with short explanation.
+
+## [0.1.0-0] — 2020-12-11
 
 Initial release.
 

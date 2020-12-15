@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 
 import 'attribute_span.dart';
 import 'spanned_string.dart';
+import 'theme.dart';
 
 /// Result of [SpannedTextEditingController.diffStrings].
 class StringDiff extends Equatable {
@@ -211,12 +212,13 @@ class SpannedTextEditingController implements TextEditingController {
   SpannedTextEditingController({
     TextAttribute? compositionAttribute,
     this.processTextValue = _defaultProcessTextValue,
+    this.attributeTheme,
     String? text,
     Iterable<AttributeSpan>? spans,
   })  : compositionAttribute = compositionAttribute ??
-            const TextAttribute(
+            TextAttribute.simple(
               debugName: 'composition underline',
-              style: TextStyle(decoration: TextDecoration.underline),
+              style: const TextStyle(decoration: TextDecoration.underline),
             ),
         _textController = TextEditingController(text: text),
         _spans = SpanList(spans);
@@ -243,6 +245,9 @@ class SpannedTextEditingController implements TextEditingController {
         text: text ?? this.text,
         spans: spans ?? this.spans.spans);
   }
+
+  /// The theme for the attributes applied by this span.
+  final AttributeThemeData? attributeTheme;
 
   /// The attribute that's applied to the active composition.
   ///
