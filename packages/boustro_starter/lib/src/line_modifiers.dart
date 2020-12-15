@@ -67,7 +67,9 @@ class TextAlignedLeadingMarginModifier extends StatelessWidget {
   Widget build(BuildContext context) {
     final btheme = BoustroTheme.of(context);
     // Apply vertical line padding to align with the text.
-    final padding = btheme.linePadding.resolve(Directionality.of(context));
+    final padding = (btheme.linePadding ??
+            BoustroThemeData.fallbackForContext(context).linePadding!)
+        .resolve(Directionality.of(context));
     return LeadingMarginModifier(
         leading: Padding(
             padding: EdgeInsets.only(

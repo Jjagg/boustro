@@ -128,8 +128,10 @@ class _BoustroViewState extends State<BoustroView> {
       }
       final scope = BoustroScope.of(buildContext);
       final btheme = BoustroTheme.of(context);
+      final padding = btheme.embedPadding ??
+          BoustroThemeData.fallbackForContext(buildContext).embedPadding!;
       result = Padding(
-        padding: btheme.embedPadding,
+        padding: padding,
         child: builder.buildEmbed(scope, embed),
       );
     }
@@ -170,10 +172,14 @@ class BoustroEditor extends StatelessWidget {
   }
 
   Widget _buildParagraphs(
-      BuildContext buildContext, BuiltList<ParagraphState> paragraphs) {
+    BuildContext buildContext,
+    BuiltList<ParagraphState> paragraphs,
+  ) {
     final btheme = BoustroTheme.of(buildContext);
     final directionality = Directionality.of(buildContext);
-    final editorPadding = btheme.editorPadding.resolve(directionality);
+    final editorPadding = (btheme.editorPadding ??
+            BoustroThemeData.fallbackForContext(buildContext).editorPadding!)
+        .resolve(directionality);
 
     // We want taps in the free area below the listview to set focus
     // on the last editor. To do that we apply editorPadding in a special
@@ -216,7 +222,9 @@ class BoustroEditor extends StatelessWidget {
   Widget _buildParagraph(BuildContext buildContext, int index) {
     final btheme = BoustroTheme.of(buildContext);
     final directionality = Directionality.of(buildContext);
-    final linePadding = btheme.linePadding.resolve(directionality);
+    final linePadding = (btheme.linePadding ??
+            BoustroThemeData.fallbackForContext(buildContext).linePadding!)
+        .resolve(directionality);
 
     Widget result;
     final value = controller.paragraphs[index];
@@ -299,7 +307,9 @@ class BoustroLineModifier extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final btheme = BoustroTheme.of(context);
-    final linePadding = btheme.linePadding.resolve(Directionality.of(context));
+    final linePadding = (btheme.linePadding ??
+            BoustroThemeData.fallbackForContext(context).linePadding!)
+        .resolve(Directionality.of(context));
     return Padding(
       padding:
           EdgeInsets.only(left: linePadding.left, right: linePadding.right),

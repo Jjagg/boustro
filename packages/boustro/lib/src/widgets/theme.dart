@@ -22,9 +22,6 @@ class BoustroTheme extends InheritedTheme {
   /// The properties to apply to descendant boustro widgets.
   final BoustroThemeData data;
 
-  static final BoustroThemeData _fallbackLight = BoustroThemeData.light();
-  static final BoustroThemeData _fallbackDark = BoustroThemeData.dark();
-
   /// Returns the [data] from the closest [BoustroTheme] ancestor. If there is
   /// no ancestor, it returns [BoustroThemeData.light] or
   /// [BoustroThemeData.dark] depending on the [Theme]'s brightness.
@@ -41,7 +38,9 @@ class BoustroTheme extends InheritedTheme {
       return boustroTheme.data;
     }
     final brightness = Theme.of(context).brightness;
-    return brightness == Brightness.light ? _fallbackLight : _fallbackDark;
+    return brightness == Brightness.light
+        ? BoustroThemeData.light
+        : BoustroThemeData.dark;
   }
 
   @override
@@ -79,7 +78,7 @@ class BoustroThemeData extends Equatable {
   /// Default theme for [brightness].
   ///
   /// Either [BoustroThemeData.light] or [BoustroThemeData.dark].
-  factory BoustroThemeData.fallback({
+  factory BoustroThemeData._fallback({
     required Brightness brightness,
   }) {
     final light = brightness == Brightness.light;
@@ -100,13 +99,32 @@ class BoustroThemeData extends Equatable {
     );
   }
 
-  /// Default light theme.
-  factory BoustroThemeData.light() =>
-      BoustroThemeData.fallback(brightness: Brightness.light);
+  /// Default boustro theme for [brightness]. Has a non-null value for all
+  /// fields.
+  factory BoustroThemeData.fallback({required Brightness brightness}) =>
+      brightness == Brightness.light ? light : dark;
 
-  /// Default dark theme.
-  factory BoustroThemeData.dark() =>
-      BoustroThemeData.fallback(brightness: Brightness.dark);
+  /// Default boustro theme for [theme]. Has a non-null value for all
+  /// fields.
+  factory BoustroThemeData.fallbackForTheme(ThemeData theme) =>
+      theme.brightness == Brightness.light ? light : dark;
+
+  /// Default boustro theme for [context]. Has a non-null value for all
+  /// fields.
+  factory BoustroThemeData.fallbackForContext(BuildContext context) =>
+      BoustroThemeData.fallbackForTheme(Theme.of(context));
+
+  factory BoustroThemeData._light() =>
+      BoustroThemeData._fallback(brightness: Brightness.light);
+
+  factory BoustroThemeData._dark() =>
+      BoustroThemeData._fallback(brightness: Brightness.dark);
+
+  /// Default light theme. Has a non-null value for all fields.
+  static late BoustroThemeData light = BoustroThemeData._light();
+
+  /// Default dark theme. Has a non-null value for all fields.
+  static late BoustroThemeData dark = BoustroThemeData._dark();
 
   /// Create a copy of this theme with passed fields replaced with the new
   /// value.
@@ -136,37 +154,37 @@ class BoustroThemeData extends Equatable {
   }
 
   /// Background color of a [BoustroEditor].
-  final Color editorColor;
+  final Color? editorColor;
 
   /// Padding inside the scrollable part of a [BoustroEditor].
-  final EdgeInsetsGeometry editorPadding;
+  final EdgeInsetsGeometry? editorPadding;
 
   /// Color and decoration for a [Toolbar].
-  final BoxDecoration toolbarDecoration;
+  final BoxDecoration? toolbarDecoration;
 
   /// Height of a [Toolbar].
-  final double toolbarHeight;
+  final double? toolbarHeight;
 
   /// Extent for items in [Toolbar].
-  final double toolbarItemExtent;
+  final double? toolbarItemExtent;
 
   /// Padding around [Toolbar]. [toolbarDecoration] is
   /// outside of this padding and the items are inside it.
-  final EdgeInsetsGeometry toolbarPadding;
+  final EdgeInsetsGeometry? toolbarPadding;
 
   /// Duration to crossfade when the toolbar items change (because of a nested
   /// menu).
-  final Duration toolbarFadeDuration;
+  final Duration? toolbarFadeDuration;
 
   /// Padding for lines of text.
   ///
   /// The horizontal part of this padding is applied outside of any
   /// [LineParagraphModifier]s, while the vertical part is applied inside of
   /// them.
-  final EdgeInsetsGeometry linePadding;
+  final EdgeInsetsGeometry? linePadding;
 
   /// Padding for embeds.
-  final EdgeInsetsGeometry embedPadding;
+  final EdgeInsetsGeometry? embedPadding;
 
   @override
   List<Object?> get props => [
@@ -187,20 +205,20 @@ class BoustroThemeData extends Equatable {
   static BoustroThemeData lerp(
       BoustroThemeData a, BoustroThemeData b, double t) {
     return BoustroThemeData.raw(
-      editorColor: Color.lerp(a.editorColor, b.editorColor, t)!,
+      editorColor: Color.lerp(a.editorColor, b.editorColor, t),
       editorPadding:
-          EdgeInsetsGeometry.lerp(a.editorPadding, b.editorPadding, t)!,
+          EdgeInsetsGeometry.lerp(a.editorPadding, b.editorPadding, t),
       toolbarDecoration:
-          BoxDecoration.lerp(a.toolbarDecoration, b.toolbarDecoration, t)!,
-      toolbarHeight: ui.lerpDouble(a.toolbarHeight, b.toolbarHeight, t)!,
+          BoxDecoration.lerp(a.toolbarDecoration, b.toolbarDecoration, t),
+      toolbarHeight: ui.lerpDouble(a.toolbarHeight, b.toolbarHeight, t),
       toolbarItemExtent:
-          ui.lerpDouble(a.toolbarItemExtent, b.toolbarItemExtent, t)!,
+          ui.lerpDouble(a.toolbarItemExtent, b.toolbarItemExtent, t),
       toolbarPadding:
-          EdgeInsetsGeometry.lerp(a.toolbarPadding, b.toolbarPadding, t)!,
+          EdgeInsetsGeometry.lerp(a.toolbarPadding, b.toolbarPadding, t),
       toolbarFadeDuration:
           t < 0.5 ? a.toolbarFadeDuration : b.toolbarFadeDuration,
-      linePadding: EdgeInsetsGeometry.lerp(a.linePadding, b.linePadding, t)!,
-      embedPadding: EdgeInsetsGeometry.lerp(a.embedPadding, b.embedPadding, t)!,
+      linePadding: EdgeInsetsGeometry.lerp(a.linePadding, b.linePadding, t),
+      embedPadding: EdgeInsetsGeometry.lerp(a.embedPadding, b.embedPadding, t),
     );
   }
 }

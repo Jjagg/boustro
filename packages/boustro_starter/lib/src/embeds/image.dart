@@ -3,7 +3,16 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-/// Embed that presents an image. Its key is 'image' and value should be an [ImageProvider].
+import 'embed_gesture_handler.dart';
+
+/// Embed that presents an image.
+///
+/// Its type is 'image' and value should be an [ImageProvider].
+///
+/// Looks for an [EmbedGestureHandler]<ImageEmbed> to handle gestures.
+/// If one is missing, default gesture handling will be added:
+///
+/// * While editing, tapping the image will toggle focus.
 class ImageEmbed extends ParagraphEmbedBuilder {
   @override
   String get type => 'image';
@@ -39,22 +48,28 @@ class _ImageEmbed extends StatelessWidget {
       return _buildContent(context, imageWrapper: _center);
     }
 
+    final gestureHandler = context
+        .dependOnInheritedWidgetOfExactType<EmbedGestureHandler<ImageEmbed>>();
+
     return Focus(
       focusNode: focusNode,
       child: Builder(
         builder: (context) {
           final focusNode = Focus.of(context);
-          return GestureDetector(
-            onTap: () {
-              if (!focusNode.hasFocus) {
-                focusNode.requestFocus();
-              }
-            },
-            child: _buildContent(
-              context,
-              imageWrapper: _buildOverlay,
-            ),
+          final child = _buildContent(
+            context,
+            imageWrapper: _buildOverlay,
           );
+
+          return gestureHandler?.toDetector(child: child) ??
+              GestureDetector(
+                onTap: () {
+                  if (!focusNode.hasFocus) {
+                    focusNode.requestFocus();
+                  }
+                },
+                child: child,
+              );
         },
       ),
     );

@@ -13,8 +13,14 @@ Widget Function(
   return (context, controller, item) {
     final btheme = BoustroTheme.of(context);
 
-    final toolbarColor = btheme.toolbarDecoration.color ??
-        btheme.toolbarDecoration.gradient?.colors.firstOrNull;
+    final toolbarColor = btheme.toolbarDecoration?.color ??
+        btheme.toolbarDecoration?.gradient?.colors.firstOrNull ??
+        BoustroThemeData.fallbackForContext(context).toolbarDecoration!.color ??
+        BoustroThemeData.fallbackForContext(context)
+            .toolbarDecoration!
+            .gradient
+            ?.colors
+            .firstOrNull;
 
     final Color? decorationColor;
 

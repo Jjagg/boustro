@@ -167,11 +167,13 @@ class Toolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final btheme = BoustroTheme.of(context);
+    final padding = btheme.toolbarPadding ??
+        BoustroThemeData.fallbackForContext(context).toolbarPadding!;
     return Container(
       height: btheme.toolbarHeight,
       decoration: btheme.toolbarDecoration,
       child: Padding(
-        padding: btheme.toolbarPadding,
+        padding: padding,
         child: _ToolbarItemsBuilder(
           documentController: documentController,
           defaultItemBuilder: defaultItemBuilder,
@@ -248,7 +250,9 @@ class _ToolbarItemsBuilder extends StatelessWidget {
             }
 
             return AnimatedSwitcher(
-              duration: theme.toolbarFadeDuration,
+              duration: theme.toolbarFadeDuration ??
+                  BoustroThemeData.fallbackForContext(context)
+                      .toolbarFadeDuration!,
               child: list,
             );
           },
