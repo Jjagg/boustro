@@ -11,20 +11,20 @@ import 'theme.dart';
 @immutable
 class SpannedString {
   /// Create a spanned string.
-  const SpannedString(this.text, this.spans);
+  SpannedString(this.text, this.spans);
 
   /// Plain text of this spanned string.
-  final String text;
+  final Characters text;
 
   /// Formatting of this spanned string.
   final SpanList spans;
 
   /// Length of this spanned string. This is equal to the length of [text].
-  int get length => text.length;
+  late int length = text.length;
 
   /// Creates a copy of this spanned string, but with the given fields replaced
   /// with the new values.
-  SpannedString copyWith({String? text, SpanList? spans}) => SpannedString(
+  SpannedString copyWith({Characters? text, SpanList? spans}) => SpannedString(
         text ?? this.text,
         spans ?? this.spans,
       );
@@ -32,14 +32,14 @@ class SpannedString {
   /// Insert text into this spanned text.
   ///
   /// The spans are shifted to accomodate for the insertion.
-  SpannedString insert(int index, String inserted) {
+  SpannedString insert(int index, Characters inserted) {
     assert(index >= 0, 'Index may not be negative.');
     if (inserted.isEmpty) {
       return this;
     }
 
     return SpannedString(
-      text.substring(0, index) + inserted + text.substring(index),
+      text.getRange(0, index) + inserted + text.getRange(index),
       spans.shift(index, inserted.length),
     );
   }
@@ -51,15 +51,15 @@ class SpannedString {
     assert(after != null || before != null,
         'after and before may not both be null.');
     after ??= 0;
-    before ??= text.length;
-    final range = TextRange(start: after, end: before);
+    before ??= length;
+    final range = Range(after, before);
 
     if (range.isCollapsed) {
       return this;
     }
 
     return SpannedString(
-      text.substring(0, after) + text.substring(before),
+      text.getRange(0, after) + text.getRange(before, length),
       spans.collapse(range),
     );
   }
@@ -96,9 +96,8 @@ class SpannedString {
     AttributeThemeData? attributeTheme,
     Map<TextAttributeValue, GestureRecognizer>? recognizers,
   }) {
-    final segments = spans.getSegments(text.length);
+    final segments = spans.getSegments(text);
     return segments.buildTextSpans(
-      text: text,
       style: style,
       attributeTheme: attributeTheme,
       recognizers: recognizers,
@@ -117,10 +116,12 @@ class SpannedStringBuilder {
   SpanList _spanList = SpanList();
   final List<AttributeSpan> _activeSpans = [];
 
+  int _length = 0;
+
   /// Format written text with [template] until [end] is called for the passed
   /// template.
   void start(AttributeSpanTemplate template) {
-    _activeSpans.add(template.toSpan(_buffer.length, maxSpanLength));
+    _activeSpans.add(template.toSpan(_length, maxSpanLength));
   }
 
   /// Stop formatting added text with [template].
@@ -139,7 +140,11 @@ class SpannedStringBuilder {
     Iterable<AttributeSpanTemplate> templates = const [],
   ]) {
     templates.forEach(start);
-    _buffer.write(obj);
+    final str = obj?.toString();
+    _buffer.write(str);
+    if (str != null) {
+      _length += str.characters.length;
+    }
     templates.forEach(end);
   }
 
@@ -152,7 +157,11 @@ class SpannedStringBuilder {
     Iterable<AttributeSpanTemplate> templates = const [],
   ]) {
     templates.forEach(start);
-    _buffer.writeln(obj);
+    final str = obj?.toString();
+    _buffer.writeln(str);
+    if (str != null) {
+      _length += str.characters.length + 1;
+    }
     templates.forEach(end);
   }
 
@@ -170,7 +179,7 @@ class SpannedStringBuilder {
           '''The template passed to 'end' must be activated by calling 'start' first.''');
     }
 
-    _spanList = _spanList.merge(span.copyWith(end: _buffer.length));
+    _spanList = _spanList.merge(span.copyWith(end: _length));
     _activeSpans.remove(span);
   }
 
@@ -182,7 +191,7 @@ class SpannedStringBuilder {
       _end(span.attribute);
     }
 
-    final str = SpannedString(_buffer.toString(), _spanList);
+    final str = SpannedString(_buffer.toString().characters, _spanList);
     _buffer.clear();
     return str;
   }

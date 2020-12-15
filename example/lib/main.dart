@@ -173,79 +173,87 @@ class _HomeScreenState extends State<HomeScreen> {
             )
           ],
         ),
-        body: BoustroEditor(
-          controller: controller,
-          context: boustroContext,
-        ),
-        bottomNavigationBar: Toolbar(
-          documentController: controller,
-          defaultItemBuilder: (context, controller, item) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-              child: Center(
-                child: IconButton(
-                  splashColor: Colors.transparent,
-                  onPressed: item.onPressed == null
-                      ? null
-                      : () => item.onPressed!(context, controller),
-                  icon: item.title,
-                  tooltip: item.tooltip,
-                ),
+        body: Column(
+          children: [
+            Expanded(
+              child: BoustroEditor(
+                controller: controller,
+                context: boustroContext,
               ),
-            );
-          },
-          items: [
-            toolbar_items.bold,
-            toolbar_items.italic,
-            toolbar_items.underline,
-            ToolbarItem.sublist(
-              title: const Icon(Icons.photo),
+            ),
+            Toolbar(
+              documentController: controller,
+              defaultItemBuilder: (context, controller, item) {
+                return Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                  child: Center(
+                    child: IconButton(
+                      splashColor: Colors.transparent,
+                      onPressed: item.onPressed == null
+                          ? null
+                          : () => item.onPressed!(context, controller),
+                      icon: item.title,
+                      tooltip: item.tooltip,
+                    ),
+                  ),
+                );
+              },
               items: [
+                toolbar_items.bold,
+                toolbar_items.italic,
+                toolbar_items.underline,
+                ToolbarItem.sublist(
+                  title: const Icon(Icons.photo),
+                  items: [
+                    ToolbarItem(
+                      title: const Icon(Icons.photo_camera),
+                      onPressed: (context, controller) {
+                        final embed = controller
+                            .insertEmbedAtCurrent(const BoustroParagraphEmbed(
+                          'image',
+                          NetworkImage(
+                              'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
+                        ));
+                        embed?.focusNode.requestFocus();
+                        if (embed != null) {
+                          Toolbar.popMenu(context);
+                        }
+                      },
+                    ),
+                    ToolbarItem(
+                      title: const Icon(Icons.photo_library),
+                      onPressed: (_, __) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Left as an exercise to the reader.'),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                  tooltip: 'Insert image',
+                ),
                 ToolbarItem(
-                  title: const Icon(Icons.photo_camera),
+                  title: const Icon(Icons.list),
                   onPressed: (context, controller) {
-                    final embed = controller
-                        .insertEmbedAtCurrent(const BoustroParagraphEmbed(
-                      'image',
-                      NetworkImage(
-                          'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
-                    ));
-                    embed?.focusNode.requestFocus();
-                    if (embed != null) {
-                      Toolbar.popMenu(context);
+                    final line = controller.focusedLine;
+                    if (line != null) {
+                      final isBullet = line.properties['list'] == 'bullet';
+                      final props = isBullet
+                          ? line.properties.rebuild((r) => r.remove('list'))
+                          : line.properties
+                              .rebuild((r) => r['list'] = 'bullet');
+                      controller.setLineProperties(line, props.asMap());
                     }
                   },
                 ),
                 ToolbarItem(
-                  title: const Icon(Icons.photo_library),
-                  onPressed: (_, __) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Left as an exercise to the reader.'),
-                      ),
-                    );
-                  },
+                  title: const Icon(Icons.wb_sunny),
+                  onPressed: (context, __) =>
+                      ThemeModeScope.of(context).toggle(context),
                 ),
               ],
-              tooltip: 'Insert image',
-            ),
-            ToolbarItem(
-              title: const Icon(Icons.list),
-              onPressed: (context, controller) {
-                final line = controller.focusedLine;
-                if (line != null) {
-                  final isBullet = line.properties['list'] == 'bullet';
-                  final props = isBullet
-                      ? line.properties.rebuild((r) => r.remove('list'))
-                      : line.properties.rebuild((r) => r['list'] = 'bullet');
-                  controller.setLineProperties(line, props.asMap());
-                }
-              },
-            ),
-            ToolbarItem(
-              title: const Icon(Icons.wb_sunny),
-              onPressed: (context, __) =>
-                  ThemeModeScope.of(context).toggle(context),
             ),
           ],
         ),

@@ -10,11 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - AttributeTheme to customize TextAttributes.
+- Range to avoid confusion with TextRange.
+  TextRange is designed to be for indexing into String by UTF-16 code units.
 
 ### Changed
 
 - TextAttribute now has a resolve method that returns the actual information for
   applying the attribute in the form of TextAttributeValue.
+- The characters library is used to index with grapheme clusters instead of UTF-16 code units.
+  This changes most String-base API to use Characters instead.
+- Use Range in AttributeSpan and related classes.
 
 ## [0.2.0-0] — 2020-12-14
 

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:built_collection/built_collection.dart';
+import 'package:characters/characters.dart';
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
@@ -8,6 +9,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:meta/meta.dart';
 
+import 'spanned_string.dart';
 import 'theme.dart';
 
 /// Maximum length of a span.
@@ -256,14 +258,11 @@ class Range extends Equatable {
     }
     if (removedSegment.end <= start) {
       // deletion before this range
-      return Range(
-          start - removedSegment.size,
-          end - removedSegment.size);
+      return Range(start - removedSegment.size, end - removedSegment.size);
     }
     if (removedSegment.start <= start && removedSegment.end <= end) {
       // deletion with the start of this range
-      return Range(
-          removedSegment.start, end - removedSegment.size);
+      return Range(removedSegment.start, end - removedSegment.size);
     }
     if (start <= removedSegment.start && end <= removedSegment.end) {
       // deletion with the end of this range
@@ -481,28 +480,28 @@ class AttributeSpanTemplate {
 }
 
 /// A range of the source text with the set of attributes that are applied to it.
-@immutable
+//@immutable
 class AttributeSegment extends Equatable {
   /// Create an attribute segment.
-  const AttributeSegment(this.attributes, this.range);
+  const AttributeSegment(this.text, this.attributes);
 
   /// Create an attribute segment.
-  AttributeSegment.from(Iterable<TextAttribute> attributes, this.range)
+  AttributeSegment.from(this.text, Iterable<TextAttribute> attributes)
       : attributes = attributes.toBuiltSet();
+
+  /// Text in this segment.
+  final Characters text;
 
   /// Attributes applied to this segment.
   final BuiltSet<TextAttribute> attributes;
 
-  /// Range of text.
-  final TextRange range;
-
   @override
   String toString() {
-    return '<${range.start},${range.end}> [${attributes.map((a) => a.runtimeType).join(',')}]';
+    return '$text [${attributes.map((a) => a.runtimeType).join(',')}]';
   }
 
   @override
-  List<Object?> get props => [range, attributes];
+  List<Object?> get props => [text, attributes];
 }
 
 enum _TransitionType { start, end }
@@ -554,18 +553,22 @@ class SpanList extends Equatable {
     Iterable<AttributeSegment> segments,
     FullInsertBehavior Function(TextAttribute) getInsertBehavior,
   ) {
+    var pos = 0;
     return segments.fold<SpanList>(SpanList(), (list, segment) {
-      return segment.attributes.fold<SpanList>(list, (list, attr) {
+      final length = segment.text.length;
+      final result = segment.attributes.fold<SpanList>(list, (list, attr) {
         final insertBehavior = getInsertBehavior(attr);
         final span = AttributeSpan(
           attr,
-          segment.range.start,
-          segment.range.end,
+          pos,
+          pos + length,
           insertBehavior.start,
           insertBehavior.end,
         );
         return list.merge(span);
       });
+      pos += length;
+      return result;
     });
   }
 
@@ -603,16 +606,14 @@ class SpanList extends Equatable {
   ///      ____
   ///          __
   /// ```
-  Iterable<AttributeSegment> getSegments(int end) sync* {
+  Iterable<AttributeSegment> getSegments(Characters t) sync* {
     // We sweep over start and end points of all spans and keep track
     // of what attributes are active, then yield a segment whenever
     // our start point moves.
 
-    // _______
-    //  ___
     final transitions = spans.expand((s) sync* {
-      if (s.end > end) {
-        s = s.copyWith(end: end);
+      if (s.end > t.length) {
+        s = s.copyWith(end: t.length);
       }
       yield _AttributeTransition(
         s.attribute,
@@ -623,15 +624,19 @@ class SpanList extends Equatable {
     }).toList()
       ..sort((a, b) => a.index - b.index);
 
+    final textIterator = t.iterator;
+
     final activeAttribs = <TextAttribute>{};
-    var currentSegmentStart = 0;
-    for (final transition in transitions) {
-      if (transition.index > currentSegmentStart) {
+    var currentIndex = 0;
+    for (var i = 0; i < transitions.length; i++) {
+      final transition = transitions[i];
+      if (transition.index > currentIndex) {
+        textIterator.moveNext(transition.index - currentIndex);
         yield AttributeSegment(
+          textIterator.currentCharacters,
           activeAttribs.build(),
-          TextRange(start: currentSegmentStart, end: transition.index),
         );
-        currentSegmentStart = transition.index;
+        currentIndex = transition.index;
       }
 
       if (transition.type == _TransitionType.start) {
@@ -641,10 +646,12 @@ class SpanList extends Equatable {
       }
     }
 
-    if (currentSegmentStart < end) {
+    textIterator.moveNextAll();
+
+    if (textIterator.isNotEmpty) {
       yield AttributeSegment(
+        textIterator.currentCharacters,
         BuiltSet(),
-        TextRange(start: currentSegmentStart, end: end),
       );
     }
   }
@@ -793,7 +800,6 @@ extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
   /// If [recognizers] is null, no gesture recognizers will be put on the
   /// spans.
   TextSpan buildTextSpans({
-    required String text,
     required TextStyle style,
     AttributeThemeData? attributeTheme,
     Map<TextAttributeValue, GestureRecognizer>? recognizers,
@@ -810,7 +816,7 @@ extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
     final span = TextSpan(
       style: style,
       children: map((segment) {
-        final spanText = segment.range.textInside(text);
+        final spanText = segment.text;
 
         GestureRecognizer? spanRecognizer;
 
@@ -836,7 +842,7 @@ extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
         }
 
         return TextSpan(
-          text: spanText,
+          text: spanText.string,
           style: style,
           recognizer: spanRecognizer,
         );

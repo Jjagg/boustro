@@ -21,14 +21,14 @@ packages:
       path: "../packages/boustro"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.1.0-0"
   boustro_starter:
     dependency: "direct main"
     description:
       path: "../packages/boustro_starter"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.1.0-0"
   built_collection:
     dependency: transitive
     description:
@@ -96,7 +96,7 @@ packages:
       path: "../packages/flutter_spanned_controller"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.2.0-0"
   flutter_test:
     dependency: "direct dev"
     description: flutter

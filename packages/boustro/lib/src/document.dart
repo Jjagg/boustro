@@ -1,4 +1,5 @@
 import 'package:built_collection/built_collection.dart';
+import 'package:characters/characters.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
@@ -67,7 +68,8 @@ class BoustroLine extends BoustroParagraph {
   BoustroLine.fromSpanned(
     SpannedString spannedText, {
     BuiltMap<String, Object>? properties,
-  }) : this(spannedText.text, spannedText.spans, properties: properties);
+  }) : this(spannedText.text.toString(), spannedText.spans,
+            properties: properties);
 
   /// Plain text in this line.
   final String text;
@@ -79,7 +81,7 @@ class BoustroLine extends BoustroParagraph {
   final BuiltMap<String, Object> properties;
 
   /// Get a spanned text that combines [text] and [spanList].
-  SpannedString get spannedText => SpannedString(text, spanList);
+  SpannedString get spannedText => SpannedString(text.characters, spanList);
 
   @override
   T deconstruct<T>({

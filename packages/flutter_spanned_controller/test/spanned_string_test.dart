@@ -15,7 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('SpannedString ctor', () {
     test('empty', () {
-      final s = SpannedString('', SpanList());
+      final s = SpannedString(''.characters, SpanList());
       expect(s.length, 0);
       expect(s.text, isEmpty);
       expect(s.spans.spans, isEmpty);

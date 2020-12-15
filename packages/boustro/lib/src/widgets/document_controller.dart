@@ -185,7 +185,6 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     SpannedTextEditingController controller,
     TextEditingValue newValue,
   ) {
-    int newLineIndex;
     LineState? toFocus;
 
     if (!newValue.text.contains('\n')) {
@@ -207,9 +206,12 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     );
 
     var t = controller.spannedString.applyDiff(diff);
-
-    while ((newLineIndex = t.text.lastIndexOf('\n')) >= 0) {
-      final nextLine = t.collapse(before: newLineIndex + 1);
+    CharacterRange? newlineRange;
+    while ((newlineRange = t.text.findLast('\n'.characters)) != null) {
+      newlineRange!;
+      final indexAfterNewline = newlineRange.charactersBefore.length +
+          newlineRange.currentCharacters.length;
+      final nextLine = t.collapse(before: indexAfterNewline);
       insertLine(
         lineIndex + 1,
         BoustroLine.fromSpanned(
@@ -217,7 +219,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
           properties: currentLine.properties,
         ),
       );
-      t = t.collapse(after: newLineIndex);
+      t = t.collapse(after: newlineRange.charactersBefore.length);
       toFocus ??= paragraphs[lineIndex + 1] as LineState;
     }
 
@@ -229,7 +231,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
       );
     }
     return TextEditingValue(
-      text: t.text,
+      text: t.text.toString(),
       selection: newValue.selection.copyWith(
         baseOffset: t.length,
         extentOffset: t.length,

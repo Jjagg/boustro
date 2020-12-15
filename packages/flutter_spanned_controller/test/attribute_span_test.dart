@@ -14,50 +14,50 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('splice TextRange', () {
     test('', () {
-      final t = TextRange(start: 3, end: 5);
+      final t = Range(3, 5);
 
       expect(
-        t.splice(TextRange(start: 0, end: 2)),
-        TextRange(start: 1, end: 3),
+        t.splice(Range(0, 2)),
+        Range(1, 3),
       );
 
       expect(
-        t.splice(TextRange(start: 0, end: 3)),
-        TextRange(start: 0, end: 2),
+        t.splice(Range(0, 3)),
+        Range(0, 2),
       );
 
       expect(
-        t.splice(TextRange(start: 1, end: 4)),
-        TextRange(start: 1, end: 2),
+        t.splice(Range(1, 4)),
+        Range(1, 2),
       );
 
       expect(
-        t.splice(TextRange(start: 4, end: 5)),
-        TextRange(start: 3, end: 4),
+        t.splice(Range(4, 5)),
+        Range(3, 4),
       );
 
       expect(
-        t.splice(TextRange(start: 4, end: 10)),
-        TextRange(start: 3, end: 4),
+        t.splice(Range(4, 10)),
+        Range(3, 4),
       );
 
       expect(
-        t.splice(TextRange(start: 3, end: 5)),
-        TextRange(start: 3, end: 3),
+        t.splice(Range(3, 5)),
+        Range(3, 3),
       );
 
       expect(
-        t.splice(TextRange(start: 2, end: 5)),
-        TextRange(start: 2, end: 2),
+        t.splice(Range(2, 5)),
+        Range(2, 2),
       );
 
       expect(
-        t.splice(TextRange(start: 3, end: 6)),
-        TextRange(start: 3, end: 3),
+        t.splice(Range(3, 6)),
+        Range(3, 3),
       );
 
       expect(
-        t.splice(TextRange(start: 2, end: 6)),
+        t.splice(Range(2, 6)),
         null,
       );
     });
@@ -68,7 +68,7 @@ void main() {
       expect(
         SpanList([
           sp(a, 1, 2, InsertBehavior.exclusive, InsertBehavior.inclusive)
-        ]).collapse(TextRange(start: 1, end: 3)).spans,
+        ]).collapse(Range(1, 3)).spans,
         <dynamic>[],
       );
     });
@@ -77,7 +77,7 @@ void main() {
       expect(
         SpanList([
           sp(a, 1, 2, InsertBehavior.inclusive, InsertBehavior.exclusive)
-        ]).collapse(TextRange(start: 0, end: 2)).spans,
+        ]).collapse(Range(0, 2)).spans,
         <dynamic>[],
       );
     });
@@ -86,7 +86,7 @@ void main() {
       expect(
         SpanList([
           sp(a, 1, 2, InsertBehavior.exclusive, InsertBehavior.exclusive)
-        ]).collapse(TextRange(start: 1, end: 2)).spans,
+        ]).collapse(Range(1, 2)).spans,
         <dynamic>[],
       );
     });
@@ -95,7 +95,7 @@ void main() {
       expect(
         SpanList([
           sp(a, 1, 3, InsertBehavior.exclusive, InsertBehavior.exclusive)
-        ]).collapse(TextRange(start: 1, end: 2)).spans,
+        ]).collapse(Range(1, 2)).spans,
         [sp(a, 1, 2, InsertBehavior.exclusive, InsertBehavior.exclusive)],
       );
     });
@@ -143,17 +143,18 @@ void main() {
 
   group('segments', () {
     test('empty', () {
-      expect(SpanList().getSegments(0), isEmpty);
+      expect(SpanList().getSegments(''.characters), isEmpty);
     });
 
     test('plain', () {
-      expect(SpanList().getSegments(3),
-          [AttributeSegment.from([], TextRange(start: 0, end: 3))]);
+      expect(SpanList().getSegments('hey'.characters),
+          [AttributeSegment.from('hey'.characters, [])]);
     });
 
     test('spans can go past end', () {
-      expect(SpanList().getSegments(3),
-          [AttributeSegment.from([], TextRange(start: 0, end: 3))]);
+      expect(SpanList([sp(a, 0, 10)]).getSegments('hey'.characters), [
+        AttributeSegment.from('hey'.characters, [a])
+      ]);
     });
 
     test('complex', () {
@@ -166,45 +167,26 @@ void main() {
             sp(e, 2, 6),
             sp(f, 2, 10),
           ]).shift(10, 3))
-              .getSegments(13),
+              .getSegments('Hello, World!'.characters),
           <AttributeSegment>[
-            AttributeSegment.from([], TextRange(start: 0, end: 1)),
-            AttributeSegment.from([a, b], TextRange(start: 1, end: 2)),
-            AttributeSegment.from(
-                [a, b, c, d, e, f], TextRange(start: 2, end: 5)),
-            AttributeSegment.from([a, b, e, f], TextRange(start: 5, end: 6)),
-            AttributeSegment.from([a, b, f], TextRange(start: 6, end: 7)),
-            AttributeSegment.from([b, f], TextRange(start: 7, end: 8)),
-            AttributeSegment.from([f], TextRange(start: 8, end: 10)),
-            AttributeSegment.from([], TextRange(start: 10, end: 13)),
+            AttributeSegment.from('H'.characters, []),
+            AttributeSegment.from('e'.characters, [a, b]),
+            AttributeSegment.from('llo'.characters, [a, b, c, d, e, f]),
+            AttributeSegment.from(','.characters, [a, b, e, f]),
+            AttributeSegment.from(' '.characters, [a, b, f]),
+            AttributeSegment.from('W'.characters, [b, f]),
+            AttributeSegment.from('or'.characters, [f]),
+            AttributeSegment.from('ld!'.characters, []),
           ]);
     });
-  });
 
-  group('diff', () {
-    const diffStrings = SpannedTextEditingController.diffStrings;
-    test('empty', () {
-      expect(diffStrings('', '', 0), StringDiff(0, '', ''));
-    });
-    test('identical', () {
-      expect(diffStrings('Hello', 'Hello', 3), StringDiff(3, '', ''));
-    });
-    test('simple', () {
-      expect(diffStrings('Hi', 'Higher', 6), StringDiff(2, '', 'gher'));
-    });
-    test('empty insert', () {
-      expect(diffStrings('', 'Yeah', 4), StringDiff(0, '', 'Yeah'));
-    });
-    test('delete to empty', () {
-      expect(diffStrings('Yeah', '', 0), StringDiff(0, 'Yeah', ''));
-    });
-    test('duplicate characters', () {
-      expect(diffStrings('booh', 'boooh', 2), StringDiff(1, '', 'o'));
-      expect(diffStrings('booh', 'boooh', 3), StringDiff(2, '', 'o'));
-      expect(diffStrings('booh', 'boooh', 4), StringDiff(3, '', 'o'));
-    });
-    test('unsolvable', () {
-      expect(() => diffStrings('booh', 'boooh', 1), throwsAssertionError);
+    test('emoji', () {
+      expect(
+          SpanList([sp(a, 1, 3)]).getSegments('👨‍👩‍👧‍👦a🥙'.characters),
+          <AttributeSegment>[
+            AttributeSegment.from('👨‍👩‍👧‍👦'.characters, []),
+            AttributeSegment.from('a🥙'.characters, [a]),
+          ]);
     });
   });
 }

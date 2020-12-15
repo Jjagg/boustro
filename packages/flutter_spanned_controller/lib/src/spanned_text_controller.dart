@@ -16,20 +16,19 @@ class StringDiff extends Equatable {
       : assert(index >= 0, 'Index may not be negative.');
 
   /// Create a string diff that indicates no changes.
-  const StringDiff.empty() : this(0, '', '');
+  StringDiff.empty() : this(0, Characters(''), Characters(''));
 
   /// Index where text was changed.
   final int index;
 
   /// Deleted text.
-  final String deleted;
+  final Characters deleted;
 
   /// Range in the old text that was deleted.
-  TextRange get deletedRange =>
-      TextRange(start: index, end: index + deleted.length);
+  Range get deletedRange => Range(index, index + deleted.length);
 
   /// Inserted text.
-  final String inserted;
+  final Characters inserted;
 
   @override
   String toString() {
@@ -136,7 +135,7 @@ extension SpannedTextEditingControllerExtension
       return;
     }
 
-    final range = selection.normalize();
+    final range = _convertRange(selection);
     final span = AttributeSpan(
       attribute,
       range.start,
@@ -161,7 +160,7 @@ extension SpannedTextEditingControllerExtension
         (ov) => ov.attribute == attribute && ov.type == OverrideType.remove)) {
       return false;
     }
-    return spans.isApplied(attribute, selection.normalize());
+    return spans.isApplied(attribute, _convertRange(selection));
   }
 
   /// Toggle an attribute for the current selection.
@@ -189,7 +188,7 @@ extension SpannedTextEditingControllerExtension
       setOverride(attribute, overrideType, startBehavior, endBehavior);
     } else {
       if (applied) {
-        spans = spans.removeFrom(selection, attribute);
+        spans = spans.removeFrom(_convertRange(selection), attribute);
       } else {
         applyAttribute(attribute, startBehavior, endBehavior);
       }
@@ -271,14 +270,14 @@ class SpannedTextEditingController implements TextEditingController {
   }
 
   /// Get the rich text contents managed by this controller.
-  SpannedString get spannedString => SpannedString(text, spans);
+  SpannedString get spannedString => SpannedString(text.characters, spans);
 
   /// Set the rich text contents managed by this controller.
-  set spannedString(SpannedString newText) {
+  set spannedString(SpannedString newString) {
     _ignoreSetValue = true;
-    value = value.copyWith(text: newText.text);
+    value = value.copyWith(text: newString.text.string);
     _ignoreSetValue = false;
-    spans = newText.spans;
+    spans = newString.spans;
   }
 
   bool _ignoreSetValue = false;
@@ -370,7 +369,7 @@ class SpannedTextEditingController implements TextEditingController {
     final segments = !value.isComposingRangeValid ||
             !withComposing ||
             value.composing.isCollapsed
-        ? spans.getSegments(text.length)
+        ? spans.getSegments(text.characters)
         : (spans.merge(
             AttributeSpan(
               compositionAttribute,
@@ -379,13 +378,13 @@ class SpannedTextEditingController implements TextEditingController {
               InsertBehavior.exclusive,
               InsertBehavior.exclusive,
             ),
-          )).getSegments(text.length);
+          )).getSegments(text.characters);
 
     // We don't pass gesture recognizers here, because we don't
     // want gestures on spans to be handled while editing.
     return segments.buildTextSpans(
-      text: text,
       style: style ?? const TextStyle(),
+      attributeTheme: attributeTheme,
     );
   }
 
@@ -436,7 +435,7 @@ class SpannedTextEditingController implements TextEditingController {
         );
         spans = spans.merge(span);
       } else {
-        spans = spans.removeFrom(range, ao.attribute);
+        spans = spans.removeFrom(_convertRange(range), ao.attribute);
       }
     }
   }
@@ -457,22 +456,44 @@ class SpannedTextEditingController implements TextEditingController {
   static StringDiff diffStrings(String oldText, String newText, int cursor) {
     assert(cursor >= 0, 'Cursor was negative.');
     assert(cursor <= newText.length, 'Cursor was outside of newText range.');
-    final delta = newText.length - oldText.length;
-    final limit = math.max(0, cursor - delta);
-    var end = oldText.length;
-    while (end > limit && oldText[end - 1] == newText[end + delta - 1]) {
-      end -= 1;
-    }
-    var start = 0;
-    final startLimit = cursor - math.max(0, delta);
-    while (start < startLimit && oldText[start] == newText[start]) {
-      start += 1;
-    }
-    final deleted = (start < end) ? oldText.substring(start, end) : '';
-    final inserted = newText.substring(start, end + delta);
 
-    assert(start + inserted.length == cursor,
-        'start + inserted.length != cursor. Probably bad input.');
+    final maxInsertion = cursor;
+    final maxDeletion =
+        math.max(0, oldText.length - newText.length + maxInsertion);
+
+    final oldLength = oldText.characters.length;
+
+    final oldEnd = CharacterRange.at(oldText, maxDeletion, oldText.length)
+        .currentCharacters
+        .iteratorAtEnd;
+    final newEnd = newText.characters.iteratorAtEnd;
+
+    var end = oldLength;
+    while (oldEnd.moveBack() &&
+        newEnd.moveBack() &&
+        oldEnd.current == newEnd.current) {
+      end--;
+    }
+
+    // TODO clean up this second part
+
+    var start = 0;
+    final delta = newText.length - oldText.length;
+    final strStartLimit = cursor - math.max<int>(0, delta);
+    final startLimit =
+        CharacterRange.at(newText, 0, strStartLimit).currentCharacters.length;
+    final oldStart = oldText.characters.iterator;
+    final newStart = newText.characters.iterator;
+    while (start < startLimit &&
+        oldStart.moveNext() &&
+        newStart.moveNext() &&
+        oldStart.current == newStart.current) {
+      start++;
+    }
+
+    final deleted = oldText.characters.getRange(math.min(start, end), end);
+    final inserted =
+        newText.characters.getRange(start, math.max(end + delta, start));
 
     return StringDiff(
       start,
@@ -484,5 +505,18 @@ class SpannedTextEditingController implements TextEditingController {
   @override
   String toString() {
     return _textController.toString();
+  }
+
+  /// Normalize [range] and convert from UTF-16 indices to grapheme cluster indices.
+  Range _convertRange(TextRange range) {
+    if (!range.isNormalized) {
+      // ignore: parameter_assignments
+      range = TextRange(start: range.end, end: range.start);
+    }
+    final startChars = CharacterRange.at(text, 0, range.start);
+    final start = startChars.currentCharacters.length;
+    final rangeChars = CharacterRange.at(text, range.start, range.end);
+    final size = rangeChars.currentCharacters.length;
+    return Range(start, start + size);
   }
 }
