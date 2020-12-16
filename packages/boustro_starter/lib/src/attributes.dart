@@ -52,6 +52,20 @@ final underlineAttributeDeltaCodec = deltaBoolAttributeCodec(
   InsertBehavior.inclusive,
 );
 
+/// Attribute with [TextStyle.decoration] set to [TextDecoration.lineThrough].
+final strikethroughAttribute = TextAttribute.simple(
+  debugName: 'strikethrough',
+  style: const TextStyle(decoration: TextDecoration.lineThrough),
+);
+
+/// Codec to convert [underlineAttribute] to/from delta (see [BoustroDocumentDeltaConverter]).
+final strikethroughAttributeDeltaCodec = deltaBoolAttributeCodec(
+  'strike',
+  strikethroughAttribute,
+  InsertBehavior.exclusive,
+  InsertBehavior.inclusive,
+);
+
 /// Themeable property getter extensions for the attributes in this library.
 extension AttributeGetters on AttributeThemeData {
   /// Font weight for text with [boldAttribute] applied.
