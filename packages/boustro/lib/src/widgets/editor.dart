@@ -115,8 +115,12 @@ class _BoustroViewState extends State<BoustroView> {
     Widget result;
 
     if (value is BoustroLine) {
-      final spans = value.spannedText
-          .buildTextSpans(style: const TextStyle(), recognizers: _recognizers);
+      final atheme = AttributeTheme.of(context);
+      final spans = value.spannedText.buildTextSpans(
+        style: const TextStyle(),
+        recognizers: _recognizers,
+        attributeTheme: atheme,
+      );
       result = Text.rich(spans);
 
       result = BoustroLineModifier(

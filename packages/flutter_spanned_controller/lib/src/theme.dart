@@ -55,6 +55,11 @@ class AttributeThemeData extends Equatable {
   /// Properties that can be used to customize [TextAttribute]s.
   final BuiltMap<String, Object> properties;
 
+  /// Get the value of a property in this theme.
+  T? get<T>(String key) {
+    return properties[key] as T?;
+  }
+
   @override
   List<Object?> get props => [properties];
 }
@@ -62,7 +67,8 @@ class AttributeThemeData extends Equatable {
 /// Builder for [AttributeThemeData].
 class AttributeThemeBuilder {
   /// Create an attribute theme builder. Can have starting properties.
-  const AttributeThemeBuilder([this._properties = const {}]);
+  AttributeThemeBuilder([Map<String, Object>? properties])
+      : _properties = properties ?? {};
 
   final Map<String, Object> _properties;
 
@@ -74,6 +80,11 @@ class AttributeThemeBuilder {
   /// If the key was already in the map, its associated value is changed.
   /// Otherwise the key/value pair is added to the map.
   void operator []=(String key, Object value) => _properties[key] = value;
+
+  /// Remove a property.
+  void remove(String key) {
+    _properties.remove(key);
+  }
 
   /// Build the properties set on this builder into an immutable attribute theme
   /// data object.

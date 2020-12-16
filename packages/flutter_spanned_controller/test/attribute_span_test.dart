@@ -6,7 +6,6 @@
 // ignore_for_file: avoid_types_on_closure_parameters
 
 import 'package:flutter_spanned_controller/src/attribute_span.dart';
-import 'package:flutter_spanned_controller/src/spanned_text_controller.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_spanned_controller/src/theme.dart';
 import 'package:flutter_test/flutter_test.dart';

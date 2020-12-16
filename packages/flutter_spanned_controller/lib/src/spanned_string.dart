@@ -20,7 +20,7 @@ class SpannedString {
   final SpanList spans;
 
   /// Length of this spanned string. This is equal to the length of [text].
-  late int length = text.length;
+  late final int length = text.length;
 
   /// Creates a copy of this spanned string, but with the given fields replaced
   /// with the new values.

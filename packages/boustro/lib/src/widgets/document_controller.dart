@@ -129,6 +129,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   DocumentController({
     ScrollController? scrollController,
     Iterable<BoustroParagraph>? paragraphs,
+    this.attributeTheme,
   })  : scrollController = scrollController ?? ScrollController(),
         super(BuiltList()) {
     if (paragraphs == null) {
@@ -145,6 +146,9 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
 
   /// Get the scroll controller for the [ScrollView] containing the paragraphs.
   final ScrollController scrollController;
+
+  /// Theme that affects the style of attributes.
+  final AttributeThemeData? attributeTheme;
 
   @protected
   @override
@@ -263,6 +267,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
       processTextValue: _processTextValue,
       text: line?.text,
       spans: line?.spanList.spans,
+      attributeTheme: attributeTheme,
     );
 
     spanController.addListener(() {

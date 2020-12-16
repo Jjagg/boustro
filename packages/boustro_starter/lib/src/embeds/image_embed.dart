@@ -151,7 +151,13 @@ class _ImageEmbed extends StatelessWidget {
     BuildContext context, {
     required Widget Function(BuildContext context, Widget child) imageWrapper,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ctheme = BoustroComponentTheme.of(context);
+    final maxHeight = ctheme.imageMaxHeight ?? 450;
+
+    final sideColor = ctheme.imageSideColor ??
+        (Theme.of(context).brightness == Brightness.dark
+            ? Colors.deepPurple.shade900.withOpacity(0.2)
+            : Colors.brown.withOpacity(0.2));
 
     Widget image = Image(
       image: embed.value as ImageProvider,
@@ -161,11 +167,9 @@ class _ImageEmbed extends StatelessWidget {
     image = imageWrapper(context, image);
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxHeight: 300),
+      constraints: BoxConstraints(maxHeight: maxHeight),
       child: Container(
-        color: isDark
-            ? Colors.deepPurple.shade900.withOpacity(0.2)
-            : Colors.brown.withOpacity(0.2),
+        color: sideColor,
         child: image,
       ),
     );
@@ -178,5 +182,40 @@ class _ImageEmbed extends StatelessWidget {
       ..add(DiagnosticsProperty<BoustroScope>('scope', scope))
       ..add(DiagnosticsProperty<BoustroParagraphEmbed>('embed', embed))
       ..add(DiagnosticsProperty<FocusNode?>('focusNode', focusNode));
+  }
+}
+
+/// Themeable property getter extensions for [ImageEmbed].
+extension ImageEmbedTheme on BoustroComponentThemeData {
+  /// The maximum height of an image in logical pixels.
+  ///
+  /// Higher images will be resized, keeping their aspect ratio.
+  /// The color in [imageSideColor] will be painted to the sides of the image.
+  double? get imageMaxHeight => get<double>('imageMaxHeight');
+
+  /// Color painted to the side of the image if it does not cover the full
+  /// width available to it.
+  Color? get imageSideColor => get('imageSideColor');
+}
+
+/// Themeable property setter extensions for [ImageEmbed].
+///
+/// See the getters in [ImageEmbedTheme] for more information on the properties.
+extension ImageEmbedThemeSet on ComponentThemeBuilder {
+  /// Set the max height for an image embed.
+  set imageMaxHeight(double? value) {
+    if (value == null) {
+      remove('imageMaxHeight');
+    } else {
+      this['imageMaxHeight'] = DoubleThemeProperty(value);
+    }
+  }
+
+  set imageSideColor(Color? value) {
+    if (value == null) {
+      remove('imageSideColor');
+    } else {
+      this['imageSideColor'] = ColorThemeProperty(value);
+    }
   }
 }

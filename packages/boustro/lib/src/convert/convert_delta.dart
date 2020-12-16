@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ui' show TextRange;
 
 import 'package:built_collection/built_collection.dart';
 import 'package:characters/characters.dart';
@@ -277,7 +276,8 @@ class BoustroDocumentDeltaDecoder extends Converter<List<Op>, BoustroDocument> {
         return attr;
       });
 
-      final segment = AttributeSegment(insert.text.characters, attrs.toBuiltSet());
+      final segment =
+          AttributeSegment(insert.text.characters, attrs.toBuiltSet());
       segments.add(segment);
       buffer.write(insert.text);
     }
@@ -290,7 +290,8 @@ class BoustroDocumentDeltaDecoder extends Converter<List<Op>, BoustroDocument> {
       },
     );
 
-    final text = segments.fold<String>('', (str, segment) => str + segment.text.string);
+    final text =
+        segments.fold<String>('', (str, segment) => str + segment.text.string);
     return BoustroLine(text, spans, properties: line.properties);
   }
 }

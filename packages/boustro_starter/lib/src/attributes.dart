@@ -2,11 +2,19 @@ import 'package:boustro/boustro.dart';
 import 'package:boustro/convert_delta.dart';
 import 'package:flutter/painting.dart';
 
-/// Attribute with [TextStyle.fontWeight] set to [FontWeight.bold].
-final boldAttribute = TextAttribute.simple(
-  debugName: 'bold',
-  style: const TextStyle(fontWeight: FontWeight.bold),
-);
+/// Attribute with a custom [TextStyle.fontWeight]. Defaults to
+/// [FontWeight.bold].
+final boldAttribute = _BoldAttribute();
+
+class _BoldAttribute extends ThemedTextAttribute {
+  _BoldAttribute() : super(debugName: 'bold');
+
+  @override
+  TextStyle? getStyle(AttributeThemeData theme) {
+    final weight = theme.boldFontWeight ?? FontWeight.bold;
+    return TextStyle(fontWeight: weight);
+  }
+}
 
 /// Codec to convert [boldAttribute] to/from delta (see [BoustroDocumentDeltaConverter]).
 final boldAttributeDeltaCodec = deltaBoolAttributeCodec(
@@ -43,3 +51,23 @@ final underlineAttributeDeltaCodec = deltaBoolAttributeCodec(
   InsertBehavior.exclusive,
   InsertBehavior.inclusive,
 );
+
+/// Themeable property getter extensions for the attributes in this library.
+extension AttributeGetters on AttributeThemeData {
+  /// Font weight for text with [boldAttribute] applied.
+  FontWeight? get boldFontWeight => get<FontWeight>('boldFontWeight');
+}
+
+/// Themeable property setter extensions for the attributes in this library.
+///
+/// See the getters in [AttributeGetters] for more information on the properties.
+extension AttributeSetters on AttributeThemeBuilder {
+  /// Set the font weight for text with [boldAttribute] applied.
+  set boldFontWeight(FontWeight? value) {
+    if (value == null) {
+      remove('boldFontWeight');
+    } else {
+      this['boldFontWeight'] = value;
+    }
+  }
+}

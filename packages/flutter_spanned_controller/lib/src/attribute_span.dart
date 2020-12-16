@@ -9,7 +9,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:meta/meta.dart';
 
-import 'spanned_string.dart';
 import 'theme.dart';
 
 /// Maximum length of a span.
@@ -69,6 +68,36 @@ class _SimpleTextAttribute extends TextAttribute with EquatableMixin {
   List<Object?> get props => [value];
 }
 
+/// Base class for [TextAttribute] implementations that need an [AttributeTheme]
+/// to resolve their theme.
+abstract class ThemedTextAttribute extends TextAttribute {
+  /// Base constructor for themed attribute.
+  ThemedTextAttribute({
+    String? debugName,
+    GestureTapCallback? onTap,
+    GestureTapCallback? onSecondaryTap,
+    GestureTapCallback? onDoubleTap,
+    GestureLongPressCallback? onLongPress,
+  }) : _valueWithoutStyle = TextAttributeValue(
+          debugName: debugName,
+          onTap: onTap,
+          onSecondaryTap: onSecondaryTap,
+          onDoubleTap: onDoubleTap,
+          onLongPress: onLongPress,
+        );
+
+  final TextAttributeValue _valueWithoutStyle;
+
+  @override
+  TextAttributeValue resolve(AttributeThemeData theme) {
+    final style = getStyle(theme);
+    return _valueWithoutStyle.copyWith(style: style);
+  }
+
+  /// Get the style applied by this attribute.
+  TextStyle? getStyle(AttributeThemeData theme);
+}
+
 /// Style and gesture handlers that can be applied to a [TextSpan].
 ///
 /// Produced by [TextAttribute.resolve].
@@ -101,6 +130,24 @@ class TextAttributeValue extends Equatable {
 
   /// Callback when long pressing the span.
   final GestureLongPressCallback? onLongPress;
+
+  /// Create a copy with the passed values replaced.
+  TextAttributeValue copyWith({
+    String? debugName,
+    TextStyle? style,
+    GestureTapCallback? onTap,
+    GestureTapCallback? onSecondaryTap,
+    GestureTapCallback? onDoubleTap,
+    GestureLongPressCallback? onLongPress,
+  }) =>
+      TextAttributeValue(
+        debugName: debugName ?? this.debugName,
+        style: style ?? this.style,
+        onTap: onTap ?? this.onTap,
+        onSecondaryTap: onSecondaryTap ?? this.onSecondaryTap,
+        onDoubleTap: onDoubleTap ?? this.onDoubleTap,
+        onLongPress: onLongPress ?? this.onLongPress,
+      );
 
   /// True if any of the gesture callbacks is not null.
   bool get hasGestures =>
@@ -789,7 +836,8 @@ class SpanList extends Equatable {
 
 /// Implements [buildTextSpans] for attribute segments.
 extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
-  /// Apply the attributes to [text] and return the resulting [TextSpan].
+  /// Apply the attributes to the text in the segments and return the resulting
+  /// [TextSpan].
   ///
   /// If [recognizers] is not null, it should contain a mapping
   /// from each text attribute value that wants to apply a gesture to a
