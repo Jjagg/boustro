@@ -102,31 +102,6 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class BulletListParagraphHandler extends LineParagraphModifier {
-  const BulletListParagraphHandler();
-
-  @override
-  Widget modify(
-    BuildContext context,
-    Map<String, Object> properties,
-    Widget child,
-  ) {
-    return LeadingTextModifier(
-      padding: 8,
-      text: '\u2022',
-      child: child,
-    );
-  }
-
-  @override
-  int get priority => 0;
-
-  @override
-  bool shouldBeApplied(Map<String, Object> properties) {
-    return properties['list'] == 'bullet';
-  }
-}
-
 class _HomeScreenState extends State<HomeScreen> {
   late final scrollController = ScrollController();
   late final controller = DocumentController(
@@ -135,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
           (AttributeThemeBuilder()..boldFontWeight = FontWeight.w900).build());
 
   final boustroContext = BoustroContext(
-    lineHandlers: const [BulletListParagraphHandler()],
+    lineHandlers: const [BulletListModifier()],
     embedHandlers: [
       ImageEmbed(),
     ],

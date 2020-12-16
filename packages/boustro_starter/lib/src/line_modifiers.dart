@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:boustro/boustro.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -154,5 +156,68 @@ class LeadingTextModifier extends StatelessWidget {
       ..add(DoubleProperty('paddingLeft', paddingLeft, defaultValue: 0))
       ..add(DoubleProperty('paddingRight', paddingRight, defaultValue: 0))
       ..add(StringProperty('text', text));
+  }
+}
+
+/// Paragraph modifier that puts a bullet before the text.
+class BulletListModifier extends LineParagraphModifier {
+  /// Create a bullet list modifier.
+  const BulletListModifier();
+
+  @override
+  Widget modify(
+    BuildContext context,
+    Map<String, Object> properties,
+    Widget child,
+  ) {
+    return LeadingTextModifier(
+      padding: 8,
+      text: '\u2022',
+      child: child,
+    );
+  }
+
+  @override
+  int get priority => 0;
+
+  @override
+  bool shouldBeApplied(Map<String, Object> properties) {
+    return properties['list'] == 'bullet';
+  }
+}
+
+/// Paragraph modifier that puts a number before the text.
+class NumberedListModifier extends LineParagraphModifier {
+  /// Create a numbered list modifier.
+  const NumberedListModifier(this.number);
+
+  /// The number to display.
+  final int number;
+
+  @override
+  Widget modify(
+    BuildContext context,
+    Map<String, Object> properties,
+    Widget child,
+  ) {
+    // TODO this probably need some work to align properly.
+    return LeadingTextModifier(
+      padding: 8,
+      text: '$number.',
+      style: const TextStyle(
+        fontFeatures: [
+          FontFeature.tabularFigures(),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  @override
+  int get priority => 0;
+
+  @override
+  bool shouldBeApplied(Map<String, Object> properties) {
+    return properties['list'] == 'numbered';
   }
 }
