@@ -18,7 +18,7 @@ void main() {
       final s = SpannedString(''.characters, SpanList());
       expect(s.length, 0);
       expect(s.text, isEmpty);
-      expect(s.spans.spans, isEmpty);
+      expect(s.spans.iter, isEmpty);
     });
   });
 }

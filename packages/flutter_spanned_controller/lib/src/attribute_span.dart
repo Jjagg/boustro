@@ -626,8 +626,8 @@ class SpanList extends Equatable {
 
   final BuiltList<AttributeSpan> _spans;
 
-  /// Get the spans in this list.
-  Iterable<AttributeSpan> get spans => _spans;
+  /// Get an iterator for the spans in this list.
+  Iterable<AttributeSpan> get iter => _spans;
 
   /// Get an iterator of the segments for this list.
   ///
@@ -658,7 +658,7 @@ class SpanList extends Equatable {
     // of what attributes are active, then yield a segment whenever
     // our start point moves.
 
-    final transitions = spans.expand((s) sync* {
+    final transitions = _spans.expand((s) sync* {
       if (s.end > t.length) {
         s = s.copyWith(end: t.length);
       }
@@ -722,7 +722,7 @@ class SpanList extends Equatable {
 
   Iterable<AttributeSpan> _getSpansIn(Range range, TextAttribute attr) =>
       _getSpans(
-        spans.where((s) => s.range.touches(range)),
+        _spans.where((s) => s.range.touches(range)),
         attr,
       );
 
@@ -745,7 +745,7 @@ class SpanList extends Equatable {
   /// [AttributeSpan.startBehavior] and [AttributeSpan.endBehavior] are not
   /// taken into account for merging; touching spans will always be merged.
   SpanList merge(AttributeSpan span) {
-    final touching = spans.where(
+    final touching = _spans.where(
         (s) => s.attribute == span.attribute && s.range.touches(span.range));
     final toMerge = touching.followedBy([span]);
     final start =
@@ -827,7 +827,7 @@ class SpanList extends Equatable {
 
   @override
   String toString() {
-    return spans.join(', ');
+    return _spans.join(', ');
   }
 
   @override

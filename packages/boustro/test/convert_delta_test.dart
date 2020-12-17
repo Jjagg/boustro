@@ -89,8 +89,8 @@ void main() {
       expect(
         doc.paragraphs[0],
         BoustroLine(
-          'Hello, World!',
-          SpanList([createBold(0, 5)]),
+          text: 'Hello, World!',
+          spans: SpanList([createBold(0, 5)]),
         ),
       );
     });
@@ -105,8 +105,8 @@ void main() {
       expect(
         doc.paragraphs[0],
         BoustroLine(
-          'Hello, World!',
-          SpanList([createBold(0, 5)]),
+          text: 'Hello, World!',
+          spans: SpanList([createBold(0, 5)]),
         ),
       );
     });
@@ -121,12 +121,12 @@ void main() {
       expect(
           doc.paragraphs[0],
           BoustroLine(
-            'Hello, World!',
-            SpanList([createBold(0, 5)]),
+            text: 'Hello, World!',
+            spans: SpanList([createBold(0, 5)]),
           ));
       expect(
         doc.paragraphs[1],
-        BoustroLine('', SpanList()),
+        BoustroLine(text: '', spans: SpanList()),
       );
     });
 
@@ -143,14 +143,14 @@ void main() {
       expect(
           doc.paragraphs[0],
           BoustroLine(
-            'Hello, World!',
-            SpanList([createBold(0, 5)]),
+            text: 'Hello, World!',
+            spans: SpanList([createBold(0, 5)]),
           ));
       expect(
         doc.paragraphs[1],
         BoustroLine(
-          'Hello, World!',
-          SpanList([createBold(5, 13)]),
+          text: 'Hello, World!',
+          spans: SpanList([createBold(5, 13)]),
         ),
       );
     });

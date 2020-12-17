@@ -72,7 +72,7 @@ class SpannedString {
       text + other.text,
       other.spans
           .shift(0, text.length)
-          .spans
+          .iter
           .fold(spans, (ls, s) => ls.merge(s)),
     );
   }
@@ -113,7 +113,7 @@ class SpannedString {
 /// Builds a [SpannedString]. Can be used fluently with cascades.
 class SpannedStringBuilder {
   final StringBuffer _buffer = StringBuffer();
-  SpanList _spanList = SpanList();
+  SpanList _spans = SpanList();
   final List<AttributeSpan> _activeSpans = [];
 
   int _length = 0;
@@ -168,18 +168,18 @@ class SpannedStringBuilder {
   /// Apply an attribute to all text, including text written after calling this
   /// method.
   void lineStyle(TextAttribute attr) {
-    _spanList = _spanList.merge(AttributeSpan.fixed(attr, 0, maxSpanLength));
+    _spans = _spans.merge(AttributeSpan.fixed(attr, 0, maxSpanLength));
   }
 
   void _end(TextAttribute attribute) {
     final span =
-        _spanList.spans.firstWhereOrNull((span) => span.attribute == attribute);
+        _spans.iter.firstWhereOrNull((span) => span.attribute == attribute);
     if (span == null) {
       throw StateError(
           '''The template passed to 'end' must be activated by calling 'start' first.''');
     }
 
-    _spanList = _spanList.merge(span.copyWith(end: _length));
+    _spans = _spans.merge(span.copyWith(end: _length));
     _activeSpans.remove(span);
   }
 
@@ -191,7 +191,7 @@ class SpannedStringBuilder {
       _end(span.attribute);
     }
 
-    final str = SpannedString(_buffer.toString().characters, _spanList);
+    final str = SpannedString(_buffer.toString().characters, _spans);
     _buffer.clear();
     return str;
   }

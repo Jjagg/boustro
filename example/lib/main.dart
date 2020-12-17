@@ -109,13 +109,6 @@ class _HomeScreenState extends State<HomeScreen> {
       attributeTheme:
           (AttributeThemeBuilder()..boldFontWeight = FontWeight.w900).build());
 
-  final boustroContext = BoustroContext(
-    lineHandlers: const [BulletListModifier()],
-    embedHandlers: [
-      ImageEmbed(),
-    ],
-  );
-
   @override
   void dispose() {
     scrollController.dispose();
@@ -150,7 +143,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         .push<void>(MaterialPageRoute<void>(builder: (context) {
                       return Scaffold(
                         body: BoustroView(
-                          context: boustroContext,
                           document: controller.toDocument(),
                         ),
                       );
@@ -165,7 +157,6 @@ class _HomeScreenState extends State<HomeScreen> {
               Expanded(
                 child: BoustroEditor(
                   controller: controller,
-                  context: boustroContext,
                 ),
               ),
               Toolbar(
@@ -196,9 +187,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       ToolbarItem(
                         title: const Icon(Icons.photo_camera),
                         onPressed: (context, controller) {
-                          final embed = controller
-                              .insertEmbedAtCurrent(const BoustroParagraphEmbed(
-                            'image',
+                          final embed =
+                              controller.insertEmbedAtCurrent(const ImageEmbed(
                             NetworkImage(
                                 'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
                           ));
@@ -225,15 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ToolbarItem(
                     title: const Icon(Icons.list),
                     onPressed: (context, controller) {
-                      final line = controller.focusedLine;
-                      if (line != null) {
-                        final isBullet = line.properties['list'] == 'bullet';
-                        final props = isBullet
-                            ? line.properties.rebuild((r) => r.remove('list'))
-                            : line.properties
-                                .rebuild((r) => r['list'] = 'bullet');
-                        controller.setLineProperties(line, props.asMap());
-                      }
+                      controller.toggleLineModifier(bulletListModifier);
                     },
                   ),
                   ToolbarItem(

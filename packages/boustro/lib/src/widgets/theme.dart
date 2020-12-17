@@ -174,7 +174,7 @@ class BoustroThemeData extends Equatable {
   /// Padding for lines of text.
   ///
   /// The horizontal part of this padding is applied outside of any
-  /// [LineParagraphModifier]s, while the vertical part is applied inside of
+  /// [LineModifier]s, while the vertical part is applied inside of
   /// them.
   final EdgeInsetsGeometry? linePadding;
 

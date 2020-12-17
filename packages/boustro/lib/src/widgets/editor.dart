@@ -17,17 +17,10 @@ class BoustroView extends StatefulWidget {
   /// Create a boustro view.
   ///
   /// [document] is the content that will be displayed.
-  ///
-  /// [context] is used to render embeds and modify lines based on their
-  /// properties.
   const BoustroView({
     Key? key,
-    required this.context,
     required this.document,
   }) : super(key: key);
-
-  /// Context determines how the elements of a [BoustroDocument] are displayed.
-  final BoustroContext context;
 
   /// The contents this view will display.
   final BoustroDocument document;
@@ -37,9 +30,7 @@ class BoustroView extends StatefulWidget {
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties
-      ..add(DiagnosticsProperty<BoustroContext>('context', context))
-      ..add(DiagnosticsProperty<BoustroDocument>('document', document));
+    properties.add(DiagnosticsProperty<BoustroDocument>('document', document));
   }
 }
 
@@ -54,7 +45,7 @@ class _BoustroViewState extends State<BoustroView> {
       return p
           .match<Iterable<TextAttribute>>(
               embed: (e) => [],
-              line: (l) => l.spanList.spans.map((s) => s.attribute))
+              line: (l) => l.spans.iter.map((s) => s.attribute))
           .map((attr) => attr.resolve(attributeTheme));
     }).toSet();
 
@@ -112,39 +103,36 @@ class _BoustroViewState extends State<BoustroView> {
   }
 
   Widget _buildParagraph(BuildContext buildContext, BoustroParagraph value) {
-    Widget result;
-
-    if (value is BoustroLine) {
+    return value.match(line: (line) {
       final atheme = AttributeTheme.of(context);
-      final spans = value.spannedText.buildTextSpans(
+      final spans = line.spannedText.buildTextSpans(
         style: const TextStyle(),
         recognizers: _recognizers,
         attributeTheme: atheme,
       );
-      result = Text.rich(spans);
 
-      result = BoustroLineModifier(
-        properties: value.properties,
-        handlers: widget.context.lineHandlers,
-        child: result,
+      final btheme = BoustroTheme.of(context);
+      final linePadding = (btheme.linePadding ??
+              BoustroThemeData.fallbackForContext(context).linePadding!)
+          .resolve(Directionality.of(context));
+      return Padding(
+        padding:
+            EdgeInsets.only(left: linePadding.left, right: linePadding.right),
+        child: line.modifiers.fold<Widget>(
+          Text.rich(spans),
+          (line, h) => h.modify(context, line),
+        ),
       );
-    } else {
-      final embed = value as BoustroParagraphEmbed;
-      final builder = widget.context.paragraphEmbedBuilders[embed.type];
-      if (builder == null) {
-        throw UnsupportedError('Missing builder for embed ${embed.type}.');
-      }
+    }, embed: (embed) {
       final scope = BoustroScope.of(buildContext);
       final btheme = BoustroTheme.of(context);
       final padding = btheme.embedPadding ??
           BoustroThemeData.fallbackForContext(buildContext).embedPadding!;
-      result = Padding(
+      return Padding(
         padding: padding,
-        child: builder.buildEmbed(scope, embed),
+        child: embed.build(scope: scope),
       );
-    }
-
-    return result;
+    });
   }
 }
 
@@ -154,14 +142,10 @@ class BoustroEditor extends StatelessWidget {
   const BoustroEditor({
     Key? key,
     required this.controller,
-    required this.context,
   }) : super(key: key);
 
   /// Controller that manages the state of the editor.
   final DocumentController controller;
-
-  /// Context determines how the elements of a [BoustroDocument] are displayed.
-  final BoustroContext context;
 
   @override
   Widget build(BuildContext context) {
@@ -238,37 +222,37 @@ class BoustroEditor extends StatelessWidget {
     final value = controller.paragraphs[index];
     if (value is LineState) {
       final key = GlobalObjectKey(value.controller);
-      result = BoustroLineModifier(
-        properties: value.properties,
-        handlers: context.lineHandlers,
-        child: TextField(
-          key: key,
-          controller: value.controller,
-          focusNode: value.focusNode,
-          maxLines: null,
-          keyboardType: TextInputType.multiline,
-          textInputAction: TextInputAction.newline,
-          decoration: InputDecoration(
-            isDense: true,
-            contentPadding: EdgeInsets.only(
-              top: linePadding.top,
-              bottom: linePadding.bottom,
-            ),
-            border: InputBorder.none,
-            focusedBorder: InputBorder.none,
-            enabledBorder: InputBorder.none,
+
+      final textField = TextField(
+        key: key,
+        controller: value.controller,
+        focusNode: value.focusNode,
+        maxLines: null,
+        keyboardType: TextInputType.multiline,
+        textInputAction: TextInputAction.newline,
+        decoration: InputDecoration(
+          isDense: true,
+          contentPadding: EdgeInsets.only(
+            top: linePadding.top,
+            bottom: linePadding.bottom,
           ),
+          border: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          enabledBorder: InputBorder.none,
         ),
       );
+
+      result = Padding(
+          padding:
+              EdgeInsets.only(left: linePadding.left, right: linePadding.right),
+          child: value.modifiers.fold<Widget>(
+            textField,
+            (line, h) => h.modify(buildContext, line),
+          ));
     } else {
       final embed = value as EmbedState;
-      final builder = context.paragraphEmbedBuilders[embed.content.type];
-      if (builder == null) {
-        throw UnsupportedError(
-            'Missing builder for embed ${embed.content.type}.');
-      }
       final scope = BoustroScope.of(buildContext);
-      result = builder.buildEmbed(scope, embed.content, embed.focusNode);
+      result = embed.content.build(scope: scope, focusNode: embed.focusNode);
     }
 
     return result;
@@ -278,65 +262,6 @@ class BoustroEditor extends StatelessWidget {
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties
-      ..add(DiagnosticsProperty<DocumentController>('controller', controller))
-      ..add(DiagnosticsProperty<BoustroContext>('context', context));
-  }
-}
-
-/// Widget that wraps a [child] and applies [LineParagraphModifier]s based on
-/// [properties].
-///
-/// Modifiers are only applied if [LineParagraphModifier.shouldBeApplied]
-/// returns true when called with [properties].
-///
-/// The order in which modifiers are applied is determined by
-/// [LineParagraphModifier.priority].
-class BoustroLineModifier extends StatelessWidget {
-  /// Create a line modifier.
-  const BoustroLineModifier({
-    Key? key,
-    required this.handlers,
-    required this.properties,
-    required this.child,
-  }) : super(key: key);
-
-  /// Nestable builders that modify how the child is wrapped.
-  final BuiltList<LineParagraphModifier> handlers;
-
-  /// Determines which of [handlers] should be applied.
-  final BuiltMap<String, Object> properties;
-
-  /// Child to wrap.
-  ///
-  /// Within boustro this is a [Text.rich] for [BoustroView] and a
-  /// [TextField] for [BoustroEditor].
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final btheme = BoustroTheme.of(context);
-    final linePadding = (btheme.linePadding ??
-            BoustroThemeData.fallbackForContext(context).linePadding!)
-        .resolve(Directionality.of(context));
-    return Padding(
-      padding:
-          EdgeInsets.only(left: linePadding.left, right: linePadding.right),
-      child: handlers
-          .where((h) => h.shouldBeApplied(properties.asMap()))
-          .fold<Widget>(
-            child,
-            (line, h) => h.modify(context, properties.asMap(), line),
-          ),
-    );
-  }
-
-  @override
-  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    super.debugFillProperties(properties);
-    properties
-      ..add(IterableProperty<LineParagraphModifier>('handlers', handlers))
-      ..add(IterableProperty<MapEntry<String, Object>>(
-          'properties', this.properties.entries,
-          ifEmpty: null));
+        .add(DiagnosticsProperty<DocumentController>('controller', controller));
   }
 }

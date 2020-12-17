@@ -67,7 +67,7 @@ void main() {
       expect(
         SpanList([
           sp(a, 1, 2, InsertBehavior.exclusive, InsertBehavior.inclusive)
-        ]).collapse(Range(1, 3)).spans,
+        ]).collapse(Range(1, 3)).iter,
         <dynamic>[],
       );
     });
@@ -76,7 +76,7 @@ void main() {
       expect(
         SpanList([
           sp(a, 1, 2, InsertBehavior.inclusive, InsertBehavior.exclusive)
-        ]).collapse(Range(0, 2)).spans,
+        ]).collapse(Range(0, 2)).iter,
         <dynamic>[],
       );
     });
@@ -85,7 +85,7 @@ void main() {
       expect(
         SpanList([
           sp(a, 1, 2, InsertBehavior.exclusive, InsertBehavior.exclusive)
-        ]).collapse(Range(1, 2)).spans,
+        ]).collapse(Range(1, 2)).iter,
         <dynamic>[],
       );
     });
@@ -94,7 +94,7 @@ void main() {
       expect(
         SpanList([
           sp(a, 1, 3, InsertBehavior.exclusive, InsertBehavior.exclusive)
-        ]).collapse(Range(1, 2)).spans,
+        ]).collapse(Range(1, 2)).iter,
         [sp(a, 1, 2, InsertBehavior.exclusive, InsertBehavior.exclusive)],
       );
     });
@@ -103,7 +103,7 @@ void main() {
   group('shift', () {
     test('insertion before', () {
       expect(
-        SpanList().shift(0, 5).merge(sp(a, 3, 4)).shift(1, 3).spans,
+        SpanList().shift(0, 5).merge(sp(a, 3, 4)).shift(1, 3).iter,
         [sp(a, 6, 7)],
       );
     });
@@ -114,21 +114,21 @@ void main() {
       final l = SpanList().shift(0, 5);
       final s1 = sp(a, 1, 2);
       final s2 = sp(a, 2, 3);
-      expect(l.merge(s1).merge(s2).spans, [sp(a, 1, 3)]);
+      expect(l.merge(s1).merge(s2).iter, [sp(a, 1, 3)]);
     });
     test('merge bridge', () {
       final l = SpanList();
       final s1 = sp(a, 1, 3);
       final s2 = sp(a, 5, 8);
       final s3 = sp(a, 3, 5);
-      expect(l.merge(s1).merge(s2).merge(s3).spans, [sp(a, 1, 8)]);
-      expect(SpanList([s1, s2, s3]).spans, [sp(a, 1, 8)]);
+      expect(l.merge(s1).merge(s2).merge(s3).iter, [sp(a, 1, 8)]);
+      expect(SpanList([s1, s2, s3]).iter, [sp(a, 1, 8)]);
     });
     test('constructor merges all', () {
       final s1 = sp(a, 1, 3);
       final s2 = sp(a, 5, 8);
       final s3 = sp(a, 3, 5);
-      expect(SpanList([s1, s2, s3]).spans, [sp(a, 1, 8)]);
+      expect(SpanList([s1, s2, s3]).iter, [sp(a, 1, 8)]);
     });
 
     test('merge containing', () {
@@ -136,7 +136,7 @@ void main() {
       final s1 = sp(a, 1, 3);
       final s2 = sp(a, 5, 8);
       final s3 = sp(a, 0, 9);
-      expect(l.merge(s1).merge(s2).merge(s3).spans, [sp(a, 0, 9)]);
+      expect(l.merge(s1).merge(s2).merge(s3).iter, [sp(a, 0, 9)]);
     });
   });
 

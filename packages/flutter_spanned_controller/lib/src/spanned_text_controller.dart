@@ -213,14 +213,14 @@ class SpannedTextEditingController implements TextEditingController {
     this.processTextValue = _defaultProcessTextValue,
     this.attributeTheme,
     String? text,
-    Iterable<AttributeSpan>? spans,
+    SpanList? spans,
   })  : compositionAttribute = compositionAttribute ??
             TextAttribute.simple(
               debugName: 'composition underline',
               style: const TextStyle(decoration: TextDecoration.underline),
             ),
         _textController = TextEditingController(text: text),
-        _spans = SpanList(spans);
+        _spans = spans ?? SpanList();
 
   /// Create a new spanned text editing controller with the same state as this
   /// one.
@@ -228,7 +228,7 @@ class SpannedTextEditingController implements TextEditingController {
       compositionAttribute: compositionAttribute,
       processTextValue: processTextValue,
       text: text,
-      spans: spans.spans);
+      spans: spans);
 
   /// Create a new spanned text editing controller with the same state as this
   /// one, but with the given fields replaced with the new values.
@@ -236,13 +236,14 @@ class SpannedTextEditingController implements TextEditingController {
     TextAttribute? compositionAttribute,
     ProcessTextValue? processTextValue,
     String? text,
-    Iterable<AttributeSpan>? spans,
+    SpanList? spans,
   }) {
     return SpannedTextEditingController(
-        compositionAttribute: compositionAttribute ?? this.compositionAttribute,
-        processTextValue: processTextValue ?? this.processTextValue,
-        text: text ?? this.text,
-        spans: spans ?? this.spans.spans);
+      compositionAttribute: compositionAttribute ?? this.compositionAttribute,
+      processTextValue: processTextValue ?? this.processTextValue,
+      text: text ?? this.text,
+      spans: spans ?? this.spans,
+    );
   }
 
   /// The theme for the attributes applied by this span.
@@ -329,7 +330,7 @@ class SpannedTextEditingController implements TextEditingController {
           .collapse(diff.deletedRange)
           .shift(diff.index, diff.inserted.length);
       _applyOverrides(
-        TextRange(start: diff.index, end: diff.index + diff.inserted.length),
+        Range(diff.index, diff.index + diff.inserted.length),
       );
 
       if (pValue.selection != _textController.selection ||
@@ -359,7 +360,7 @@ class SpannedTextEditingController implements TextEditingController {
 
   @override
   TextSpan buildTextSpan({TextStyle? style, required bool withComposing}) {
-    if (spans.spans.isEmpty) {
+    if (spans.iter.isEmpty) {
       return _textController.buildTextSpan(
         style: style,
         withComposing: withComposing,
@@ -422,7 +423,7 @@ class SpannedTextEditingController implements TextEditingController {
   void removeListener(void Function() listener) =>
       _textController.removeListener(listener);
 
-  void _applyOverrides(TextRange range) {
+  void _applyOverrides(Range range) {
     // apply overrides
     for (final ao in _attributeOverrides) {
       if (ao.type == OverrideType.apply) {
@@ -435,7 +436,7 @@ class SpannedTextEditingController implements TextEditingController {
         );
         spans = spans.merge(span);
       } else {
-        spans = spans.removeFrom(_convertRange(range), ao.attribute);
+        spans = spans.removeFrom(range, ao.attribute);
       }
     }
   }

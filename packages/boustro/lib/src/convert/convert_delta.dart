@@ -43,10 +43,10 @@ class TextAttributeDeltaCodec {
 }
 
 /// Function that decodes an embed.
-typedef EmbedDecoder = Object Function(Map<String, dynamic>);
+typedef EmbedDecoder = ParagraphEmbed Function(Map<String, dynamic>);
 
 /// Function that encodes an embed.
-typedef EmbedEncoder = Map<String, dynamic> Function(Object);
+typedef EmbedEncoder = Map<String, dynamic> Function(ParagraphEmbed);
 
 /// Codec that can encode/decode the value of the embed with matching key.
 @immutable
@@ -54,7 +54,7 @@ class EmbedCodec {
   /// Create an embed codec.
   const EmbedCodec(this.key, this.decoder, this.encoder);
 
-  /// Identifies the type of the embed. See [ParagraphEmbedBuilder.type].
+  /// Identifies the type of the embed. See [ParagraphEmbed.type].
   final String key;
 
   /// Decoder for the embed value.
@@ -124,7 +124,7 @@ class BoustroDocumentDeltaConverter extends Codec<BoustroDocument, List<Op>> {
   final Object? Function(TextAttribute) attributeEncoder;
 
   /// Maps embed keys to their encoder.
-  final Map<String, EmbedDecoder> embedEncoders;
+  final Map<String, EmbedEncoder> embedEncoders;
 
   @override
   Converter<List<Op>, BoustroDocument> get decoder =>
@@ -147,7 +147,7 @@ class BoustroDocumentDeltaEncoder extends Converter<BoustroDocument, List<Op>> {
   final Object? Function(TextAttribute attribute) attributeEncoder;
 
   /// Maps embed keys to their encoder.
-  final Map<String, EmbedDecoder> embedEncoders;
+  final Map<String, EmbedEncoder> embedEncoders;
 
   @override
   List<Op> convert(BoustroDocument input) {
@@ -191,11 +191,7 @@ class BoustroDocumentDeltaDecoder extends Converter<List<Op>, BoustroDocument> {
               input, 'input', 'Attribute with missing codec: ${first.type}.');
         }
 
-        final value = decoder(first.value.asMap());
-        final embed = BoustroParagraphEmbed(
-          first.type,
-          value,
-        );
+        final embed = decoder(first.value.asMap());
         paragraphs.add(embed);
       } else {
         final paragraph = _opsToLine(line);
@@ -223,6 +219,8 @@ class BoustroDocumentDeltaDecoder extends Converter<List<Op>, BoustroDocument> {
               final opText = text.substring(0, newline);
 
               BuiltMap<String, Object>? lineAttribs;
+
+              // TODO proper line style/modifier support
 
               // If the op contained only a newline character, the attributes apply
               // to the entire line.
@@ -292,7 +290,7 @@ class BoustroDocumentDeltaDecoder extends Converter<List<Op>, BoustroDocument> {
 
     final text =
         segments.fold<String>('', (str, segment) => str + segment.text.string);
-    return BoustroLine(text, spans, properties: line.properties);
+    return BoustroLine(text: text, spans: spans);
   }
 }
 

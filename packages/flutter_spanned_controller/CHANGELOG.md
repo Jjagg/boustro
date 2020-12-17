@@ -9,23 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- System to theme TextAttributes with AttributeTheme.
-- Range to avoid confusion with TextRange.
-  TextRange is designed to be for indexing into String by UTF-16 code units.
+- System to theme `TextAttributes` with `AttributeTheme`.
+- Range to avoid confusion with `TextRange`.
+  `TextRange` is designed to be for indexing into `String` by UTF-16 code units.
 
 ### Changed
 
-- TextAttribute now has a resolve method that returns the actual information for
-  applying the attribute in the form of TextAttributeValue.
-- The characters library is used to index with grapheme clusters instead of UTF-16 code units.
-  This changes most String-base API to use Characters instead.
-- Use Range in AttributeSpan and related classes to avoid confusion with UTF-16 indices used by TextRange.
+- `TextAttribute` now has a resolve method that returns the actual information for
+  applying the attribute in the form of `TextAttributeValue`.
+- The `characters` library is used to index with grapheme clusters instead of UTF-16 code units.
+  This changes most `String`-based API to use `Characters` instead.
+- Use `Range` in `AttributeSpan` and related classes to avoid confusion with UTF-16 indices used by `TextRange`.
+- Renamed `SpanList.spans` to `iter` to prevent confusing `spans.spans`.
+- `SpannedTextEditingController` takes a `SpanList` now instead of `Iterable<AttributeSpan>`.
 
 ## [0.2.0-0] — 2020-12-14
 
 ### Added
 
-- SpannedStringBuilder to fluently build SpannedString.
+- `SpannedStringBuilder` to fluently build `SpannedString`.
 
 ## [0.1.1-0] — 2020-12-14
 

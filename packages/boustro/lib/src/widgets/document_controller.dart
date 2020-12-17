@@ -1,9 +1,12 @@
+import 'dart:ui';
+
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
+import '../context.dart';
 import '../document.dart';
 import 'editor.dart';
 
@@ -39,21 +42,31 @@ abstract class ParagraphState {
 class LineState extends ParagraphState {
   /// Create a text line.
   LineState({
+    required SpannedTextEditingController controller,
+    required FocusNode focusNode,
+    List<LineModifier>? modifiers,
+  }) : this.built(
+          controller: controller,
+          focusNode: focusNode,
+          modifiers: modifiers?.build() ?? BuiltList<LineModifier>(),
+        );
+
+  /// Create a text line, directly providing the values for its fields.
+  const LineState.built({
     required this.controller,
     required FocusNode focusNode,
-    BuiltMap<String, Object>? properties,
-  })  : properties = properties ?? BuiltMap<String, Object>(),
-        super(focusNode: focusNode);
+    required this.modifiers,
+  }) : super(focusNode: focusNode);
 
   /// Create a copy of this line state, but with properties set to the new
   /// properties.
-  LineState withProperties(
-    Map<String, dynamic> properties,
+  LineState withModifiers(
+    BuiltList<LineModifier> modifiers,
   ) {
-    return LineState(
+    return LineState.built(
       controller: controller,
       focusNode: focusNode,
-      properties: BuiltMap.from(properties),
+      modifiers: modifiers,
     );
   }
 
@@ -61,8 +74,11 @@ class LineState extends ParagraphState {
   /// and markup of this line.
   final SpannedTextEditingController controller;
 
-  /// Properties that can affect how this line is displayed.
-  final BuiltMap<String, Object> properties;
+  /// Modifiers that can affect how this line is displayed.
+  ///
+  /// Modifiers are applied in order, wrapping each other. E.g. if modifiers is
+  /// equal to `[a, b]`, then they will be applied as `b(a(line))`.
+  final BuiltList<LineModifier> modifiers;
 
   @override
   void dispose() {
@@ -79,8 +95,6 @@ class LineState extends ParagraphState {
 }
 
 /// Holds [FocusNode] and content for a boustro embed.
-///
-/// This is the editable variant of [BoustroParagraphEmbed].
 @immutable
 class EmbedState extends ParagraphState {
   /// Create an embed.
@@ -89,17 +103,8 @@ class EmbedState extends ParagraphState {
     required this.content,
   }) : super(focusNode: focusNode);
 
-  /// Create a copy of this embed state, but with the value of its content set
-  /// to the new value.
-  EmbedState withValue(Object value) {
-    return EmbedState(
-      focusNode: focusNode,
-      content: content.withValue(value),
-    );
-  }
-
   /// Content of the embed.
-  final BoustroParagraphEmbed content;
+  final ParagraphEmbed content;
 
   @override
   T match<T>({
@@ -168,7 +173,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     value = value.rebuild(updates);
   }
 
-  /// Get the index of the focused paragraph or -1 if no paragrap has focus.
+  /// Get the index of the focused paragraph or null if no paragraph has focus.
   int? get focusedParagraphIndex {
     final index = paragraphs.indexWhere((p) => p.focusNode.hasPrimaryFocus);
     return index == -1 ? null : index;
@@ -196,7 +201,8 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     }
 
     final lineIndex = paragraphs.indexWhere(
-        (ctrl) => ctrl is LineState && identical(ctrl.controller, controller));
+      (ctrl) => ctrl is LineState && identical(ctrl.controller, controller),
+    );
     assert(lineIndex >= 0, 'processTextValue called with missing controller.');
 
     final currentLine = paragraphs[lineIndex] as LineState;
@@ -218,9 +224,10 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
       final nextLine = t.collapse(before: indexAfterNewline);
       insertLine(
         lineIndex + 1,
-        BoustroLine.fromSpanned(
-          nextLine,
-          properties: currentLine.properties,
+        BoustroLine.built(
+          text: nextLine.text,
+          spans: nextLine.spans,
+          modifiers: currentLine.modifiers,
         ),
       );
       t = t.collapse(after: newlineRange.charactersBefore.length);
@@ -248,7 +255,8 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     final paragraphs = this
         .paragraphs
         .map((p) => p.match<BoustroParagraph>(
-              line: (l) => BoustroLine.fromSpanned(l.controller.spannedString),
+              line: (l) =>
+                  BoustroLine.fromSpanned(string: l.controller.spannedString),
               // TODO need a controller to modify embed state.
               embed: (e) => e.content,
             ))
@@ -265,8 +273,8 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   LineState insertLine(int index, [BoustroLine? line]) {
     final spanController = SpannedTextEditingController(
       processTextValue: _processTextValue,
-      text: line?.text,
-      spans: line?.spanList.spans,
+      text: line?.text.string,
+      spans: line?.spans,
       attributeTheme: attributeTheme,
     );
 
@@ -283,7 +291,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     final newLine = LineState(
       controller: spanController,
       focusNode: focusNode,
-      properties: line?.properties,
+      modifiers: line?.modifiers.asList(),
     );
 
     _rebuild((r) => r.insert(index, newLine));
@@ -291,21 +299,56 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   }
 
   /// Apply a text attribute to the currently focused line, if there is one.
-  void setCurrentLineStyle(TextAttribute attribute) {
+  void setLineStyle(TextAttribute attribute) {
     final line = focusedLine;
     if (line != null) {
-      final ctrl = line.controller;
-      final span = AttributeSpan.fixed(
-        attribute,
-        0,
-        maxSpanLength,
-      );
-      ctrl.spans = ctrl.spans.merge(span);
+      setLineStyleOf(line, attribute);
+    }
+  }
+
+  /// Apply a text attribute to the line at the given index, if the index is
+  /// valid and points to a [LineState].
+  void setLineStyleAt(int index, TextAttribute attribute) {
+    if (index >= 0 && index < paragraphs.length) {
+      final paragraph = paragraphs[index];
+      if (paragraph is LineState) {
+        setLineStyleOf(paragraph, attribute);
+      }
+    }
+  }
+
+  /// Apply a text attribute to the given line.
+  void setLineStyleOf(LineState line, TextAttribute attribute) {
+    final ctrl = line.controller;
+    final span = AttributeSpan.fixed(
+      attribute,
+      0,
+      maxSpanLength,
+    );
+    ctrl.spans = ctrl.spans.merge(span);
+  }
+
+  /// Remove a text attribute from the currently focused line, if there is one.
+  void unsetLineStyle(TextAttribute attribute) {
+    final line = focusedLine;
+    if (line != null) {
+      unsetLineStyleOf(line, attribute);
+    }
+  }
+
+  /// Remove a text attribute from the line at the given index, if the index is
+  /// valid and points to a [LineState].
+  void unsetLineStyleAt(int index, TextAttribute attribute) {
+    if (index >= 0 && index < paragraphs.length) {
+      final paragraph = paragraphs[index];
+      if (paragraph is LineState) {
+        setLineStyleOf(paragraph, attribute);
+      }
     }
   }
 
   /// Remove a text attribute from the currently focused line, if there is one.
-  void unsetCurrentLineStyle(TextAttribute attribute) {
+  void unsetLineStyleOf(LineState line, TextAttribute attribute) {
     final line = focusedLine;
     if (line != null) {
       final ctrl = line.controller;
@@ -315,38 +358,33 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
 
   /// Toggle an attribute for the current line.
   ///
-  /// Calls either [setCurrentLineStyle] or [unsetCurrentLineStyle] depending
+  /// Calls either [setLineStyle] or [unsetLineStyle] depending
   /// on whether the attribute is already applied.
-  void toggleCurrentLineStyle(TextAttribute attribute) {
+  void toggleLineStyle(TextAttribute attribute) {
     final line = focusedLine;
     if (line != null) {
       final ctrl = line.controller;
       if (line.controller.isApplied(attribute)) {
-        ctrl.spans = ctrl.spans.removeAll(attribute);
+        unsetLineStyleOf(line, attribute);
       } else {
-        final span = AttributeSpan.fixed(
-          attribute,
-          0,
-          maxSpanLength,
-        );
-        ctrl.spans = ctrl.spans.merge(span);
+        setLineStyleOf(line, attribute);
       }
     }
   }
 
-  /// Set the [LineState.properties] for [line].
-  void setLineProperties(LineState line, Map<String, dynamic> properties) {
-    final lineIndex = paragraphs.indexWhere((l) => l is LineState && l == line);
-    if (lineIndex < 0) {
-      throw ArgumentError.value(
-          line, 'line', 'line must be a member of this document.');
+  /// Toggles a line modifier for the focused line.
+  // TODO mechanism for ordering and conflicts
+  void toggleLineModifier(LineModifier modifier) {
+    final focusIndex = focusedParagraphIndex;
+    if (focusIndex != null && paragraphs[focusIndex] is LineState) {
+      final line = paragraphs[focusIndex] as LineState;
+      final hasModifier = line.modifiers.contains(modifier);
+      final modifiers = hasModifier
+          ? line.modifiers.rebuild((r) => r.remove(modifier))
+          : line.modifiers.rebuild((r) => r.insert(0, modifier));
+      final newLine = line.withModifiers(modifiers);
+      paragraphs = paragraphs.rebuild((b) => b[focusIndex] = newLine);
     }
-
-    final newLine = line.withProperties(properties);
-
-    _rebuild(
-      (b) => b[lineIndex] = newLine,
-    );
   }
 
   /// Remove the focused paragraph.
@@ -374,12 +412,12 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   }
 
   /// Add an embed after all existing paragraphs.
-  EmbedState appendEmbed(BoustroParagraphEmbed embed) {
+  EmbedState appendEmbed(ParagraphEmbed embed) {
     return insertEmbed(paragraphs.length, embed);
   }
 
   /// Insert an embed at the current index.
-  EmbedState? insertEmbedAtCurrent(BoustroParagraphEmbed embed) {
+  EmbedState? insertEmbedAtCurrent(ParagraphEmbed embed) {
     // We replace the current line if it's empty.
     var index = focusedParagraphIndex;
     if (index == null) {
@@ -395,7 +433,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   }
 
   /// Insert an embed at [index].
-  EmbedState insertEmbed(int index, BoustroParagraphEmbed embed) {
+  EmbedState insertEmbed(int index, ParagraphEmbed embed) {
     final focus = FocusNode();
     final state = EmbedState(focusNode: focus, content: embed);
 
@@ -413,7 +451,9 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
 
   // Key handler for handling backspace and delete in line paragraphs.
   KeyEventResult _onKey(
-      SpannedTextEditingController controller, RawKeyEvent ev) {
+    SpannedTextEditingController controller,
+    RawKeyEvent ev,
+  ) {
     final selection = controller.value.selection;
     // Try to merge lines when backspace is pressed at the start of
     // a line or delete at the end of a line.
@@ -426,9 +466,9 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
       assert(index >= 0, 'onKey callback from missing controller');
 
       final line = paragraphs[index] as LineState;
-      if (line.properties.isNotEmpty) {
+      if (line.modifiers.isNotEmpty) {
         _rebuild(
-          (b) => b[index] = line.withProperties(<String, dynamic>{}),
+          (b) => b[index] = line.withModifiers(BuiltList()),
         );
         return KeyEventResult.handled;
       } else {

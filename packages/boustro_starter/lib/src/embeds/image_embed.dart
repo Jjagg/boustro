@@ -13,19 +13,21 @@ import 'embed_gesture_handler.dart';
 /// If one is missing, default gesture handling will be added:
 ///
 /// * While editing, tapping the image will toggle focus.
-class ImageEmbed extends ParagraphEmbedBuilder {
-  @override
-  String get type => 'image';
+class ImageEmbed extends ParagraphEmbed {
+  /// Create an image embed.
+  const ImageEmbed(this.image);
+
+  /// Image that this embed displays.
+  final ImageProvider image;
 
   @override
-  Widget buildEmbed(
-    BoustroScope scope,
-    BoustroParagraphEmbed embed, [
+  Widget build({
+    required BoustroScope scope,
     FocusNode? focusNode,
-  ]) {
+  }) {
     return _ImageEmbed(
+      image: image,
       scope: scope,
-      embed: embed,
       focusNode: focusNode,
     );
   }
@@ -33,13 +35,13 @@ class ImageEmbed extends ParagraphEmbedBuilder {
 
 class _ImageEmbed extends StatelessWidget {
   const _ImageEmbed({
+    required this.image,
     required this.scope,
-    required this.embed,
     required this.focusNode,
   });
 
+  final ImageProvider image;
   final BoustroScope scope;
-  final BoustroParagraphEmbed embed;
   final FocusNode? focusNode;
 
   @override
@@ -159,18 +161,18 @@ class _ImageEmbed extends StatelessWidget {
             ? Colors.deepPurple.shade900.withOpacity(0.2)
             : Colors.brown.withOpacity(0.2));
 
-    Widget image = Image(
-      image: embed.value as ImageProvider,
+    Widget widget = Image(
+      image: image,
       fit: BoxFit.contain,
     );
 
-    image = imageWrapper(context, image);
+    widget = imageWrapper(context, widget);
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: maxHeight),
       child: Container(
         color: sideColor,
-        child: image,
+        child: widget,
       ),
     );
   }
@@ -179,8 +181,8 @@ class _ImageEmbed extends StatelessWidget {
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties
+      ..add(DiagnosticsProperty<ImageProvider>('image', image))
       ..add(DiagnosticsProperty<BoustroScope>('scope', scope))
-      ..add(DiagnosticsProperty<BoustroParagraphEmbed>('embed', embed))
       ..add(DiagnosticsProperty<FocusNode?>('focusNode', focusNode));
   }
 }

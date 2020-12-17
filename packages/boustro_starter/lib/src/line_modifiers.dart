@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:boustro/boustro.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -8,7 +9,7 @@ import 'package:flutter/material.dart';
 // composition, but I don't think it's that useful to have this granularity.
 // Should maybe remove these?
 
-/// Base class to compose in a [LineParagraphModifier] to order some widget
+/// Base class to compose in a [LineModifier] to order some widget
 /// before the text widget.
 class LeadingMarginModifier extends StatelessWidget {
   /// Constant constructor for a leading margin modifier.
@@ -160,14 +161,16 @@ class LeadingTextModifier extends StatelessWidget {
 }
 
 /// Paragraph modifier that puts a bullet before the text.
-class BulletListModifier extends LineParagraphModifier {
+const bulletListModifier = _BulletListModifier();
+
+/// Paragraph modifier that puts a bullet before the text.
+class _BulletListModifier extends LineModifier with EquatableMixin {
   /// Create a bullet list modifier.
-  const BulletListModifier();
+  const _BulletListModifier();
 
   @override
   Widget modify(
     BuildContext context,
-    Map<String, Object> properties,
     Widget child,
   ) {
     return LeadingTextModifier(
@@ -178,16 +181,11 @@ class BulletListModifier extends LineParagraphModifier {
   }
 
   @override
-  int get priority => 0;
-
-  @override
-  bool shouldBeApplied(Map<String, Object> properties) {
-    return properties['list'] == 'bullet';
-  }
+  List<Object?> get props => const [];
 }
 
 /// Paragraph modifier that puts a number before the text.
-class NumberedListModifier extends LineParagraphModifier {
+class NumberedListModifier extends LineModifier {
   /// Create a numbered list modifier.
   const NumberedListModifier(this.number);
 
@@ -197,7 +195,6 @@ class NumberedListModifier extends LineParagraphModifier {
   @override
   Widget modify(
     BuildContext context,
-    Map<String, Object> properties,
     Widget child,
   ) {
     // TODO this probably need some work to align properly.
@@ -211,13 +208,5 @@ class NumberedListModifier extends LineParagraphModifier {
       ),
       child: child,
     );
-  }
-
-  @override
-  int get priority => 0;
-
-  @override
-  bool shouldBeApplied(Map<String, Object> properties) {
-    return properties['list'] == 'numbered';
   }
 }
