@@ -6,7 +6,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
-import '../context.dart';
 import '../document.dart';
 import '../scope.dart';
 import 'document_controller.dart';

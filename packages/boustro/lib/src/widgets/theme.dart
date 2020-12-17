@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-import '../context.dart';
+import '../document.dart';
 import 'editor.dart';
 import 'toolbar.dart';
 

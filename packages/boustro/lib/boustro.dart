@@ -2,7 +2,6 @@ library boustro;
 
 export 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
-export 'src/context.dart';
 export 'src/document.dart';
 export 'src/scope.dart';
 

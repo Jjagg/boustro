@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
-import 'context.dart';
 import 'scope.dart';
 
 /// Rich text represented as a list of [BoustroParagraph]s.
@@ -140,4 +139,16 @@ class DocumentBuilder {
     _paragraphs.clear();
     return doc;
   }
+}
+
+/// Wraps a line to modify how it's displayed.
+abstract class LineModifier {
+  /// Constant base constructor for implementations.
+  const LineModifier();
+
+  /// Build a text paragraph with some modification.
+  Widget modify(
+    BuildContext context,
+    Widget child,
+  );
 }

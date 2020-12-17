@@ -6,7 +6,6 @@ import 'package:collection/collection.dart';
 import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 import 'package:meta/meta.dart';
 
-import '../context.dart';
 import '../document.dart';
 import 'convert.dart';
 import 'ops.dart';
@@ -43,25 +42,30 @@ class TextAttributeDeltaCodec {
 }
 
 /// Function that decodes an embed.
-typedef EmbedDecoder = ParagraphEmbed Function(Map<String, dynamic>);
+typedef EmbedDecoder<T extends ParagraphEmbed> = T Function(
+    Map<String, dynamic>);
 
 /// Function that encodes an embed.
-typedef EmbedEncoder = Map<String, dynamic> Function(ParagraphEmbed);
+typedef EmbedEncoder<T extends ParagraphEmbed> = Map<String, dynamic> Function(
+    T);
 
 /// Codec that can encode/decode the value of the embed with matching key.
 @immutable
-class EmbedCodec {
+class EmbedCodec<T extends ParagraphEmbed> {
   /// Create an embed codec.
   const EmbedCodec(this.key, this.decoder, this.encoder);
 
-  /// Identifies the type of the embed. See [ParagraphEmbed.type].
+  /// Object type in the delta format that can be decoded with [decoder].
   final String key;
 
   /// Decoder for the embed value.
-  final EmbedDecoder decoder;
+  final EmbedDecoder<T> decoder;
+
+  /// Runtime type of the embed this codec can encodes and decodes to.
+  Type get embedType => T;
 
   /// Encoder for the embed value.
-  final EmbedEncoder encoder;
+  final EmbedEncoder<T> encoder;
 }
 
 /// Convenience function to create a codec for a [TextAttribute] with a boolean
@@ -103,7 +107,7 @@ class BoustroDocumentDeltaConverter extends Codec<BoustroDocument, List<Op>> {
   )   : attributeDecoders = {for (final c in attributeCodecs) c.key: c},
         attributeEncoder = _createEncoder(attributeCodecs),
         embedDecoders = {for (final c in embedCodec) c.key: c.decoder},
-        embedEncoders = {for (final c in embedCodec) c.key: c.encoder};
+        embedEncoders = {for (final c in embedCodec) c.embedType: c.encoder};
 
   static Object? Function(TextAttribute attribute) _createEncoder(
     List<TextAttributeDeltaCodec> attributeCodecs,
@@ -124,7 +128,7 @@ class BoustroDocumentDeltaConverter extends Codec<BoustroDocument, List<Op>> {
   final Object? Function(TextAttribute) attributeEncoder;
 
   /// Maps embed keys to their encoder.
-  final Map<String, EmbedEncoder> embedEncoders;
+  final Map<Type, EmbedEncoder> embedEncoders;
 
   @override
   Converter<List<Op>, BoustroDocument> get decoder =>
@@ -147,7 +151,7 @@ class BoustroDocumentDeltaEncoder extends Converter<BoustroDocument, List<Op>> {
   final Object? Function(TextAttribute attribute) attributeEncoder;
 
   /// Maps embed keys to their encoder.
-  final Map<String, EmbedEncoder> embedEncoders;
+  final Map<Type, EmbedEncoder> embedEncoders;
 
   @override
   List<Op> convert(BoustroDocument input) {

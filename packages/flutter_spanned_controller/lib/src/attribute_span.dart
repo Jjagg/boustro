@@ -592,7 +592,7 @@ class SpanList extends Equatable {
 
   /// Create a SpanList from segments.
   ///
-  /// Segments will be merged to create the [spans].
+  /// Segments will be merged to create the spans.
   /// [getInsertBehavior] is used to determine insert behavior
   /// for created spans, since [AttributeSegment] does not
   /// store that information.

@@ -1,12 +1,9 @@
-import 'dart:ui';
-
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
-import '../context.dart';
 import '../document.dart';
 import 'editor.dart';
 
@@ -363,7 +360,6 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   void toggleLineStyle(TextAttribute attribute) {
     final line = focusedLine;
     if (line != null) {
-      final ctrl = line.controller;
       if (line.controller.isApplied(attribute)) {
         unsetLineStyleOf(line, attribute);
       } else {
