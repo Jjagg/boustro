@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Finally, I've come up with the right name for this concept :)
 - Rename `SpannedString()` to `SpannedString.chars()` and let unnamed constructor take `String`.
 
+### Fixed
+
+- Changed library name from flutter\_span\_controller to flutter\_spann**ed**\_controller.
+
 ## [0.2.0-0] — 2020-12-14
 
 ### Added

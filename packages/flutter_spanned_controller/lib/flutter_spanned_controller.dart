@@ -1,4 +1,4 @@
-library flutter_span_controller;
+library flutter_spanned_controller;
 
 export 'src/attribute_span.dart';
 export 'src/spanned_string.dart';
