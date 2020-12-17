@@ -118,6 +118,10 @@ class SpannedString extends Equatable {
     AttributeThemeData? attributeTheme,
     Map<TextAttributeValue, GestureRecognizer>? recognizers,
   }) {
+    if (spans.iter.isEmpty) {
+      return TextSpan(text: text.string, style: style);
+    }
+
     final segments = spans.getSegments(text);
     return segments.buildTextSpans(
       style: style,

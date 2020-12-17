@@ -66,6 +66,9 @@ void main() {
     test('end < start', () {
       expect(() => s.collapse(start: 3, end: 2), throwsArgumentError);
     });
+    test('start and end null', () {
+      expect(s.collapse, throwsArgumentError);
+    });
   });
 
   group('insert', () {
@@ -122,14 +125,45 @@ void main() {
     });
   });
 
+  group('applyDiff', () {
+    const str = 'This is a test';
+    final s = SpannedString(str, SpanList([sp(a, 0, 4), sp(b, 3, 7)]));
+    test('insert', () {
+      expect(
+        s.applyDiff(StringDiff(0, ''.characters, 'OK'.characters)),
+        SpannedString('OK$str', SpanList([sp(a, 2, 6), sp(b, 5, 9)])),
+      );
+    });
+    test('delete', () {
+      expect(
+        s.applyDiff(StringDiff(2, 'is'.characters, ''.characters)),
+        SpannedString('Th is a test', SpanList([sp(a, 0, 2), sp(b, 2, 5)])),
+      );
+    });
+    test('insert delete', () {
+      expect(
+        s.applyDiff(StringDiff(2, 'is'.characters, 'OK'.characters)),
+        SpannedString('ThOK is a test', SpanList([sp(a, 0, 2), sp(b, 4, 7)])),
+      );
+    });
+  });
+
+  group('buildTextSpans', () {
+    test('plain', () {
+      final sp = SpannedString('Hello').buildTextSpans(style: TextStyle());
+      expect(sp, TextSpan(text: 'Hello', style: TextStyle()));
+    });
+  });
+
   group('builder', () {
     test('text only', () {
       expect(
         (SpannedStringBuilder()
               ..write('Testing')
-              ..writeln())
+              ..writeln()
+              ..writeln('😴'))
             .build(),
-        SpannedString('Testing\n'),
+        SpannedString('Testing\n😴\n'),
       );
     });
     test('single span', () {
@@ -163,6 +197,21 @@ void main() {
                 ..end(spt(b)))
               .build(),
           SpannedString('Test', SpanList([sp(a, 0, 3), sp(b, 1, 4)])));
+    });
+    test('end unstarted span throws', () {
+      expect(() => SpannedStringBuilder().end(spt(a)), throwsStateError);
+    });
+    test('line style', () {
+      expect(
+        (SpannedStringBuilder()
+              ..lineStyle(a)
+              ..write('Test'))
+            .build(),
+        SpannedString(
+          'Test',
+          SpanList([AttributeSpan.fixed(a, 0, maxSpanLength)]),
+        ),
+      );
     });
     test('segment style', () {
       expect(
