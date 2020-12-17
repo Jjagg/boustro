@@ -65,37 +65,37 @@ void main() {
   group('collapse', () {
     test('''remove collapsed span at the end''', () {
       expect(
-        SpanList([
-          sp(a, 1, 2, InsertBehavior.exclusive, InsertBehavior.inclusive)
-        ]).collapse(Range(1, 3)).iter,
+        SpanList([sp(a, 1, 2, ExpandRule.exclusive, ExpandRule.inclusive)])
+            .collapse(Range(1, 3))
+            .iter,
         <dynamic>[],
       );
     });
 
     test('''remove useless span at the start''', () {
       expect(
-        SpanList([
-          sp(a, 1, 2, InsertBehavior.inclusive, InsertBehavior.exclusive)
-        ]).collapse(Range(0, 2)).iter,
+        SpanList([sp(a, 1, 2, ExpandRule.inclusive, ExpandRule.exclusive)])
+            .collapse(Range(0, 2))
+            .iter,
         <dynamic>[],
       );
     });
 
     test('''remove useless span collapsed''', () {
       expect(
-        SpanList([
-          sp(a, 1, 2, InsertBehavior.exclusive, InsertBehavior.exclusive)
-        ]).collapse(Range(1, 2)).iter,
+        SpanList([sp(a, 1, 2, ExpandRule.exclusive, ExpandRule.exclusive)])
+            .collapse(Range(1, 2))
+            .iter,
         <dynamic>[],
       );
     });
 
     test('''do not remove unexpandable span not collapsed''', () {
       expect(
-        SpanList([
-          sp(a, 1, 3, InsertBehavior.exclusive, InsertBehavior.exclusive)
-        ]).collapse(Range(1, 2)).iter,
-        [sp(a, 1, 2, InsertBehavior.exclusive, InsertBehavior.exclusive)],
+        SpanList([sp(a, 1, 3, ExpandRule.exclusive, ExpandRule.exclusive)])
+            .collapse(Range(1, 2))
+            .iter,
+        [sp(a, 1, 2, ExpandRule.exclusive, ExpandRule.exclusive)],
       );
     });
   });
@@ -188,6 +188,15 @@ void main() {
           ]);
     });
   });
+
+  test('expand rule toBracketString', () {
+    expect(ExpandRule.inclusive.toBracketStr(true), ']');
+    expect(ExpandRule.inclusive.toBracketStr(false), '[');
+    expect(ExpandRule.exclusive.toBracketStr(true), '|');
+    expect(ExpandRule.exclusive.toBracketStr(false), '|');
+    expect(ExpandRule.fixed.toBracketStr(true), '_');
+    expect(ExpandRule.fixed.toBracketStr(false), '_');
+  });
 }
 
 abstract class MockSpan extends TextAttribute {
@@ -201,8 +210,8 @@ AttributeSpan sp<T extends MockSpan>(
   T attr,
   int start,
   int end, [
-  InsertBehavior startAnchor = InsertBehavior.exclusive,
-  InsertBehavior endAnchor = InsertBehavior.exclusive,
+  ExpandRule startAnchor = ExpandRule.exclusive,
+  ExpandRule endAnchor = ExpandRule.exclusive,
 ]) =>
     AttributeSpan(
       attr,

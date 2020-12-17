@@ -77,8 +77,8 @@ ToolbarItem createToggleableToolbarItem(
   String tooltip,
   TextAttribute attribute,
   IconData icon, {
-  InsertBehavior startBehavior = InsertBehavior.exclusive,
-  InsertBehavior endBehavior = InsertBehavior.inclusive,
+  ExpandRule startBehavior = ExpandRule.exclusive,
+  ExpandRule endBehavior = ExpandRule.inclusive,
 }) {
   return ToolbarItem(
     builder: _createToggleableToolbarItemBuilder(attribute),
@@ -86,8 +86,8 @@ ToolbarItem createToggleableToolbarItem(
     onPressed: (_, controller) =>
         controller.focusedLine?.controller.toggleAttribute(
       attribute,
-      InsertBehavior.exclusive,
-      InsertBehavior.inclusive,
+      ExpandRule.exclusive,
+      ExpandRule.inclusive,
     ),
     tooltip: tooltip,
   );

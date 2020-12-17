@@ -114,8 +114,8 @@ class _AttributeOverride {
 
   final TextAttribute attribute;
   final OverrideType type;
-  final InsertBehavior startBehavior;
-  final InsertBehavior endBehavior;
+  final ExpandRule startBehavior;
+  final ExpandRule endBehavior;
   @override
   String toString() {
     return '$attribute -> $type';
@@ -128,8 +128,8 @@ extension SpannedTextEditingControllerExtension
   /// Apply an attribute to the current selection.
   void applyAttribute(
     TextAttribute attribute,
-    InsertBehavior startBehavior,
-    InsertBehavior endBehavior,
+    ExpandRule startBehavior,
+    ExpandRule endBehavior,
   ) {
     if (!selection.isValid || selection.isCollapsed) {
       return;
@@ -169,7 +169,7 @@ extension SpannedTextEditingControllerExtension
   /// insertion, a call to this method makes it so the attribute is not applied
   /// and vice-versa. I.e. the result of [isApplied] will be
   /// inverted for [attribute] after calling this method. This will only have
-  /// an effect if [endBehavior] is set to [InsertBehavior.inclusive].
+  /// an effect if [endBehavior] is set to [ExpandRule.inclusive].
   ///
   /// For a range selection, if the attribute is not applied to the full
   /// selection it will be applied to the full selection. Otherwise the
@@ -179,11 +179,11 @@ extension SpannedTextEditingControllerExtension
   /// will be applied for collapsed selections.
   bool toggleAttribute(
     TextAttribute attribute,
-    InsertBehavior startBehavior,
-    InsertBehavior endBehavior,
+    ExpandRule startBehavior,
+    ExpandRule endBehavior,
   ) {
     final applied = isApplied(attribute);
-    if (selection.isCollapsed && endBehavior == InsertBehavior.inclusive) {
+    if (selection.isCollapsed && endBehavior == ExpandRule.inclusive) {
       final overrideType = applied ? OverrideType.remove : OverrideType.apply;
       setOverride(attribute, overrideType, startBehavior, endBehavior);
     } else {
@@ -349,8 +349,8 @@ class SpannedTextEditingController implements TextEditingController {
   void setOverride(
     TextAttribute attribute,
     OverrideType type,
-    InsertBehavior startBehavior,
-    InsertBehavior endBehavior,
+    ExpandRule startBehavior,
+    ExpandRule endBehavior,
   ) {
     _attributeOverrides
       ..removeWhere((ao) => ao.attribute == attribute)
@@ -376,8 +376,8 @@ class SpannedTextEditingController implements TextEditingController {
               compositionAttribute,
               value.composing.start,
               value.composing.end,
-              InsertBehavior.exclusive,
-              InsertBehavior.exclusive,
+              ExpandRule.exclusive,
+              ExpandRule.exclusive,
             ),
           )).getSegments(text.characters);
 

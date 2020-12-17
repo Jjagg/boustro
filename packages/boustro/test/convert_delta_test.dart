@@ -64,8 +64,8 @@ void main() {
   final boldCodec = deltaBoolAttributeCodec(
     'bold',
     bold,
-    InsertBehavior.exclusive,
-    InsertBehavior.inclusive,
+    ExpandRule.exclusive,
+    ExpandRule.inclusive,
   );
 
   final deltaConverter = BoustroDocumentDeltaConverter([boldCodec], []);
@@ -74,8 +74,8 @@ void main() {
         bold,
         start,
         end,
-        InsertBehavior.exclusive,
-        InsertBehavior.inclusive,
+        ExpandRule.exclusive,
+        ExpandRule.inclusive,
       );
 
   group('op to boustro document converter', () {

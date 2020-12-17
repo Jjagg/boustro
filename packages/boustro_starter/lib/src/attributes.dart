@@ -20,8 +20,8 @@ class _BoldAttribute extends ThemedTextAttribute {
 final boldAttributeDeltaCodec = deltaBoolAttributeCodec(
   'bold',
   boldAttribute,
-  InsertBehavior.exclusive,
-  InsertBehavior.inclusive,
+  ExpandRule.exclusive,
+  ExpandRule.inclusive,
 );
 
 /// Attribute with [TextStyle.fontStyle] set to [FontStyle.italic].
@@ -34,8 +34,8 @@ final italicAttribute = TextAttribute.simple(
 final italicAttributeDeltaCodec = deltaBoolAttributeCodec(
   'italic',
   italicAttribute,
-  InsertBehavior.exclusive,
-  InsertBehavior.inclusive,
+  ExpandRule.exclusive,
+  ExpandRule.inclusive,
 );
 
 /// Attribute with [TextStyle.decoration] set to [TextDecoration.underline].
@@ -48,8 +48,8 @@ final underlineAttribute = TextAttribute.simple(
 final underlineAttributeDeltaCodec = deltaBoolAttributeCodec(
   'underline',
   underlineAttribute,
-  InsertBehavior.exclusive,
-  InsertBehavior.inclusive,
+  ExpandRule.exclusive,
+  ExpandRule.inclusive,
 );
 
 /// Attribute with [TextStyle.decoration] set to [TextDecoration.lineThrough].
@@ -62,8 +62,8 @@ final strikethroughAttribute = TextAttribute.simple(
 final strikethroughAttributeDeltaCodec = deltaBoolAttributeCodec(
   'strike',
   strikethroughAttribute,
-  InsertBehavior.exclusive,
-  InsertBehavior.inclusive,
+  ExpandRule.exclusive,
+  ExpandRule.inclusive,
 );
 
 /// Themeable property getter extensions for the attributes in this library.

@@ -20,7 +20,7 @@ class TextAttributeDeltaCodec {
   const TextAttributeDeltaCodec({
     required this.key,
     required this.decoder,
-    required this.insertBehavior,
+    required this.expandRules,
     required this.appliesTo,
     required this.encoder,
   });
@@ -31,8 +31,9 @@ class TextAttributeDeltaCodec {
   /// Decode the attribute value to a [TextAttribute].
   final Converter<dynamic, TextAttribute> decoder;
 
-  /// Insert behavior to use when decoding an attribute to a [AttributeSpan].
-  final FullInsertBehavior insertBehavior;
+  /// Expand rules to give the span when decoding an attribute to a
+  /// [AttributeSpan].
+  final SpanExpandRules expandRules;
 
   /// Should return true if this codec applies to the given [TextAttribute].
   final bool Function(TextAttribute) appliesTo;
@@ -75,8 +76,8 @@ class EmbedCodec<T extends ParagraphEmbed> {
 TextAttributeDeltaCodec deltaBoolAttributeCodec(
   String key,
   TextAttribute instance,
-  InsertBehavior startBehavior,
-  InsertBehavior endBehavior,
+  ExpandRule startBehavior,
+  ExpandRule endBehavior,
 ) {
   return TextAttributeDeltaCodec(
     key: key,
@@ -91,7 +92,7 @@ TextAttributeDeltaCodec deltaBoolAttributeCodec(
       }
       return instance;
     }),
-    insertBehavior: FullInsertBehavior(startBehavior, endBehavior),
+    expandRules: SpanExpandRules(startBehavior, endBehavior),
     appliesTo: (t) => t.runtimeType == instance.runtimeType,
     encoder: ClosureConverter((_) => true),
   );
@@ -261,7 +262,7 @@ class BoustroDocumentDeltaDecoder extends Converter<List<Op>, BoustroDocument> {
     final buffer = StringBuffer();
     final segments = <AttributeSegment>[];
 
-    final attrInsertBehaviorMap = <Type, FullInsertBehavior>{};
+    final attrExpandRulesMap = <Type, SpanExpandRules>{};
 
     for (final op in line.ops) {
       assert(op is InsertOp, 'Expected InsertOp, but got ${op.runtimeType}.');
@@ -274,7 +275,7 @@ class BoustroDocumentDeltaDecoder extends Converter<List<Op>, BoustroDocument> {
               'Attribute with missing codec: ${attrDyn.key}.');
         }
         final attr = codec.decoder.convert(attrDyn.value);
-        attrInsertBehaviorMap[attr.runtimeType] = codec.insertBehavior;
+        attrExpandRulesMap[attr.runtimeType] = codec.expandRules;
         return attr;
       });
 
@@ -288,7 +289,7 @@ class BoustroDocumentDeltaDecoder extends Converter<List<Op>, BoustroDocument> {
       segments,
       (attr) {
         // We went through all attributes, so can't be null.
-        return attrInsertBehaviorMap[attr.runtimeType]!;
+        return attrExpandRulesMap[attr.runtimeType]!;
       },
     );
 
