@@ -7,8 +7,9 @@
 
 import 'package:flutter_spanned_controller/src/attribute_span.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_spanned_controller/src/theme.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'util.dart';
 
 void main() {
   group('splice TextRange', () {
@@ -198,44 +199,3 @@ void main() {
     expect(ExpandRule.fixed.toBracketStr(false), '_');
   });
 }
-
-abstract class MockSpan extends TextAttribute {
-  @override
-  TextAttributeValue resolve(AttributeThemeData theme) {
-    throw UnimplementedError();
-  }
-}
-
-AttributeSpan sp<T extends MockSpan>(
-  T attr,
-  int start,
-  int end, [
-  ExpandRule startAnchor = ExpandRule.exclusive,
-  ExpandRule endAnchor = ExpandRule.exclusive,
-]) =>
-    AttributeSpan(
-      attr,
-      start,
-      end,
-      startAnchor,
-      endAnchor,
-    );
-
-final a = MockSpanA();
-final b = MockSpanB();
-final c = MockSpanC();
-final d = MockSpanD();
-final e = MockSpanE();
-final f = MockSpanF();
-
-class MockSpanA extends MockSpan {}
-
-class MockSpanB extends MockSpan {}
-
-class MockSpanC extends MockSpan {}
-
-class MockSpanD extends MockSpan {}
-
-class MockSpanE extends MockSpan {}
-
-class MockSpanF extends MockSpan {}

@@ -271,7 +271,7 @@ class SpannedTextEditingController implements TextEditingController {
   }
 
   /// Get the rich text contents managed by this controller.
-  SpannedString get spannedString => SpannedString(text.characters, spans);
+  SpannedString get spannedString => SpannedString(text, spans);
 
   /// Set the rich text contents managed by this controller.
   set spannedString(SpannedString newString) {

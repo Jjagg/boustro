@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:meta/meta.dart';
@@ -9,9 +10,16 @@ import 'theme.dart';
 
 /// Rich text represented with a [String] and a [SpanList].
 @immutable
-class SpannedString {
+class SpannedString extends Equatable {
   /// Create a spanned string.
-  SpannedString(this.text, this.spans);
+  SpannedString(String text, [SpanList? spans])
+      : this.chars(text.characters, spans ?? SpanList());
+
+  /// Create an empty spanned string.
+  SpannedString.empty() : this('', SpanList());
+
+  /// Create a spanned string.
+  SpannedString.chars(this.text, this.spans);
 
   /// Plain text of this spanned string.
   final Characters text;
@@ -24,7 +32,8 @@ class SpannedString {
 
   /// Creates a copy of this spanned string, but with the given fields replaced
   /// with the new values.
-  SpannedString copyWith({Characters? text, SpanList? spans}) => SpannedString(
+  SpannedString copyWith({Characters? text, SpanList? spans}) =>
+      SpannedString.chars(
         text ?? this.text,
         spans ?? this.spans,
       );
@@ -33,12 +42,15 @@ class SpannedString {
   ///
   /// The spans are shifted to accomodate for the insertion.
   SpannedString insert(int index, Characters inserted) {
-    assert(index >= 0, 'Index may not be negative.');
+    if (index < 0 || index > length) {
+      throw RangeError.index(
+          index, text, 'index', 'Index must be inside text range.', length);
+    }
     if (inserted.isEmpty) {
       return this;
     }
 
-    return SpannedString(
+    return SpannedString.chars(
       text.getRange(0, index) + inserted + text.getRange(index),
       spans.shift(index, inserted.length),
     );
@@ -47,19 +59,29 @@ class SpannedString {
   /// Delete a part of this spanned text.
   ///
   /// The spans are shifted and deleted to accomodate for the deletion.
-  SpannedString collapse({int? after, int? before}) {
-    assert(after != null || before != null,
-        'after and before may not both be null.');
-    after ??= 0;
-    before ??= length;
-    final range = Range(after, before);
+  /// End is exlusive.
+  SpannedString collapse({int? start, int? end}) {
+    if (start == null && end == null) {
+      throw ArgumentError('start and end may not both be null.');
+    }
+    start ??= 0;
+    end ??= length;
+
+    if (start < 0 || end > length) {
+      throw RangeError('start and end must be inside text range.');
+    }
+    if (end < start) {
+      throw ArgumentError('end may not come before start.');
+    }
+
+    final range = Range(start, end);
 
     if (range.isCollapsed) {
       return this;
     }
 
-    return SpannedString(
-      text.getRange(0, after) + text.getRange(before, length),
+    return SpannedString.chars(
+      text.getRange(0, start) + text.getRange(end, length),
       spans.collapse(range),
     );
   }
@@ -68,7 +90,7 @@ class SpannedString {
   ///
   /// Touching spans with the same attribute will be merged.
   SpannedString concat(SpannedString other) {
-    return SpannedString(
+    return SpannedString.chars(
       text + other.text,
       other.spans
           .shift(0, text.length)
@@ -84,7 +106,7 @@ class SpannedString {
   SpannedString applyDiff(StringDiff diff) {
     // ignore: unnecessary_this
     return this
-        .collapse(after: diff.index, before: diff.index + diff.deleted.length)
+        .collapse(start: diff.index, end: diff.index + diff.deleted.length)
         .insert(diff.index, diff.inserted);
   }
 
@@ -108,13 +130,16 @@ class SpannedString {
   String toString() {
     return '$text <$spans>';
   }
+
+  @override
+  List<Object?> get props => [text, spans];
 }
 
 /// Builds a [SpannedString]. Can be used fluently with cascades.
 class SpannedStringBuilder {
   final StringBuffer _buffer = StringBuffer();
   SpanList _spans = SpanList();
-  final List<AttributeSpan> _activeSpans = [];
+  final Set<AttributeSpan> _activeSpans = {};
 
   int _length = 0;
 
@@ -152,16 +177,17 @@ class SpannedStringBuilder {
   ///
   /// Applies any active templates (templates for which [start] was called, but
   /// [end] was not yet called) and the additional templates passed.
-  void writeln(
-    Object? obj, [
+  ///
+  /// If [obj] is null or [obj.toString()] returns null only a newline is
+  /// written.
+  void writeln([
+    Object? obj,
     Iterable<AttributeSpanTemplate> templates = const [],
   ]) {
     templates.forEach(start);
-    final str = obj?.toString();
+    final str = obj?.toString() ?? '';
     _buffer.writeln(str);
-    if (str != null) {
-      _length += str.characters.length + 1;
-    }
+    _length += str.characters.length + 1;
     templates.forEach(end);
   }
 
@@ -173,7 +199,7 @@ class SpannedStringBuilder {
 
   void _end(TextAttribute attribute) {
     final span =
-        _spans.iter.firstWhereOrNull((span) => span.attribute == attribute);
+        _activeSpans.firstWhereOrNull((span) => span.attribute == attribute);
     if (span == null) {
       throw StateError(
           '''The template passed to 'end' must be activated by calling 'start' first.''');
@@ -188,10 +214,11 @@ class SpannedStringBuilder {
   /// The builder will be reset and can be reused.
   SpannedString build() {
     for (final span in _activeSpans) {
-      _end(span.attribute);
+      _spans = _spans.merge(span.copyWith(end: _length));
     }
+    _activeSpans.clear();
 
-    final str = SpannedString(_buffer.toString().characters, _spans);
+    final str = SpannedString(_buffer.toString(), _spans);
     _buffer.clear();
     return str;
   }

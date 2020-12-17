@@ -23,7 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `SpanList.spans` to `iter` to prevent confusing `spans.spans`.
 - `SpannedTextEditingController` takes a `SpanList` now instead of `Iterable<AttributeSpan>`.
 - Renamed `InsertBehavior` to `ExpandRule` and `FullInsertBehavior` to `SpanExpandRules`.
-  Finally I've come up with the right name for this concept :)
+  Finally, I've come up with the right name for this concept :)
+- Rename `SpannedString()` to `SpannedString.chars()` and let unnamed constructor take `String`.
 
 ## [0.2.0-0] — 2020-12-14
 

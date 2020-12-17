@@ -218,7 +218,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
       newlineRange!;
       final indexAfterNewline = newlineRange.charactersBefore.length +
           newlineRange.currentCharacters.length;
-      final nextLine = t.collapse(before: indexAfterNewline);
+      final nextLine = t.collapse(end: indexAfterNewline);
       insertLine(
         lineIndex + 1,
         BoustroLine.built(
@@ -227,7 +227,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
           modifiers: currentLine.modifiers,
         ),
       );
-      t = t.collapse(after: newlineRange.charactersBefore.length);
+      t = t.collapse(start: newlineRange.charactersBefore.length);
       toFocus ??= paragraphs[lineIndex + 1] as LineState;
     }
 

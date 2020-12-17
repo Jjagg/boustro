@@ -72,7 +72,7 @@ class BoustroLine extends BoustroParagraph with EquatableMixin {
   final BuiltList<LineModifier> modifiers;
 
   /// Get a spanned text that combines [text] and [spans].
-  late final SpannedString spannedText = SpannedString(text, spans);
+  late final SpannedString spannedText = SpannedString.chars(text, spans);
 
   @override
   T match<T>({
