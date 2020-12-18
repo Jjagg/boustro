@@ -7,6 +7,9 @@ title = "boustro Documentation"
 
 [output.html]
 
+git-repository-url = "https://github.com/Jjagg/boustro"
+site-url = "/boustro"
+
 # TODO Should enable linkcheck when we write all drafts
 #[output.linkcheck]
 ## Need this because we include changelog
