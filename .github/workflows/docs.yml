@@ -1,0 +1,31 @@
+name: Docs
+
+on:
+  push:
+    paths:
+      - "docs/**"
+      - "packages/**/CHANGELOG.md"
+  pull_request:
+    paths:
+      - "docs/**"
+      - "packages/**/CHANGELOG.md"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup mdBook
+        uses: peaceiris/actions-mdbook@v1
+        with:
+          mdbook-version: "0.4.4"
+
+      - run: mdbook build
+        working-directory: docs/
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/book

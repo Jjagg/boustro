@@ -2,7 +2,11 @@ name: Build
 
 on:
   push:
+    paths-ignore:
+      - "docs/**"
   pull_request:
+    paths-ignore:
+      - "docs/**"
 
 jobs:
   build:
@@ -17,7 +21,7 @@ jobs:
           - packages/boustro
           - packages/boustro_starter
           - example
-        include: 
+        include:
           - package: packages/boustro_starter
             no-tests: true
           - package: example
@@ -53,4 +57,3 @@ jobs:
           name: ${{ matrix.package }}
           fail_ci_if_error: true
         if: ${{ !matrix.no-tests }}
-

@@ -1,0 +1,13 @@
+[book]
+authors = ["Jesse Gielen"]
+language = "en"
+multilingual = false
+src = "src"
+title = "boustro Documentation"
+
+[output.html]
+
+# TODO Should enable linkcheck when we write all drafts
+#[output.linkcheck]
+## Need this because we include changelog
+#traverse-parent-directories = true
