@@ -98,9 +98,9 @@ TextAttributeDeltaCodec deltaBoolAttributeCodec(
   );
 }
 
-/// Convert a boustro document to or from a list of insert operations in Quill's
+/// Convert a document to or from a list of insert operations in Quill's
 /// delta format.
-class BoustroDocumentDeltaConverter extends Codec<BoustroDocument, List<Op>> {
+class BoustroDocumentDeltaConverter extends Codec<Document, List<Op>> {
   /// Create a delta converter
   BoustroDocumentDeltaConverter(
     List<TextAttributeDeltaCodec> attributeCodecs,
@@ -132,16 +132,16 @@ class BoustroDocumentDeltaConverter extends Codec<BoustroDocument, List<Op>> {
   final Map<Type, EmbedEncoder> embedEncoders;
 
   @override
-  Converter<List<Op>, BoustroDocument> get decoder =>
+  Converter<List<Op>, Document> get decoder =>
       BoustroDocumentDeltaDecoder(attributeDecoders, embedDecoders);
 
   @override
-  Converter<BoustroDocument, List<Op>> get encoder =>
+  Converter<Document, List<Op>> get encoder =>
       BoustroDocumentDeltaEncoder(attributeEncoder, embedEncoders);
 }
 
-/// Encodes a boustro document to a list of Quill delta insert operations.
-class BoustroDocumentDeltaEncoder extends Converter<BoustroDocument, List<Op>> {
+/// Encodes a document to a list of Quill delta insert operations.
+class BoustroDocumentDeltaEncoder extends Converter<Document, List<Op>> {
   /// Create an encoder.
   const BoustroDocumentDeltaEncoder(
     this.attributeEncoder,
@@ -155,17 +155,17 @@ class BoustroDocumentDeltaEncoder extends Converter<BoustroDocument, List<Op>> {
   final Map<Type, EmbedEncoder> embedEncoders;
 
   @override
-  List<Op> convert(BoustroDocument input) {
+  List<Op> convert(Document input) {
     throw UnimplementedError();
   }
 }
 
-/// Convert a list of Quill delta format insert operations to a boustro
+/// Convert a list of Quill delta format insert operations to a
 /// document.
 ///
 /// Throws [ArgumentError] when an attribute is encountered with no entry in
 /// [attributeCodecs].
-class BoustroDocumentDeltaDecoder extends Converter<List<Op>, BoustroDocument> {
+class BoustroDocumentDeltaDecoder extends Converter<List<Op>, Document> {
   /// Create a decoder.
   const BoustroDocumentDeltaDecoder(
     this.attributeCodecs,
@@ -179,10 +179,10 @@ class BoustroDocumentDeltaDecoder extends Converter<List<Op>, BoustroDocument> {
   final Map<String, EmbedDecoder> embedDecoders;
 
   @override
-  BoustroDocument convert(List<Op> input) {
+  Document convert(List<Op> input) {
     // First group or split ops by lines (\n) because each line maps to a
     // BoustroParagraph.
-    final paragraphs = <BoustroParagraph>[];
+    final paragraphs = <Paragraph>[];
     for (final line in _groupByLines(input)) {
       final first = line.ops.firstOrNull;
       if (first is InsertObjectOp) {
@@ -204,7 +204,7 @@ class BoustroDocumentDeltaDecoder extends Converter<List<Op>, BoustroDocument> {
       }
     }
 
-    return BoustroDocument(paragraphs.build());
+    return Document(paragraphs.build());
   }
 
   Iterable<_DeltaLine> _groupByLines(List<Op> ops) sync* {
@@ -258,7 +258,7 @@ class BoustroDocumentDeltaDecoder extends Converter<List<Op>, BoustroDocument> {
     }
   }
 
-  BoustroLine _opsToLine(_DeltaLine line) {
+  TextLine _opsToLine(_DeltaLine line) {
     final buffer = StringBuffer();
     final segments = <AttributeSegment>[];
 
@@ -295,7 +295,7 @@ class BoustroDocumentDeltaDecoder extends Converter<List<Op>, BoustroDocument> {
 
     final text =
         segments.fold<String>('', (str, segment) => str + segment.text.string);
-    return BoustroLine(text: text, spans: spans);
+    return TextLine(text: text, spans: spans);
   }
 }
 

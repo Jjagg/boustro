@@ -5,10 +5,10 @@ import 'document.dart';
 import 'widgets/document_controller.dart';
 import 'widgets/editor.dart';
 
-/// Inherited widget that carries information about a boustro document.
+/// Inherited widget that carries information about a document.
 @immutable
 class BoustroScope extends InheritedWidget {
-  /// Create a scope for an editable document with a document controller.
+  /// Create a scope for an editable document with a [DocumentController].
   const BoustroScope.editable({
     Key? key,
     required DocumentController this.controller,
@@ -16,10 +16,10 @@ class BoustroScope extends InheritedWidget {
   })   : document = null,
         super(key: key, child: child);
 
-  /// Create a scope for a read-only document with a boustro document controller.
+  /// Create a scope for a read-only document with a [Document].
   const BoustroScope.readonly({
     Key? key,
-    required BoustroDocument this.document,
+    required Document this.document,
     required Widget child,
   })   : controller = null,
         super(key: key, child: child);
@@ -28,9 +28,9 @@ class BoustroScope extends InheritedWidget {
   /// used.
   final DocumentController? controller;
 
-  /// Document of the [BoustroView]. Null if [BoustroScope.readonly] was
+  /// Document of the [DocumentView]. Null if [BoustroScope.readonly] was
   /// used.
-  final BoustroDocument? document;
+  final Document? document;
 
   /// True if [BoustroScope.editable] was used, false if [BoustroScope.readonly]
   /// was used.
@@ -39,7 +39,7 @@ class BoustroScope extends InheritedWidget {
   /// Call [editable] if [isEditable] is true or [readonly] if it is not.
   T match<T>({
     required T Function(DocumentController) editable,
-    required T Function(BoustroDocument) readonly,
+    required T Function(Document) readonly,
   }) {
     return isEditable ? editable(controller!) : readonly(document!);
   }
@@ -81,7 +81,7 @@ class BoustroScope extends InheritedWidget {
       ..add(DiagnosticsProperty<bool>('isEditable', isEditable))
       ..add(DiagnosticsProperty<DocumentController?>('controller', controller,
           defaultValue: null))
-      ..add(DiagnosticsProperty<BoustroDocument?>('document', document,
+      ..add(DiagnosticsProperty<Document?>('document', document,
           defaultValue: null));
   }
 }

@@ -142,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.of(context)
                         .push<void>(MaterialPageRoute<void>(builder: (context) {
                       return Scaffold(
-                        body: BoustroView(
+                        body: DocumentView(
                           document: controller.toDocument(),
                         ),
                       );
@@ -155,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
           body: Column(
             children: [
               Expanded(
-                child: BoustroEditor(
+                child: DocumentEditor(
                   controller: controller,
                 ),
               ),

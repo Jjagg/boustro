@@ -88,7 +88,7 @@ void main() {
       expect(doc.paragraphs.length, 1);
       expect(
         doc.paragraphs[0],
-        BoustroLine(
+        TextLine(
           text: 'Hello, World!',
           spans: SpanList([createBold(0, 5)]),
         ),
@@ -104,7 +104,7 @@ void main() {
       expect(doc.paragraphs.length, 1);
       expect(
         doc.paragraphs[0],
-        BoustroLine(
+        TextLine(
           text: 'Hello, World!',
           spans: SpanList([createBold(0, 5)]),
         ),
@@ -120,13 +120,13 @@ void main() {
       expect(doc.paragraphs.length, 2);
       expect(
           doc.paragraphs[0],
-          BoustroLine(
+          TextLine(
             text: 'Hello, World!',
             spans: SpanList([createBold(0, 5)]),
           ));
       expect(
         doc.paragraphs[1],
-        BoustroLine(text: '', spans: SpanList()),
+        TextLine(text: '', spans: SpanList()),
       );
     });
 
@@ -142,13 +142,13 @@ void main() {
       expect(doc.paragraphs.length, 2);
       expect(
           doc.paragraphs[0],
-          BoustroLine(
+          TextLine(
             text: 'Hello, World!',
             spans: SpanList([createBold(0, 5)]),
           ));
       expect(
         doc.paragraphs[1],
-        BoustroLine(
+        TextLine(
           text: 'Hello, World!',
           spans: SpanList([createBold(5, 13)]),
         ),

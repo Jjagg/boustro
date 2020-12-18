@@ -7,35 +7,35 @@ import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
 import 'scope.dart';
 
-/// Rich text represented as a list of [BoustroParagraph]s.
+/// Rich text represented as a list of [Paragraph]s.
 @immutable
-class BoustroDocument {
-  /// Create a new boustro document.
-  const BoustroDocument(this.paragraphs);
+class Document {
+  /// Create a new document.
+  const Document(this.paragraphs);
 
   /// The list of paragraphs in this document.
-  final BuiltList<BoustroParagraph> paragraphs;
+  final BuiltList<Paragraph> paragraphs;
 }
 
-/// A paragraph in a [BoustroDocument]. Is either a [BoustroLine] for rich text,
+/// A paragraph in a [Document]. Is either a [TextLine] for rich text,
 /// or a [ParagraphEmbed] for other content.
 @immutable
-abstract class BoustroParagraph {
-  const BoustroParagraph._();
+abstract class Paragraph {
+  const Paragraph._();
 
-  /// Execute [line] if this is a [BoustroLine] and [embed] if this is a
+  /// Execute [line] if this is a [TextLine] and [embed] if this is a
   /// [ParagraphEmbed].
   T match<T>({
-    required T Function(BoustroLine) line,
+    required T Function(TextLine) line,
     required T Function(ParagraphEmbed) embed,
   });
 }
 
-/// Immutable representation of a line of rich text in a [BoustroDocument].
+/// Immutable representation of a line of rich text in a [Document].
 @immutable
-class BoustroLine extends BoustroParagraph with EquatableMixin {
-  /// Create a boustro line.
-  BoustroLine({
+class TextLine extends Paragraph with EquatableMixin {
+  /// Create a line of rich text.
+  TextLine({
     required String text,
     required SpanList spans,
     List<LineModifier>? modifiers,
@@ -45,8 +45,8 @@ class BoustroLine extends BoustroParagraph with EquatableMixin {
           modifiers: modifiers?.build() ?? BuiltList<LineModifier>(),
         );
 
-  /// Create a boustro line with the text and spans of [string].
-  BoustroLine.fromSpanned({
+  /// Create a line with the text and spans of [string].
+  TextLine.fromSpanned({
     required SpannedString string,
     List<LineModifier>? modifiers,
   }) : this.built(
@@ -55,8 +55,8 @@ class BoustroLine extends BoustroParagraph with EquatableMixin {
           modifiers: modifiers?.build() ?? BuiltList<LineModifier>(),
         );
 
-  /// Create a boustro line with directly initialized fields.
-  BoustroLine.built({
+  /// Create a line with directly initialized fields.
+  TextLine.built({
     required this.text,
     required this.spans,
     required this.modifiers,
@@ -76,7 +76,7 @@ class BoustroLine extends BoustroParagraph with EquatableMixin {
 
   @override
   T match<T>({
-    required T Function(BoustroLine) line,
+    required T Function(TextLine) line,
     required T Function(ParagraphEmbed) embed,
   }) =>
       line(this);
@@ -92,13 +92,13 @@ class BoustroLine extends BoustroParagraph with EquatableMixin {
 
 /// Interface for paragraph embeds.
 @immutable
-abstract class ParagraphEmbed extends BoustroParagraph {
+abstract class ParagraphEmbed extends Paragraph {
   /// Constant base constructor for implementations.
   const ParagraphEmbed() : super._();
 
   @override
   T match<T>({
-    required T Function(BoustroLine) line,
+    required T Function(TextLine) line,
     required T Function(ParagraphEmbed) embed,
   }) =>
       embed(this);
@@ -110,9 +110,9 @@ abstract class ParagraphEmbed extends BoustroParagraph {
   });
 }
 
-/// Builds a [BoustroDocument]. Can be used fluently with cascades.
+/// Builds a [Document]. Can be used fluently with cascades.
 class DocumentBuilder {
-  final List<BoustroParagraph> _paragraphs = [];
+  final List<Paragraph> _paragraphs = [];
   final SpannedStringBuilder _lineBuilder = SpannedStringBuilder();
 
   /// Add a line of rich text to the document.
@@ -122,7 +122,7 @@ class DocumentBuilder {
   ]) {
     build(_lineBuilder);
     final str = _lineBuilder.build();
-    final line = BoustroLine.fromSpanned(string: str, modifiers: modifiers);
+    final line = TextLine.fromSpanned(string: str, modifiers: modifiers);
     _paragraphs.add(line);
   }
 
@@ -134,8 +134,8 @@ class DocumentBuilder {
   /// Finishes building and returns the created document.
   ///
   /// The builder will be reset and can be reused.
-  BoustroDocument build() {
-    final doc = BoustroDocument(_paragraphs.build());
+  Document build() {
+    final doc = Document(_paragraphs.build());
     _paragraphs.clear();
     return doc;
   }

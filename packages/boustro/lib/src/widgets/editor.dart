@@ -11,29 +11,29 @@ import '../scope.dart';
 import 'document_controller.dart';
 import 'theme.dart';
 
-/// A readonly view of a [BoustroDocument].
-class BoustroView extends StatefulWidget {
-  /// Create a boustro view.
+/// A readonly view of a [Document].
+class DocumentView extends StatefulWidget {
+  /// Create a document view.
   ///
   /// [document] is the content that will be displayed.
-  const BoustroView({
+  const DocumentView({
     Key? key,
     required this.document,
   }) : super(key: key);
 
   /// The contents this view will display.
-  final BoustroDocument document;
+  final Document document;
 
   @override
-  _BoustroViewState createState() => _BoustroViewState();
+  _DocumentViewState createState() => _DocumentViewState();
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(DiagnosticsProperty<BoustroDocument>('document', document));
+    properties.add(DiagnosticsProperty<Document>('document', document));
   }
 }
 
-class _BoustroViewState extends State<BoustroView> {
+class _DocumentViewState extends State<DocumentView> {
   late final Map<TextAttributeValue, GestureRecognizer> _recognizers =
       _createRecognizers();
 
@@ -101,7 +101,7 @@ class _BoustroViewState extends State<BoustroView> {
     );
   }
 
-  Widget _buildParagraph(BuildContext buildContext, BoustroParagraph value) {
+  Widget _buildParagraph(BuildContext buildContext, Paragraph value) {
     return value.match(line: (line) {
       final atheme = AttributeTheme.of(context);
       final spans = line.spannedText.buildTextSpans(
@@ -135,10 +135,10 @@ class _BoustroViewState extends State<BoustroView> {
   }
 }
 
-/// Displays the state of a [DocumentController].
-class BoustroEditor extends StatelessWidget {
+/// An editor for a [Document]. Uses a [DocumentController] to manage its state.
+class DocumentEditor extends StatelessWidget {
   /// Create an editor with a controller that can have an initial state.
-  const BoustroEditor({
+  const DocumentEditor({
     Key? key,
     required this.controller,
   }) : super(key: key);

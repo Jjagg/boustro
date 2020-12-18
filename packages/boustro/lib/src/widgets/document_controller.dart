@@ -7,7 +7,7 @@ import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 import '../document.dart';
 import 'editor.dart';
 
-/// Holds state for a paragraph of a boustro document.
+/// Holds state for a paragraph of a document.
 @immutable
 abstract class ParagraphState {
   /// Create a paragraph.
@@ -34,7 +34,7 @@ abstract class ParagraphState {
 
 /// Holds focus node and state for a line of text.
 ///
-/// This is the editable variant of [BoustroLine].
+/// This is the editable variant of [TextLine].
 @immutable
 class LineState extends ParagraphState {
   /// Create a text line.
@@ -91,7 +91,7 @@ class LineState extends ParagraphState {
       line(this);
 }
 
-/// Holds [FocusNode] and content for a boustro embed.
+/// Holds [FocusNode] and content for an embed.
 @immutable
 class EmbedState extends ParagraphState {
   /// Create an embed.
@@ -111,7 +111,7 @@ class EmbedState extends ParagraphState {
       embed(this);
 }
 
-/// Manages the contents of a [BoustroEditor].
+/// Manages the contents of a [DocumentEditor].
 ///
 /// Keeps track of the state of its paragraphs and editor:
 ///
@@ -130,7 +130,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   /// Create a document controller.
   DocumentController({
     ScrollController? scrollController,
-    Iterable<BoustroParagraph>? paragraphs,
+    Iterable<Paragraph>? paragraphs,
     this.attributeTheme,
   })  : scrollController = scrollController ?? ScrollController(),
         super(BuiltList()) {
@@ -221,7 +221,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
       final nextLine = t.collapse(end: indexAfterNewline);
       insertLine(
         lineIndex + 1,
-        BoustroLine.built(
+        TextLine.built(
           text: nextLine.text,
           spans: nextLine.spans,
           modifiers: currentLine.modifiers,
@@ -247,27 +247,27 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     );
   }
 
-  /// Get the contents of this controller represented as a boustro document.
-  BoustroDocument toDocument() {
+  /// Get the contents of this controller represented as a document.
+  Document toDocument() {
     final paragraphs = this
         .paragraphs
-        .map((p) => p.match<BoustroParagraph>(
+        .map((p) => p.match<Paragraph>(
               line: (l) =>
-                  BoustroLine.fromSpanned(string: l.controller.spannedString),
+                  TextLine.fromSpanned(string: l.controller.spannedString),
               // TODO need a controller to modify embed state.
               embed: (e) => e.content,
             ))
         .toBuiltList();
-    return BoustroDocument(paragraphs);
+    return Document(paragraphs);
   }
 
   /// Add a line after all existing paragraphs.
-  LineState appendLine([BoustroLine? line]) {
+  LineState appendLine([TextLine? line]) {
     return insertLine(paragraphs.length, line);
   }
 
   /// Insert a line at [index].
-  LineState insertLine(int index, [BoustroLine? line]) {
+  LineState insertLine(int index, [TextLine? line]) {
     final spanController = SpannedTextEditingController(
       processTextValue: _processTextValue,
       text: line?.text.string,

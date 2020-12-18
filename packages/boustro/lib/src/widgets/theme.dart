@@ -148,10 +148,10 @@ class BoustroThemeData extends Equatable {
     );
   }
 
-  /// Background color of a [BoustroEditor].
+  /// Background color of a [DocumentEditor].
   final Color? editorColor;
 
-  /// Padding inside the scrollable part of a [BoustroEditor].
+  /// Padding inside the scrollable part of a [DocumentEditor].
   final EdgeInsetsGeometry? editorPadding;
 
   /// Color and decoration for a [Toolbar].
