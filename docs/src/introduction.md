@@ -13,4 +13,4 @@ been written.
 
 If you want to try out boustro, for now, the best way to get started is to check out the [example](https://github.com/Jjagg/boustro/tree/main/example).
 
-The documentation is built with [mdBook](https://rust-lang.github.io/mdBook/index.html).
+This documentation is built with [mdBook](https://rust-lang.github.io/mdBook/index.html).

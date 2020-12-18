@@ -21,5 +21,6 @@
 
 ---
 
+[Packages (pub.dev)](packages.md)
 [API reference](api_reference.md)
 [Contribute to boustro](contributing.md)
