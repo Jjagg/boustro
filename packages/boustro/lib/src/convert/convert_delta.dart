@@ -16,7 +16,7 @@ import 'ops.dart';
 /// delta attribute.
 @immutable
 class TextAttributeDeltaCodec {
-  /// Create a text text attribute codec for Quill delta conversion.
+  /// Create a text attribute codec for Quill delta conversion.
   const TextAttributeDeltaCodec({
     required this.key,
     required this.decoder,
@@ -57,7 +57,7 @@ class EmbedCodec<T extends ParagraphEmbed> {
   /// Decoder for the embed value.
   final EmbedDecoder<T> decoder;
 
-  /// Runtime type of the embed this codec can encodes and decodes to.
+  /// Runtime type of the embed this codec encodes and decodes to.
   Type get embedType => T;
 
   /// Encoder for the embed value.
