@@ -147,58 +147,58 @@ class SpannedStringBuilder {
 
   int _length = 0;
 
-  /// Format written text with [template] until [end] is called for the passed
-  /// template.
-  void start(AttributeSpanTemplate template) {
-    _activeSpans.add(template.toSpan(_length, maxSpanLength));
+  /// Format written text with [attribute] until [end] is called for the passed
+  /// attribute.
+  void start(TextAttribute attribute) {
+    _activeSpans.add(AttributeSpan(attribute, _length, maxSpanLength));
   }
 
-  /// Stop formatting added text with [template].
+  /// Stop formatting added text with [attribute].
   ///
-  /// Throws a [StateError] if [start] was not first called for [template].
-  void end(AttributeSpanTemplate template) {
-    _end(template.attribute);
+  /// Throws a [StateError] if [start] was not first called for [attribute].
+  void end(TextAttribute attribute) {
+    _end(attribute);
   }
 
   /// Write text to the internal string buffer.
   ///
-  /// Applies any active templates (templates for which [start] was called, but
-  /// [end] was not yet called) and the additional templates passed.
+  /// Applies any active attributes (attributes for which [start] was called,
+  /// but [end] was not yet called) and the additional attributes passed.
   void write(
     Object? obj, [
-    Iterable<AttributeSpanTemplate> templates = const [],
+    Iterable<TextAttribute> attributes = const [],
   ]) {
-    templates.forEach(start);
+    attributes.forEach(start);
     final str = obj?.toString();
     _buffer.write(str);
     if (str != null) {
       _length += str.characters.length;
     }
-    templates.forEach(end);
+    attributes.forEach(end);
   }
 
   /// Write text to the internal string buffer, followed by a newline.
   ///
-  /// Applies any active templates (templates for which [start] was called, but
-  /// [end] was not yet called) and the additional templates passed.
+  /// Applies any active attributes (attributes for which [start] was called,
+  /// but [end] was not yet called) and the additional attributes passed.
   ///
   /// If [obj] is null or [obj.toString()] returns null only a newline is
   /// written.
   void writeln([
     Object? obj,
-    Iterable<AttributeSpanTemplate> templates = const [],
+    Iterable<TextAttribute> attributes = const [],
   ]) {
-    templates.forEach(start);
+    attributes.forEach(start);
     final str = obj?.toString() ?? '';
     _buffer.writeln(str);
     _length += str.characters.length + 1;
-    templates.forEach(end);
+    attributes.forEach(end);
   }
 
   /// Apply an attribute to all text, including text written after calling this
-  /// method.
+  /// method. Typically used for attributes with [SpanExpandRules.fixed].
   void lineStyle(TextAttribute attr) {
-    _spans = _spans.merge(AttributeSpan.fixed(attr, 0, maxSpanLength));
+    _spans = _spans.merge(AttributeSpan(attr, 0, maxSpanLength));
   }
 
   void _end(TextAttribute attribute) {

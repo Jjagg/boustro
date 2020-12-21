@@ -20,7 +20,6 @@ class TextAttributeDeltaCodec {
   const TextAttributeDeltaCodec({
     required this.key,
     required this.decoder,
-    required this.expandRules,
     required this.appliesTo,
     required this.encoder,
   });
@@ -30,10 +29,6 @@ class TextAttributeDeltaCodec {
 
   /// Decode the attribute value to a [TextAttribute].
   final Converter<dynamic, TextAttribute> decoder;
-
-  /// Expand rules to give the span when decoding an attribute to a
-  /// [AttributeSpan].
-  final SpanExpandRules expandRules;
 
   /// Should return true if this codec applies to the given [TextAttribute].
   final bool Function(TextAttribute) appliesTo;
@@ -76,8 +71,6 @@ class EmbedCodec<T extends ParagraphEmbed> {
 TextAttributeDeltaCodec deltaBoolAttributeCodec(
   String key,
   TextAttribute instance,
-  ExpandRule startBehavior,
-  ExpandRule endBehavior,
 ) {
   return TextAttributeDeltaCodec(
     key: key,
@@ -92,7 +85,6 @@ TextAttributeDeltaCodec deltaBoolAttributeCodec(
       }
       return instance;
     }),
-    expandRules: SpanExpandRules(startBehavior, endBehavior),
     appliesTo: (t) => t.runtimeType == instance.runtimeType,
     encoder: ClosureConverter((_) => true),
   );
@@ -262,8 +254,6 @@ class DocumentDeltaDecoder extends Converter<List<Op>, Document> {
     final buffer = StringBuffer();
     final segments = <AttributeSegment>[];
 
-    final attrExpandRulesMap = <Type, SpanExpandRules>{};
-
     for (final op in line.ops) {
       assert(op is InsertOp, 'Expected InsertOp, but got ${op.runtimeType}.');
       final insert = op as InsertOp;
@@ -274,9 +264,7 @@ class DocumentDeltaDecoder extends Converter<List<Op>, Document> {
           throw ArgumentError.value(attrDyn, 'input',
               'Attribute with missing codec: ${attrDyn.key}.');
         }
-        final attr = codec.decoder.convert(attrDyn.value);
-        attrExpandRulesMap[attr.runtimeType] = codec.expandRules;
-        return attr;
+        return codec.decoder.convert(attrDyn.value);
       });
 
       final segment =
@@ -285,13 +273,7 @@ class DocumentDeltaDecoder extends Converter<List<Op>, Document> {
       buffer.write(insert.text);
     }
 
-    final spans = SpanList.fromSegments(
-      segments,
-      (attr) {
-        // We went through all attributes, so can't be null.
-        return attrExpandRulesMap[attr.runtimeType]!;
-      },
-    );
+    final spans = SpanList.fromSegments(segments);
 
     final text =
         segments.fold<String>('', (str, segment) => str + segment.text.string);

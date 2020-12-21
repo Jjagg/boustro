@@ -26,12 +26,16 @@ const maxSpanLength = (2 << 32) - 1;
 /// the equality operator or use a singleton for the attribute, because
 /// the span system uses equality tests for operations like [SpanList.merge]
 /// and [SpanList.isApplied]/[SpanList.willApply].
+///
+/// Attributes contain [expandRules] to indicate how spans with the attribute
+/// should behave when an insertion happens at its boundaries.
 abstract class TextAttribute {
   /// Base constant constructor for inheritors that have a constant constructor.
   const TextAttribute();
 
   /// Constructor for attributes that always return the same value in [resolve].
   factory TextAttribute.simple({
+    required SpanExpandRules expandRules,
     String? debugName,
     TextStyle? style,
     GestureTapCallback? onTap,
@@ -39,15 +43,22 @@ abstract class TextAttribute {
     GestureTapCallback? onDoubleTap,
     GestureLongPressCallback? onLongPress,
   }) {
-    return _SimpleTextAttribute(TextAttributeValue(
-      debugName: debugName,
-      style: style,
-      onTap: onTap,
-      onSecondaryTap: onSecondaryTap,
-      onDoubleTap: onDoubleTap,
-      onLongPress: onLongPress,
-    ));
+    return _SimpleTextAttribute(
+      TextAttributeValue(
+        debugName: debugName,
+        style: style,
+        onTap: onTap,
+        onSecondaryTap: onSecondaryTap,
+        onDoubleTap: onDoubleTap,
+        onLongPress: onLongPress,
+      ),
+      expandRules: expandRules,
+    );
   }
+
+  /// Rules that determine how spans with this attribute grow when insertions
+  /// happend at their boundaries.
+  SpanExpandRules get expandRules;
 
   /// Returns a text attribute value that can depend on [theme].
   TextAttributeValue resolve(AttributeThemeData theme);
@@ -56,10 +67,16 @@ abstract class TextAttribute {
 /// A text attribute with a value that does not depend on a [BuildContext].
 class _SimpleTextAttribute extends TextAttribute with EquatableMixin {
   /// Create a simple text attribute.
-  const _SimpleTextAttribute(this.value);
+  const _SimpleTextAttribute(
+    this.value, {
+    required this.expandRules,
+  });
 
   /// The value that will be returned by [resolve].
   final TextAttributeValue value;
+
+  @override
+  final SpanExpandRules expandRules;
 
   @override
   TextAttributeValue resolve(AttributeThemeData theme) => value;
@@ -183,7 +200,7 @@ enum ExpandRule {
   exclusive,
 
   /// The span will not be shifted at all. This should not be used directly,
-  /// instead use [AttributeSpan.fixed].
+  /// instead use [SpanExpandRules.fixed].
   @visibleForTesting
   fixed,
 }
@@ -191,13 +208,49 @@ enum ExpandRule {
 /// Contains an [ExpandRule] for the start and end boundaries of a span.
 class SpanExpandRules {
   /// Create span expand rules.
-  const SpanExpandRules(this.start, this.end);
+  const SpanExpandRules(this.start, this.end)
+      : assert((start == ExpandRule.fixed) == (end == ExpandRule.fixed),
+            'Start and end rules must either both be fixed or neither may be fixed.');
 
-  /// Rule for the start of the span.
+  /// Create a span with [start] set to [ExpandRule.exclusive] and [end] set to
+  /// [ExpandRule.inclusive].
+  ///
+  /// This ruleset is commonly used for text formatting attributes like bold and
+  /// italic.
+  const SpanExpandRules.after()
+      : this(ExpandRule.exclusive, ExpandRule.inclusive);
+
+  /// Create rules for a span that is fixed in place.
+  ///
+  /// Spans with these rules will not move or expand when [AttributeSpan.shift]
+  /// is called on them. There are two typical use cases:
+  ///
+  /// * The span should apply to a fixed range of characters. E.g. the first
+  ///   line in git commit messages are recommended to be 50 characters or less.
+  ///   Users could highlight characters within the recommended length as
+  ///   follows:
+  ///
+  ///   ```dart
+  ///   AttributeSpan.fixed(highlightAttribute, 0, 50)
+  ///   ```
+  ///
+  /// * The span should apply to the full line of text. E.g. a header line:
+  ///
+  ///   ```dart
+  ///   AttributeSpan.fixed(headerAttriute, 0, maxSpanLength)
+  ///   ```
+  const SpanExpandRules.fixed() : this(ExpandRule.fixed, ExpandRule.fixed);
+
+  /// Rule for expanding when [AttributeSpan.shift] is called at
+  /// [AttributeSpan.start] of the span.
   final ExpandRule start;
 
-  /// Rule for the end of the span.
+  /// Rule for expanding when [AttributeSpan.shift] is called at
+  /// [AttributeSpan.end] of the span.
   final ExpandRule end;
+
+  /// Indicates if these rules where created with [SpanExpandRules.fixed].
+  bool get isFixed => start == ExpandRule.fixed;
 }
 
 /// Extensions for SpanAttachment.
@@ -329,46 +382,19 @@ class Range extends Equatable {
   List<Object?> get props => [start, end];
 }
 
-/// A [TextAttribute] applied to a [range] of text with rules for
-/// expansion on [shift].
+/// A [TextAttribute] applied to a [range] of text.
 @immutable
 class AttributeSpan extends Equatable {
   /// Create an attribute span.
   ///
-  /// [range] must be valid and normalized.
-  /// For an unattached span, use [AttributeSpan.fixed].
+  /// [range] must be valid, normalized and not collapsed.
   const AttributeSpan(
     this.attribute,
     this.start,
     this.end,
-    this.startRule,
-    this.endRule,
   )   : assert(start >= 0 && end >= 0, 'Range must be valid.'),
-        assert(start <= end, 'Range must be normalized.'),
-        assert((startRule == ExpandRule.fixed) == (endRule == ExpandRule.fixed),
-            'Start and end rules must either both be fixed or neither may be fixed.');
-
-  /// Create a span that is fixed in place.
-  ///
-  /// Spans created with this constructor will not move or expand when [shift]
-  /// is called on them. There are two typical use cases:
-  ///
-  /// * The span should apply to a fixed range of characters. E.g. the first
-  ///   line in git commit messages are recommended to be 50 characters or less.
-  ///   Users could highlight characters within the recommended length as
-  ///   follows:
-  ///
-  ///   ```dart
-  ///   AttributeSpan.fixed(highlightAttribute, 0, 50)
-  ///   ```
-  ///
-  /// * The span should apply to the full line of text. E.g. a header line:
-  ///
-  ///   ```dart
-  ///   AttributeSpan.fixed(headerAttriute, 0, maxSpanLength)
-  ///   ```
-  const AttributeSpan.fixed(TextAttribute attribute, int start, int end)
-      : this(attribute, start, end, ExpandRule.fixed, ExpandRule.fixed);
+        assert(
+            start < end, 'Range must be normalized and may not be collapsed.');
 
   /// The attribute this span applies.
   final TextAttribute attribute;
@@ -385,46 +411,15 @@ class AttributeSpan extends Equatable {
   /// Size of the range of this span.
   int get size => end - start;
 
-  /// Rule for expanding when [shift] is called at the [start] of this span.
-  final ExpandRule startRule;
-
-  /// Rule for expanding when [shift] is called at the [end] of this span.
-  final ExpandRule endRule;
-
-  /// Returns true if this span was created with [AttributeSpan.fixed];
-  bool get isFixed => startRule == ExpandRule.fixed;
-
-  /// Returns true if the [range] of this span is collapsed.
-  ///
-  /// See [Range.isCollapsed].
-  bool get isCollapsed => start == end;
-
-  /// Inverse of [isCollapsed].
-  bool get isNotCollapsed => !isCollapsed;
-
-  /// Returns true if [shift] can make the [range] of this span larger.
-  bool get isExpandable =>
-      (startRule == ExpandRule.inclusive &&
-          (!isCollapsed || endRule == ExpandRule.inclusive)) ||
-      endRule == ExpandRule.inclusive;
-
-  /// Returns true if [shift] can't make the [range] of this span larger.
-  bool get isNotExpandable => !isExpandable;
-
-  /// Returns true if this span is not expandable and its [range] is collapsed.
-  /// (see [isNotExpandable] and [Range.isCollapsed]).
-  bool get isUseless => isNotExpandable && isCollapsed;
-
-  /// True if this span is not expandable
-  bool get isNotUseless => !isUseless;
+  /// Returns true if this span's attribute is fixed in place. I.e. [shift] can
+  /// not move this span.
+  bool get isFixed => attribute.expandRules.isFixed;
 
   @override
   List<Object?> get props => [
         attribute,
         start,
         end,
-        startRule,
-        endRule,
       ];
 
   /// Creates a copy of this attribute span with the given fields replaced with
@@ -433,49 +428,27 @@ class AttributeSpan extends Equatable {
     TextAttribute? attribute,
     int? start,
     int? end,
-    ExpandRule? startRule,
-    ExpandRule? endRule,
   }) {
     return AttributeSpan(
       attribute ?? this.attribute,
       start ?? this.start,
       end ?? this.end,
-      startRule ?? this.startRule,
-      endRule ?? this.endRule,
     );
   }
 
   /// Return the resulting span after inserting source text at [index] with [length].
-  ///
-  /// If this span is collapsed and [endRule] is [ExpandRule.inclusive],
-  /// [startRule] is always treated as [ExpandRule.inclusive].
-  ///
-  /// I.e. a shift at the index of a collapsed span \[\[ will result in \[o\[. Note
-  /// that the start is expanded even though the expand rule is set to
-  /// [ExpandRule.exclusive]. Because of this exception a collapsed span
-  /// with [endRule] inclusive can still expand.
-  // TODO this behavior should probably be symmetric, though start inclusive
-  // spans are not very useful in practice...
-  // Or maybe we can get rid of it altogether since the controller now has the
-  // override mechanism and collapsed spans are deleted by SpanList.
   AttributeSpan shift(int index, int length) {
     if (isFixed ||
         index > end ||
-        (index == end && endRule != ExpandRule.inclusive)) {
+        (index == end && attribute.expandRules.end != ExpandRule.inclusive)) {
       return this;
     }
 
     final newEnd = end + length;
 
-    final startRule = isCollapsed && endRule == ExpandRule.inclusive
-        ? ExpandRule.inclusive
-        : this.startRule;
-
-    // If this span is collapsed we treat the shift as happening at the end
-    // boundary. This way, a collapsed span with endBehavior inclusive can
-    // still expand.
     if (index > start ||
-        (index == start && startRule == ExpandRule.inclusive)) {
+        (index == start &&
+            attribute.expandRules.start == ExpandRule.inclusive)) {
       return copyWith(end: newEnd);
     }
 
@@ -489,7 +462,7 @@ class AttributeSpan extends Equatable {
       return this;
     } else {
       final spliced = range.splice(collapseRange);
-      if (spliced != null) {
+      if (spliced != null && !spliced.isCollapsed) {
         return copyWith(start: spliced.start, end: spliced.end);
       }
     }
@@ -497,55 +470,25 @@ class AttributeSpan extends Equatable {
 
   /// Returns true if this span is applied to the full range of text.
   bool isApplied(Range textRange) {
-    if (textRange.isCollapsed) {
-      return willApply(textRange.start);
-    }
-
     return range.contains(textRange);
   }
 
   /// Returns true if this span will apply to text inserted at [index].
   bool willApply(int index) {
     return (start < index && index < end) ||
-        (!isCollapsed && index == start && startRule == ExpandRule.inclusive) ||
-        (index == end && endRule == ExpandRule.inclusive);
+        (index == start &&
+            attribute.expandRules.start == ExpandRule.inclusive) ||
+        (index == end && attribute.expandRules.end == ExpandRule.inclusive);
   }
 
   @override
   String toString() {
-    return '(${startRule.toBracketStr(true)}$start $end${endRule.toBracketStr(false)} $attribute)';
-  }
-}
-
-/// A text attribute with [ExpandRule] at start and end boundaries.
-///
-/// Can be converted to an [AttributeSpan] with [toSpan] by providing a range
-/// where the attribute should be applied.
-@immutable
-class AttributeSpanTemplate {
-  /// Create an attribute span template.
-  const AttributeSpanTemplate(
-      this.attribute, this.startBehavior, this.endBehavior);
-
-  /// The attribute spans created from this template will apply.
-  ///
-  /// See [AttributeSpan.attribute].
-  final TextAttribute attribute;
-
-  /// See [AttributeSpan.startRule].
-  final ExpandRule startBehavior;
-
-  /// See [AttributeSpan.endRule].
-  final ExpandRule endBehavior;
-
-  /// Create a span from this template.
-  AttributeSpan toSpan(int start, int end) {
-    return AttributeSpan(attribute, start, end, startBehavior, endBehavior);
+    return '(${attribute.expandRules.start.toBracketStr(true)}$start $end${attribute.expandRules.start.toBracketStr(false)} $attribute)';
   }
 }
 
 /// A range of the source text with the set of attributes that are applied to it.
-//@immutable
+@immutable
 class AttributeSegment extends Equatable {
   /// Create an attribute segment.
   const AttributeSegment(this.text, this.attributes);
@@ -611,24 +554,15 @@ class SpanList extends Equatable {
   /// Create a SpanList from segments.
   ///
   /// Segments will be merged to create the spans.
-  /// [getExpandRules] is used to determine expand rules
-  /// for created spans, since [AttributeSegment] does not
-  /// store that information.
-  factory SpanList.fromSegments(
-    Iterable<AttributeSegment> segments,
-    SpanExpandRules Function(TextAttribute) getExpandRules,
-  ) {
+  factory SpanList.fromSegments(Iterable<AttributeSegment> segments) {
     var pos = 0;
     return segments.fold<SpanList>(SpanList(), (list, segment) {
       final length = segment.text.length;
       final result = segment.attributes.fold<SpanList>(list, (list, attr) {
-        final expandRule = getExpandRules(attr);
         final span = AttributeSpan(
           attr,
           pos,
           pos + length,
-          expandRule.start,
-          expandRule.end,
         );
         return list.merge(span);
       });
@@ -753,15 +687,8 @@ class SpanList extends Equatable {
 
   /// Add a span. Merges touching spans with the same attribute.
   ///
-  /// Collapsed spans are not added. See [AttributeSpan.isCollapsed].
-  ///
   /// Spans touching [span] with an equal [AttributeSpan.attribute] will be
   /// merged.
-  ///
-  /// Merged spans will always use [AttributeSpan.startRule] and
-  /// [AttributeSpan.endRule] of the passed [span].
-  /// [AttributeSpan.startRule] and [AttributeSpan.endRule] are not
-  /// taken into account for merging; touching spans will always be merged.
   SpanList merge(AttributeSpan span) {
     final touching = _spans.where(
         (s) => s.attribute == span.attribute && s.range.touches(span.range));
@@ -773,15 +700,11 @@ class SpanList extends Equatable {
       start: start,
       end: end,
     );
-    if (merged.isNotCollapsed) {
-      return SpanList._sorted(
-        _spans
-            .whereNot(toMerge.contains)
-            .followedBy([merged]).sorted((a, b) => a.start - b.start),
-      );
-    } else {
-      return SpanList._sorted(_spans.whereNot(touching.contains));
-    }
+    return SpanList._sorted(
+      _spans
+          .whereNot(toMerge.contains)
+          .followedBy([merged]).sorted((a, b) => a.start - b.start),
+    );
   }
 
   /// Remove [span].
@@ -837,7 +760,7 @@ class SpanList extends Equatable {
     }
     return SpanList(_spans.expand((s) sync* {
       final collapsedSpan = s.collapse(range);
-      if (collapsedSpan != null && collapsedSpan.isNotCollapsed) {
+      if (collapsedSpan != null) {
         yield collapsedSpan;
       }
     }));

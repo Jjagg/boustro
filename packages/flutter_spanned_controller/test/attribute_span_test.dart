@@ -66,37 +66,29 @@ void main() {
   group('collapse', () {
     test('''remove collapsed span at the end''', () {
       expect(
-        SpanList([sp(a, 1, 2, ExpandRule.exclusive, ExpandRule.inclusive)])
-            .collapse(Range(1, 3))
-            .iter,
+        SpanList([sp(RuleAttr.exInc, 1, 2)]).collapse(Range(1, 3)).iter,
         <dynamic>[],
       );
     });
 
     test('''remove useless span at the start''', () {
       expect(
-        SpanList([sp(a, 1, 2, ExpandRule.inclusive, ExpandRule.exclusive)])
-            .collapse(Range(0, 2))
-            .iter,
+        SpanList([sp(RuleAttr.incEx, 1, 2)]).collapse(Range(0, 2)).iter,
         <dynamic>[],
       );
     });
 
     test('''remove useless span collapsed''', () {
       expect(
-        SpanList([sp(a, 1, 2, ExpandRule.exclusive, ExpandRule.exclusive)])
-            .collapse(Range(1, 2))
-            .iter,
+        SpanList([sp(RuleAttr.exEx, 1, 2)]).collapse(Range(1, 2)).iter,
         <dynamic>[],
       );
     });
 
     test('''do not remove unexpandable span not collapsed''', () {
       expect(
-        SpanList([sp(a, 1, 3, ExpandRule.exclusive, ExpandRule.exclusive)])
-            .collapse(Range(1, 2))
-            .iter,
-        [sp(a, 1, 2, ExpandRule.exclusive, ExpandRule.exclusive)],
+        SpanList([sp(RuleAttr.exEx, 1, 3)]).collapse(Range(1, 2)).iter,
+        [sp(RuleAttr.exEx, 1, 2)],
       );
     });
   });

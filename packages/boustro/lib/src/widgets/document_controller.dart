@@ -314,10 +314,11 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     }
   }
 
-  /// Apply a text attribute to the given line.
+  /// Apply a text attribute to the given line. Typically used with attributes
+  /// with [SpanExpandRules.fixed].
   void setLineStyleOf(LineState line, TextAttribute attribute) {
     final ctrl = line.controller;
-    final span = AttributeSpan.fixed(
+    final span = AttributeSpan(
       attribute,
       0,
       maxSpanLength,

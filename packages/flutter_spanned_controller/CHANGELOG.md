@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `InsertBehavior` to `ExpandRule` and `FullInsertBehavior` to `SpanExpandRules`.
   Finally, I've come up with the right name for this concept :)
 - Rename `SpannedString()` to `SpannedString.chars()` and let unnamed constructor take `String`.
+- Moved `ExpandRules` to be a part of attributes themselves.
 
 ### Fixed
 

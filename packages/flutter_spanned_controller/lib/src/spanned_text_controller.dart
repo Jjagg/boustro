@@ -108,14 +108,11 @@ class _AttributeOverride {
   const _AttributeOverride(
     this.attribute,
     this.type,
-    this.startBehavior,
-    this.endBehavior,
   );
 
   final TextAttribute attribute;
   final OverrideType type;
-  final ExpandRule startBehavior;
-  final ExpandRule endBehavior;
+
   @override
   String toString() {
     return '$attribute -> $type';
@@ -128,8 +125,6 @@ extension SpannedTextEditingControllerExtension
   /// Apply an attribute to the current selection.
   void applyAttribute(
     TextAttribute attribute,
-    ExpandRule startBehavior,
-    ExpandRule endBehavior,
   ) {
     if (!selection.isValid || selection.isCollapsed) {
       return;
@@ -140,8 +135,6 @@ extension SpannedTextEditingControllerExtension
       attribute,
       range.start,
       range.end,
-      startBehavior,
-      endBehavior,
     );
     spans = spans.merge(span);
   }
@@ -169,7 +162,7 @@ extension SpannedTextEditingControllerExtension
   /// insertion, a call to this method makes it so the attribute is not applied
   /// and vice-versa. I.e. the result of [isApplied] will be
   /// inverted for [attribute] after calling this method. This will only have
-  /// an effect if [endBehavior] is set to [ExpandRule.inclusive].
+  /// an effect if the attribute's end rule is set to [ExpandRule.inclusive].
   ///
   /// For a range selection, if the attribute is not applied to the full
   /// selection it will be applied to the full selection. Otherwise the
@@ -179,18 +172,17 @@ extension SpannedTextEditingControllerExtension
   /// will be applied for collapsed selections.
   bool toggleAttribute(
     TextAttribute attribute,
-    ExpandRule startBehavior,
-    ExpandRule endBehavior,
   ) {
     final applied = isApplied(attribute);
-    if (selection.isCollapsed && endBehavior == ExpandRule.inclusive) {
+    if (selection.isCollapsed &&
+        attribute.expandRules.end == ExpandRule.inclusive) {
       final overrideType = applied ? OverrideType.remove : OverrideType.apply;
-      setOverride(attribute, overrideType, startBehavior, endBehavior);
+      setOverride(attribute, overrideType);
     } else {
       if (applied) {
         spans = spans.removeFrom(_convertRange(selection), attribute);
       } else {
-        applyAttribute(attribute, startBehavior, endBehavior);
+        applyAttribute(attribute);
       }
     }
 
@@ -216,6 +208,7 @@ class SpannedTextEditingController implements TextEditingController {
     SpanList? spans,
   })  : compositionAttribute = compositionAttribute ??
             TextAttribute.simple(
+              expandRules: SpanExpandRules.fixed(),
               debugName: 'composition underline',
               style: const TextStyle(decoration: TextDecoration.underline),
             ),
@@ -349,12 +342,10 @@ class SpannedTextEditingController implements TextEditingController {
   void setOverride(
     TextAttribute attribute,
     OverrideType type,
-    ExpandRule startBehavior,
-    ExpandRule endBehavior,
   ) {
     _attributeOverrides
       ..removeWhere((ao) => ao.attribute == attribute)
-      ..add(_AttributeOverride(attribute, type, startBehavior, endBehavior));
+      ..add(_AttributeOverride(attribute, type));
     notifyListeners();
   }
 
@@ -376,8 +367,6 @@ class SpannedTextEditingController implements TextEditingController {
               compositionAttribute,
               value.composing.start,
               value.composing.end,
-              ExpandRule.exclusive,
-              ExpandRule.exclusive,
             ),
           )).getSegments(text.characters);
 
@@ -431,8 +420,6 @@ class SpannedTextEditingController implements TextEditingController {
           ao.attribute,
           range.start,
           range.end,
-          ao.startBehavior,
-          ao.endBehavior,
         );
         spans = spans.merge(span);
       } else {

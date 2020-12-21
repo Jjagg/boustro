@@ -76,18 +76,14 @@ Widget Function(
 ToolbarItem createToggleableToolbarItem(
   String tooltip,
   TextAttribute attribute,
-  IconData icon, {
-  ExpandRule startBehavior = ExpandRule.exclusive,
-  ExpandRule endBehavior = ExpandRule.inclusive,
-}) {
+  IconData icon,
+) {
   return ToolbarItem(
     builder: _createToggleableToolbarItemBuilder(attribute),
     title: Icon(icon),
     onPressed: (_, controller) =>
         controller.focusedLine?.controller.toggleAttribute(
       attribute,
-      ExpandRule.exclusive,
-      ExpandRule.inclusive,
     ),
     tooltip: tooltip,
   );

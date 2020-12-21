@@ -10,6 +10,9 @@ class _BoldAttribute extends ThemedTextAttribute {
   _BoldAttribute() : super(debugName: 'bold');
 
   @override
+  SpanExpandRules get expandRules => SpanExpandRules.after();
+
+  @override
   TextStyle? getStyle(AttributeThemeData theme) {
     final weight = theme.boldFontWeight ?? FontWeight.bold;
     return TextStyle(fontWeight: weight);
@@ -17,15 +20,11 @@ class _BoldAttribute extends ThemedTextAttribute {
 }
 
 /// Codec to convert [boldAttribute] to/from delta (see [DocumentDeltaConverter]).
-final boldAttributeDeltaCodec = deltaBoolAttributeCodec(
-  'bold',
-  boldAttribute,
-  ExpandRule.exclusive,
-  ExpandRule.inclusive,
-);
+final boldAttributeDeltaCodec = deltaBoolAttributeCodec('bold', boldAttribute);
 
 /// Attribute with [TextStyle.fontStyle] set to [FontStyle.italic].
 final italicAttribute = TextAttribute.simple(
+  expandRules: SpanExpandRules.after(),
   debugName: 'italic',
   style: const TextStyle(fontStyle: FontStyle.italic),
 );
@@ -34,12 +33,11 @@ final italicAttribute = TextAttribute.simple(
 final italicAttributeDeltaCodec = deltaBoolAttributeCodec(
   'italic',
   italicAttribute,
-  ExpandRule.exclusive,
-  ExpandRule.inclusive,
 );
 
 /// Attribute with [TextStyle.decoration] set to [TextDecoration.underline].
 final underlineAttribute = TextAttribute.simple(
+  expandRules: SpanExpandRules.after(),
   debugName: 'underline',
   style: const TextStyle(decoration: TextDecoration.underline),
 );
@@ -48,12 +46,11 @@ final underlineAttribute = TextAttribute.simple(
 final underlineAttributeDeltaCodec = deltaBoolAttributeCodec(
   'underline',
   underlineAttribute,
-  ExpandRule.exclusive,
-  ExpandRule.inclusive,
 );
 
 /// Attribute with [TextStyle.decoration] set to [TextDecoration.lineThrough].
 final strikethroughAttribute = TextAttribute.simple(
+  expandRules: SpanExpandRules.after(),
   debugName: 'strikethrough',
   style: const TextStyle(decoration: TextDecoration.lineThrough),
 );
@@ -62,8 +59,6 @@ final strikethroughAttribute = TextAttribute.simple(
 final strikethroughAttributeDeltaCodec = deltaBoolAttributeCodec(
   'strike',
   strikethroughAttribute,
-  ExpandRule.exclusive,
-  ExpandRule.inclusive,
 );
 
 /// Themeable property getter extensions for the attributes in this library.

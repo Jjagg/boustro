@@ -1,7 +1,15 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
-abstract class MockSpan extends TextAttribute with EquatableMixin {
+abstract class MockAttr extends TextAttribute with EquatableMixin {
+  const MockAttr();
+
+  @override
+  SpanExpandRules get expandRules => SpanExpandRules(
+        ExpandRule.exclusive,
+        ExpandRule.exclusive,
+      );
+
   @override
   TextAttributeValue resolve(AttributeThemeData theme) {
     throw UnimplementedError();
@@ -11,43 +19,46 @@ abstract class MockSpan extends TextAttribute with EquatableMixin {
   List<Object?> get props => [];
 }
 
-AttributeSpanTemplate spt<T extends MockSpan>(
-  T attr, [
-  ExpandRule startAnchor = ExpandRule.exclusive,
-  ExpandRule endAnchor = ExpandRule.exclusive,
-]) =>
-    AttributeSpanTemplate(attr, startAnchor, endAnchor);
+AttributeSpan sp<T extends MockAttr>(T attr, int start, int end) {
+  return AttributeSpan(
+    attr,
+    start,
+    end,
+  );
+}
 
-AttributeSpan sp<T extends MockSpan>(
-  T attr,
-  int start,
-  int end, [
-  ExpandRule startAnchor = ExpandRule.exclusive,
-  ExpandRule endAnchor = ExpandRule.exclusive,
-]) =>
-    AttributeSpan(
-      attr,
-      start,
-      end,
-      startAnchor,
-      endAnchor,
-    );
+final a = MockAttrA();
+final b = MockAttrB();
+final c = MockAttrC();
+final d = MockAttrD();
+final e = MockAttrE();
+final f = MockAttrF();
 
-final a = MockSpanA();
-final b = MockSpanB();
-final c = MockSpanC();
-final d = MockSpanD();
-final e = MockSpanE();
-final f = MockSpanF();
+class MockAttrA extends MockAttr {}
 
-class MockSpanA extends MockSpan {}
+class MockAttrB extends MockAttr {}
 
-class MockSpanB extends MockSpan {}
+class MockAttrC extends MockAttr {}
 
-class MockSpanC extends MockSpan {}
+class MockAttrD extends MockAttr {}
 
-class MockSpanD extends MockSpan {}
+class MockAttrE extends MockAttr {}
 
-class MockSpanE extends MockSpan {}
+class MockAttrF extends MockAttr {}
 
-class MockSpanF extends MockSpan {}
+class RuleAttr extends MockAttr {
+  const RuleAttr(this.expandRules);
+
+  @override
+  final SpanExpandRules expandRules;
+
+  static final RuleAttr exEx =
+      RuleAttr(SpanExpandRules(ExpandRule.exclusive, ExpandRule.exclusive));
+  static final RuleAttr exInc =
+      RuleAttr(SpanExpandRules(ExpandRule.exclusive, ExpandRule.inclusive));
+  static final RuleAttr incEx =
+      RuleAttr(SpanExpandRules(ExpandRule.inclusive, ExpandRule.exclusive));
+  static final RuleAttr incInc =
+      RuleAttr(SpanExpandRules(ExpandRule.inclusive, ExpandRule.inclusive));
+  static final RuleAttr fixed = RuleAttr(SpanExpandRules.fixed());
+}

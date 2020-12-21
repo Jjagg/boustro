@@ -107,17 +107,12 @@ void main() {
       expect(s1.concat(s2), SpannedString('birdword', SpanList([sp(a, 1, 6)])));
     });
     test('concat does not expand', () {
-      final s1 = SpannedString('bird',
-          SpanList([sp(a, 1, 4, ExpandRule.exclusive, ExpandRule.inclusive)]));
+      final s1 = SpannedString('bird', SpanList([sp(RuleAttr.exInc, 1, 4)]));
       final s2 = SpannedString('word', SpanList([sp(b, 0, 2)]));
       expect(
         s1.concat(s2),
         SpannedString(
-            'birdword',
-            SpanList([
-              sp(a, 1, 4, ExpandRule.exclusive, ExpandRule.inclusive),
-              sp(b, 4, 6)
-            ])),
+            'birdword', SpanList([sp(RuleAttr.exInc, 1, 4), sp(b, 4, 6)])),
       );
     });
     test('index oob', () {
@@ -169,9 +164,9 @@ void main() {
     test('single span', () {
       expect(
         (SpannedStringBuilder()
-              ..start(spt(a))
+              ..start(a)
               ..write('Test')
-              ..end(spt(a)))
+              ..end(a))
             .build(),
         SpannedString('Test', SpanList([sp(a, 0, 4)])),
       );
@@ -179,7 +174,7 @@ void main() {
     test('unfinished span', () {
       expect(
         (SpannedStringBuilder()
-              ..start(spt(a))
+              ..start(a)
               ..write('Test'))
             .build(),
         SpannedString('Test', SpanList([sp(a, 0, 4)])),
@@ -188,18 +183,18 @@ void main() {
     test('multiple spans', () {
       expect(
           (SpannedStringBuilder()
-                ..start(spt(a))
+                ..start(a)
                 ..write('T')
-                ..start(spt(b))
+                ..start(b)
                 ..write('es')
-                ..end(spt(a))
+                ..end(a)
                 ..write('t')
-                ..end(spt(b)))
+                ..end(b))
               .build(),
           SpannedString('Test', SpanList([sp(a, 0, 3), sp(b, 1, 4)])));
     });
     test('end unstarted span throws', () {
-      expect(() => SpannedStringBuilder().end(spt(a)), throwsStateError);
+      expect(() => SpannedStringBuilder().end(a), throwsStateError);
     });
     test('line style', () {
       expect(
@@ -209,20 +204,18 @@ void main() {
             .build(),
         SpannedString(
           'Test',
-          SpanList([AttributeSpan.fixed(a, 0, maxSpanLength)]),
+          SpanList([sp(RuleAttr.fixed, 0, maxSpanLength)]),
         ),
       );
     });
     test('segment style', () {
       expect(
-          (SpannedStringBuilder()..write('Hi', [spt(a)])..write(':)', [spt(b)]))
-              .build(),
+          (SpannedStringBuilder()..write('Hi', [a])..write(':)', [b])).build(),
           SpannedString('Hi:)', SpanList([sp(a, 0, 2), sp(b, 2, 4)])));
     });
     test('segment style merge', () {
       expect(
-          (SpannedStringBuilder()..write('Hi', [spt(a)])..write(':)', [spt(a)]))
-              .build(),
+          (SpannedStringBuilder()..write('Hi', [a])..write(':)', [a])).build(),
           SpannedString('Hi:)', SpanList([sp(a, 0, 4)])));
     });
   });

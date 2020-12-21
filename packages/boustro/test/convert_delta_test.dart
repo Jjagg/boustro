@@ -61,12 +61,7 @@ void main() {
   });
 
   final bold = TestAttribute();
-  final boldCodec = deltaBoolAttributeCodec(
-    'bold',
-    bold,
-    ExpandRule.exclusive,
-    ExpandRule.inclusive,
-  );
+  final boldCodec = deltaBoolAttributeCodec('bold', bold);
 
   final deltaConverter = DocumentDeltaConverter([boldCodec], []);
 
@@ -74,8 +69,6 @@ void main() {
         bold,
         start,
         end,
-        ExpandRule.exclusive,
-        ExpandRule.inclusive,
       );
 
   group('op to boustro document converter', () {
@@ -162,4 +155,8 @@ class TestAttribute extends TextAttribute {
   TextAttributeValue resolve(AttributeThemeData theme) {
     throw UnimplementedError();
   }
+
+  @override
+  SpanExpandRules get expandRules =>
+      SpanExpandRules(ExpandRule.exclusive, ExpandRule.inclusive);
 }
