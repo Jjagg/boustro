@@ -68,7 +68,7 @@ void main() {
     ExpandRule.inclusive,
   );
 
-  final deltaConverter = BoustroDocumentDeltaConverter([boldCodec], []);
+  final deltaConverter = DocumentDeltaConverter([boldCodec], []);
 
   final createBold = (int start, int end) => AttributeSpan(
         bold,

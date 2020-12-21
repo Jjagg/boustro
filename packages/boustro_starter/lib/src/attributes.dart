@@ -16,7 +16,7 @@ class _BoldAttribute extends ThemedTextAttribute {
   }
 }
 
-/// Codec to convert [boldAttribute] to/from delta (see [BoustroDocumentDeltaConverter]).
+/// Codec to convert [boldAttribute] to/from delta (see [DocumentDeltaConverter]).
 final boldAttributeDeltaCodec = deltaBoolAttributeCodec(
   'bold',
   boldAttribute,
@@ -30,7 +30,7 @@ final italicAttribute = TextAttribute.simple(
   style: const TextStyle(fontStyle: FontStyle.italic),
 );
 
-/// Codec to convert [italicAttribute] to/from delta (see [BoustroDocumentDeltaConverter]).
+/// Codec to convert [italicAttribute] to/from delta (see [DocumentDeltaConverter]).
 final italicAttributeDeltaCodec = deltaBoolAttributeCodec(
   'italic',
   italicAttribute,
@@ -44,7 +44,7 @@ final underlineAttribute = TextAttribute.simple(
   style: const TextStyle(decoration: TextDecoration.underline),
 );
 
-/// Codec to convert [underlineAttribute] to/from delta (see [BoustroDocumentDeltaConverter]).
+/// Codec to convert [underlineAttribute] to/from delta (see [DocumentDeltaConverter]).
 final underlineAttributeDeltaCodec = deltaBoolAttributeCodec(
   'underline',
   underlineAttribute,
@@ -58,7 +58,7 @@ final strikethroughAttribute = TextAttribute.simple(
   style: const TextStyle(decoration: TextDecoration.lineThrough),
 );
 
-/// Codec to convert [underlineAttribute] to/from delta (see [BoustroDocumentDeltaConverter]).
+/// Codec to convert [underlineAttribute] to/from delta (see [DocumentDeltaConverter]).
 final strikethroughAttributeDeltaCodec = deltaBoolAttributeCodec(
   'strike',
   strikethroughAttribute,

@@ -100,9 +100,9 @@ TextAttributeDeltaCodec deltaBoolAttributeCodec(
 
 /// Convert a document to or from a list of insert operations in Quill's
 /// delta format.
-class BoustroDocumentDeltaConverter extends Codec<Document, List<Op>> {
+class DocumentDeltaConverter extends Codec<Document, List<Op>> {
   /// Create a delta converter
-  BoustroDocumentDeltaConverter(
+  DocumentDeltaConverter(
     List<TextAttributeDeltaCodec> attributeCodecs,
     List<EmbedCodec> embedCodec,
   )   : attributeDecoders = {for (final c in attributeCodecs) c.key: c},
@@ -133,17 +133,17 @@ class BoustroDocumentDeltaConverter extends Codec<Document, List<Op>> {
 
   @override
   Converter<List<Op>, Document> get decoder =>
-      BoustroDocumentDeltaDecoder(attributeDecoders, embedDecoders);
+      DocumentDeltaDecoder(attributeDecoders, embedDecoders);
 
   @override
   Converter<Document, List<Op>> get encoder =>
-      BoustroDocumentDeltaEncoder(attributeEncoder, embedEncoders);
+      DocumentDeltaEncoder(attributeEncoder, embedEncoders);
 }
 
 /// Encodes a document to a list of Quill delta insert operations.
-class BoustroDocumentDeltaEncoder extends Converter<Document, List<Op>> {
+class DocumentDeltaEncoder extends Converter<Document, List<Op>> {
   /// Create an encoder.
-  const BoustroDocumentDeltaEncoder(
+  const DocumentDeltaEncoder(
     this.attributeEncoder,
     this.embedEncoders,
   );
@@ -165,9 +165,9 @@ class BoustroDocumentDeltaEncoder extends Converter<Document, List<Op>> {
 ///
 /// Throws [ArgumentError] when an attribute is encountered with no entry in
 /// [attributeCodecs].
-class BoustroDocumentDeltaDecoder extends Converter<List<Op>, Document> {
+class DocumentDeltaDecoder extends Converter<List<Op>, Document> {
   /// Create a decoder.
-  const BoustroDocumentDeltaDecoder(
+  const DocumentDeltaDecoder(
     this.attributeCodecs,
     this.embedDecoders,
   );
