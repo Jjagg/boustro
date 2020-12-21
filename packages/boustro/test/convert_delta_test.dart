@@ -9,12 +9,6 @@ import 'dart:convert';
 import 'package:boustro/convert_delta.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-const doc3 =
-    r'''[{"insert":"Project Pura"},{"insert":"\n","attributes":{"header":1}},{"insert":"We've just launched the Project Pura app!","attributes":{"italic":true}},{"insert":"\n"},{"insert":{"image":"assets/logo128.png"}},{"insert":"\n"},{"insert":"Photo by Hiroyuki Takeda.","attributes":{"italic":true}},{"insert":"\nZefyr is currently in "},{"insert":"early preview","attributes":{"bold":true}},{"insert":". If you have a feature request or found a bug, please file it at the "},{"insert":"issue tracker","attributes":{"link":"https://github.com/memspace/zefyr/issues"}},{"insert":'''
-    r'".\nDocumentation"},{"insert":"\n","attributes":{"header":3}},{"insert":"Quick Start","attributes":{"link":"https://github.com/memspace/zefyr/blob/master/doc/quick_start.md"}},{"insert":"\n","attributes":{"list":"bullet"}},{"insert":"Data Format and Document Model","attributes":{"link":"https://github.com/memspace/zefyr/blob/master/doc/data_and_document.md"}},{"insert":"\n","attributes":{"list":"bullet"}},{"insert":"Style Attributes","attributes":{"link":"https://github.com/memspace/zefyr/blob/master/doc/attr'
-    r'ibutes.md"}},{"insert":"\n","attributes":{"list":"bullet"}},{"insert":"Heuristic Rules","attributes":{"link":"https://github.com/memspace/zefyr/blob/master/doc/heuristics.md"}},{"insert":"\n","attributes":{"list":"bullet"}},{"insert":"FAQ","attributes":{"link":"https://github.com/memspace/zefyr/blob/master/doc/faq.md"}},{"insert":"\n","attributes":{"list":"bullet"}},{"insert":"Clean and modern look"},{"insert":"\n","attributes":{"header":2}},{"insert":"Zefyr’s rich text editor is built with simplicity and fle'
-    r'xibility in mind. It provides clean interface for distraction-free editing. Think Medium.com-like experience.\nMarkdown inspired semantics"},{"insert":"\n","attributes":{"header":2}},{"insert":"Ever needed to have a heading line inside of a quote block, like this:\nI’m a Markdown heading"},{"insert":"\n","attributes":{"blockquote":true,"header":3}},{"insert":"And I’m a regular paragraph"},{"insert":"\n","attributes":{"blockquote":true}}]';
-
 // TODO We don't want strong mode implicit-dynamic here, but I don't think
 //      the analyzer lets us disable it for tests.
 
@@ -81,7 +75,7 @@ void main() {
       expect(doc.paragraphs.length, 1);
       expect(
         doc.paragraphs[0],
-        TextLine(
+        LineParagraph(
           text: 'Hello, World!',
           spans: SpanList([createBold(0, 5)]),
         ),
@@ -97,7 +91,7 @@ void main() {
       expect(doc.paragraphs.length, 1);
       expect(
         doc.paragraphs[0],
-        TextLine(
+        LineParagraph(
           text: 'Hello, World!',
           spans: SpanList([createBold(0, 5)]),
         ),
@@ -113,13 +107,13 @@ void main() {
       expect(doc.paragraphs.length, 2);
       expect(
           doc.paragraphs[0],
-          TextLine(
+          LineParagraph(
             text: 'Hello, World!',
             spans: SpanList([createBold(0, 5)]),
           ));
       expect(
         doc.paragraphs[1],
-        TextLine(text: '', spans: SpanList()),
+        LineParagraph(text: '', spans: SpanList()),
       );
     });
 
@@ -135,13 +129,13 @@ void main() {
       expect(doc.paragraphs.length, 2);
       expect(
           doc.paragraphs[0],
-          TextLine(
+          LineParagraph(
             text: 'Hello, World!',
             spans: SpanList([createBold(0, 5)]),
           ));
       expect(
         doc.paragraphs[1],
-        TextLine(
+        LineParagraph(
           text: 'Hello, World!',
           spans: SpanList([createBold(5, 13)]),
         ),

@@ -17,25 +17,25 @@ class Document {
   final BuiltList<Paragraph> paragraphs;
 }
 
-/// A paragraph in a [Document]. Is either a [TextLine] for rich text,
+/// A paragraph in a [Document]. Is either a [LineParagraph] for rich text,
 /// or a [ParagraphEmbed] for other content.
 @immutable
 abstract class Paragraph {
   const Paragraph._();
 
-  /// Execute [line] if this is a [TextLine] and [embed] if this is a
+  /// Execute [line] if this is a [LineParagraph] and [embed] if this is a
   /// [ParagraphEmbed].
   T match<T>({
-    required T Function(TextLine) line,
+    required T Function(LineParagraph) line,
     required T Function(ParagraphEmbed) embed,
   });
 }
 
 /// Immutable representation of a line of rich text in a [Document].
 @immutable
-class TextLine extends Paragraph with EquatableMixin {
+class LineParagraph extends Paragraph with EquatableMixin {
   /// Create a line of rich text.
-  TextLine({
+  LineParagraph({
     required String text,
     required SpanList spans,
     List<LineModifier>? modifiers,
@@ -46,7 +46,7 @@ class TextLine extends Paragraph with EquatableMixin {
         );
 
   /// Create a line with the text and spans of [string].
-  TextLine.fromSpanned({
+  LineParagraph.fromSpanned({
     required SpannedString string,
     List<LineModifier>? modifiers,
   }) : this.built(
@@ -56,7 +56,7 @@ class TextLine extends Paragraph with EquatableMixin {
         );
 
   /// Create a line with directly initialized fields.
-  TextLine.built({
+  LineParagraph.built({
     required this.text,
     required this.spans,
     required this.modifiers,
@@ -76,7 +76,7 @@ class TextLine extends Paragraph with EquatableMixin {
 
   @override
   T match<T>({
-    required T Function(TextLine) line,
+    required T Function(LineParagraph) line,
     required T Function(ParagraphEmbed) embed,
   }) =>
       line(this);
@@ -98,7 +98,7 @@ abstract class ParagraphEmbed extends Paragraph {
 
   @override
   T match<T>({
-    required T Function(TextLine) line,
+    required T Function(LineParagraph) line,
     required T Function(ParagraphEmbed) embed,
   }) =>
       embed(this);
@@ -122,7 +122,7 @@ class DocumentBuilder {
   ]) {
     build(_lineBuilder);
     final str = _lineBuilder.build();
-    final line = TextLine.fromSpanned(string: str, modifiers: modifiers);
+    final line = LineParagraph.fromSpanned(string: str, modifiers: modifiers);
     _paragraphs.add(line);
   }
 

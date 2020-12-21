@@ -250,7 +250,7 @@ class DocumentDeltaDecoder extends Converter<List<Op>, Document> {
     }
   }
 
-  TextLine _opsToLine(_DeltaLine line) {
+  LineParagraph _opsToLine(_DeltaLine line) {
     final buffer = StringBuffer();
     final segments = <AttributeSegment>[];
 
@@ -277,7 +277,7 @@ class DocumentDeltaDecoder extends Converter<List<Op>, Document> {
 
     final text =
         segments.fold<String>('', (str, segment) => str + segment.text.string);
-    return TextLine(text: text, spans: spans);
+    return LineParagraph(text: text, spans: spans);
   }
 }
 

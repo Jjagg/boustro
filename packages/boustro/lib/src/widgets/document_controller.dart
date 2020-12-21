@@ -34,7 +34,7 @@ abstract class ParagraphState {
 
 /// Holds focus node and state for a line of text.
 ///
-/// This is the editable variant of [TextLine].
+/// This is the editable variant of [LineParagraph].
 @immutable
 class LineState extends ParagraphState {
   /// Create a text line.
@@ -221,7 +221,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
       final nextLine = t.collapse(end: indexAfterNewline);
       insertLine(
         lineIndex + 1,
-        TextLine.built(
+        LineParagraph.built(
           text: nextLine.text,
           spans: nextLine.spans,
           modifiers: currentLine.modifiers,
@@ -253,7 +253,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
         .paragraphs
         .map((p) => p.match<Paragraph>(
               line: (l) =>
-                  TextLine.fromSpanned(string: l.controller.spannedString),
+                  LineParagraph.fromSpanned(string: l.controller.spannedString),
               // TODO need a controller to modify embed state.
               embed: (e) => e.content,
             ))
@@ -262,12 +262,12 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   }
 
   /// Add a line after all existing paragraphs.
-  LineState appendLine([TextLine? line]) {
+  LineState appendLine([LineParagraph? line]) {
     return insertLine(paragraphs.length, line);
   }
 
   /// Insert a line at [index].
-  LineState insertLine(int index, [TextLine? line]) {
+  LineState insertLine(int index, [LineParagraph? line]) {
     final spanController = SpannedTextEditingController(
       processTextValue: _processTextValue,
       text: line?.text.string,
