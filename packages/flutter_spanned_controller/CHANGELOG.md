@@ -3,7 +3,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.4.0-0] — 2020-12-22
+
+### Removed
+
+- `TextAttribute.simple`. In favor of custom classes, so each attribute has its own type and
+  serialization can use the type to determine which encoder to use.
+
+### Changed
+
+- Moved `ExpandRules` to be a part of attributes themselves.
 
 ## [0.3.0-0] — 2020-12-18
 
@@ -12,11 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - System to theme `TextAttributes` with `AttributeTheme`.
 - Range to avoid confusion with `TextRange`.
   `TextRange` is designed to be for indexing into `String` by UTF-16 code units.
-
-### Removed
-
-- `TextAttribute.simple`. In favor of custom classes, so each attribute has its own type and
-  serialization can use the type to determine which encoder to use.
 
 ### Changed
 
@@ -30,7 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `InsertBehavior` to `ExpandRule` and `FullInsertBehavior` to `SpanExpandRules`.
   Finally, I've come up with the right name for this concept :)
 - Rename `SpannedString()` to `SpannedString.chars()` and let unnamed constructor take `String`.
-- Moved `ExpandRules` to be a part of attributes themselves.
 
 ### Fixed
 
@@ -53,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Initial release.
 
 [Unreleased]: https://github.com/Jjagg/boustro/tree/main/packages/flutter_spanned_controller
+[0.4.0-0]: https://github.com/Jjagg/boustro/tree/release_fsp_v0.4.0-0/packages/flutter_spanned_controller
 [0.3.0-0]: https://github.com/Jjagg/boustro/tree/release_fsp_v0.3.0-0/packages/flutter_spanned_controller
 [0.2.0-0]: https://github.com/Jjagg/boustro/tree/release_fsp_v0.2.0-0/packages/flutter_spanned_controller
 [0.1.1-0]: https://github.com/Jjagg/boustro/tree/release_fsp_v0.1.1-0/packages/flutter_spanned_controller
