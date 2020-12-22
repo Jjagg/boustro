@@ -1,18 +1,15 @@
+import 'dart:io';
+
 import 'package:boustro/boustro.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-import 'embed_gesture_handler.dart';
-
 /// Embed that presents an image.
 ///
-/// Its type is 'image' and value should be an [ImageProvider].
+/// Its value should be an [ImageProvider].
 ///
-/// Looks for an [EmbedGestureHandler]<ImageEmbed> to handle gestures.
-/// If one is missing, default gesture handling will be added:
-///
-/// * While editing, tapping the image will toggle focus.
+/// While editing, tapping the image will focus it.
 class ImageEmbed extends ParagraphEmbed {
   /// Create an image embed.
   const ImageEmbed(this.image);
@@ -46,12 +43,10 @@ class _ImageEmbed extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ctheme = BoustroComponentConfig.of(context);
     if (!scope.isEditable) {
-      return _buildContent(context, imageWrapper: _center);
+      return _buildContent(context, ctheme, _center);
     }
-
-    final gestureHandler = context
-        .dependOnInheritedWidgetOfExactType<EmbedGestureHandler<ImageEmbed>>();
 
     return Focus(
       focusNode: focusNode,
@@ -60,27 +55,38 @@ class _ImageEmbed extends StatelessWidget {
           final focusNode = Focus.of(context);
           final child = _buildContent(
             context,
-            imageWrapper: _buildOverlay,
+            ctheme,
+            _buildOverlay,
           );
 
-          return gestureHandler?.toDetector(child: child) ??
-              GestureDetector(
-                onTap: () {
-                  if (!focusNode.hasFocus) {
-                    focusNode.requestFocus();
-                  }
-                },
-                child: child,
-              );
+          return GestureDetector(
+            onTap: () {
+              if (!focusNode.hasFocus) {
+                focusNode.requestFocus();
+              }
+            },
+            child: child,
+          );
         },
       ),
     );
   }
 
-  Widget _center(BuildContext context, Widget child) => Center(child: child);
+  Widget _center(
+    BuildContext context,
+    BoustroComponentConfigData ctheme,
+    Widget child,
+  ) {
+    return Center(child: child);
+  }
 
-  Widget _buildOverlay(BuildContext context, Widget child) {
+  Widget _buildOverlay(
+    BuildContext context,
+    BoustroComponentConfigData ctheme,
+    Widget child,
+  ) {
     final hasFocus = Focus.of(context).hasFocus;
+    final pickImg = ctheme.imagePickImage;
     return Center(
       widthFactor: 1,
       heightFactor: 1,
@@ -96,17 +102,20 @@ class _ImageEmbed extends StatelessWidget {
               firstChild: const SizedBox(),
               secondChild: Stack(
                 children: [
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: _buildButton(
-                        context: context,
-                        icon: Icons.edit,
-                        onPressed: () {},
+                  if (pickImg != null)
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: _buildButton(
+                          context: context,
+                          icon: Icons.edit,
+                          onPressed: () {
+                            // TODO edit image
+                          },
+                        ),
                       ),
                     ),
-                  ),
                   Align(
                     alignment: Alignment.topRight,
                     child: Padding(
@@ -150,10 +159,12 @@ class _ImageEmbed extends StatelessWidget {
   }
 
   Widget _buildContent(
-    BuildContext context, {
-    required Widget Function(BuildContext context, Widget child) imageWrapper,
-  }) {
-    final ctheme = BoustroComponentTheme.of(context);
+    BuildContext context,
+    BoustroComponentConfigData ctheme,
+    Widget Function(BuildContext context, BoustroComponentConfigData ctheme,
+            Widget child)
+        imageWrapper,
+  ) {
     final maxHeight = ctheme.imageMaxHeight ?? 450;
 
     final sideColor = ctheme.imageSideColor ??
@@ -166,7 +177,7 @@ class _ImageEmbed extends StatelessWidget {
       fit: BoxFit.contain,
     );
 
-    widget = imageWrapper(context, widget);
+    widget = imageWrapper(context, ctheme, widget);
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: maxHeight),
@@ -187,8 +198,11 @@ class _ImageEmbed extends StatelessWidget {
   }
 }
 
+/// Signature for function used to pick an image.
+typedef PickImage = File? Function();
+
 /// Themeable property getter extensions for [ImageEmbed].
-extension ImageEmbedTheme on BoustroComponentThemeData {
+extension ImageEmbedTheme on BoustroComponentConfigData {
   /// The maximum height of an image in logical pixels.
   ///
   /// Higher images will be resized, keeping their aspect ratio.
@@ -197,7 +211,10 @@ extension ImageEmbedTheme on BoustroComponentThemeData {
 
   /// Color painted to the side of the image if it does not cover the full
   /// width available to it.
-  Color? get imageSideColor => get('imageSideColor');
+  Color? get imageSideColor => get<Color>('imageSideColor');
+
+  /// Get the closure that's called when an image should be picked.
+  PickImage? get imagePickImage => get<PickImage>('imagePickImage');
 }
 
 /// Themeable property setter extensions for [ImageEmbed].
@@ -213,11 +230,21 @@ extension ImageEmbedThemeSet on ComponentThemeBuilder {
     }
   }
 
+  /// Set the color painted to the side of the image.
   set imageSideColor(Color? value) {
     if (value == null) {
       remove('imageSideColor');
     } else {
       this['imageSideColor'] = ColorThemeProperty(value);
+    }
+  }
+
+  /// Set the closure that's called when an image should be picked.
+  set imagePickImage(PickImage? value) {
+    if (value == null) {
+      remove('imagePickImage');
+    } else {
+      this['imagePickImage'] = UnlerpableThemeProperty<PickImage>(value);
     }
   }
 }

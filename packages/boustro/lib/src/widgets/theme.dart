@@ -307,54 +307,54 @@ class _AnimatedBoustroThemeState
 }
 
 /// Theme for custom components in boustro, like embeds and line modifiers.
-class BoustroComponentTheme extends InheritedTheme {
+class BoustroComponentConfig extends InheritedTheme {
   /// Create a boustro component theme.
-  const BoustroComponentTheme({
+  const BoustroComponentConfig({
     Key? key,
     required this.data,
     required Widget child,
   }) : super(key: key, child: child);
 
   /// The configuration of this theme.
-  final BoustroComponentThemeData data;
+  final BoustroComponentConfigData data;
 
   /// Returns the [data] from the closest [BoustroTheme] ancestor. If there is
   /// no ancestor, it returns [BoustroThemeData.light] or
   /// [BoustroThemeData.dark] depending on the [Theme]'s brightness.
-  static BoustroComponentThemeData of(BuildContext context) {
+  static BoustroComponentConfigData of(BuildContext context) {
     final boustroTheme =
-        context.dependOnInheritedWidgetOfExactType<BoustroComponentTheme>();
+        context.dependOnInheritedWidgetOfExactType<BoustroComponentConfig>();
     if (boustroTheme != null) {
       return boustroTheme.data;
     }
-    return BoustroComponentThemeData.empty();
+    return BoustroComponentConfigData.empty();
   }
 
   @override
-  bool updateShouldNotify(covariant BoustroComponentTheme oldWidget) {
+  bool updateShouldNotify(covariant BoustroComponentConfig oldWidget) {
     return data != oldWidget.data;
   }
 
   @override
   Widget wrap(BuildContext context, Widget child) {
-    return BoustroComponentTheme(data: data, child: child);
+    return BoustroComponentConfig(data: data, child: child);
   }
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties
-        .add(DiagnosticsProperty<BoustroComponentThemeData>('data', data));
+        .add(DiagnosticsProperty<BoustroComponentConfigData>('data', data));
   }
 }
 
-/// Theme data object for [BoustroComponentTheme].
-class BoustroComponentThemeData extends Equatable {
+/// Theme data object for [BoustroComponentConfig].
+class BoustroComponentConfigData extends Equatable {
   /// Create a theme data object with the provided property map.
-  const BoustroComponentThemeData(this.properties);
+  const BoustroComponentConfigData(this.properties);
 
   /// Create a theme data object with no properties set.
-  BoustroComponentThemeData.empty() : this(BuiltMap());
+  BoustroComponentConfigData.empty() : this(BuiltMap());
 
   /// Map of properties set on this theme.
   final BuiltMap<String, ThemeProperty<dynamic>> properties;
@@ -365,7 +365,7 @@ class BoustroComponentThemeData extends Equatable {
   }
 
   /// Rebuild this theme data by applying updates to a [ComponentThemeBuilder].
-  BoustroComponentThemeData rebuild(
+  BoustroComponentConfigData rebuild(
       dynamic Function(ComponentThemeBuilder) updates) {
     final builder = ComponentThemeBuilder(properties.toMap());
     updates(builder);
@@ -378,8 +378,8 @@ class BoustroComponentThemeData extends Equatable {
   /// Linearly interpolate between two boustro themes.
   ///
   /// Used by [AnimatedBoustroComponentTheme] to animate between themes.
-  static BoustroComponentThemeData lerp(
-      BoustroComponentThemeData a, BoustroComponentThemeData b, double t) {
+  static BoustroComponentConfigData lerp(
+      BoustroComponentConfigData a, BoustroComponentConfigData b, double t) {
     final map = <String, ThemeProperty<dynamic>>{};
     final keys = a.properties.keys.toSet()..addAll(b.properties.keys);
     for (final key in keys) {
@@ -395,7 +395,7 @@ class BoustroComponentThemeData extends Equatable {
       }
     }
 
-    return BoustroComponentThemeData(map.build());
+    return BoustroComponentConfigData(map.build());
   }
 }
 
@@ -405,29 +405,29 @@ class BoustroComponentThemeData extends Equatable {
 /// [BoustroThemeData.lerp] method.
 ///
 /// See [Tween] for a discussion on how to use interpolation objects.
-class BoustroComponentThemeDataTween extends Tween<BoustroComponentThemeData> {
-  /// Creates a [BoustroComponentThemeData] tween.
+class BoustroComponentThemeDataTween extends Tween<BoustroComponentConfigData> {
+  /// Creates a [BoustroComponentConfigData] tween.
   ///
   /// The [begin] and [end] properties must be non-null before the tween is
   /// first used, but the arguments can be null if the values are going to be
   /// filled in later.
   BoustroComponentThemeDataTween(
-      {BoustroComponentThemeData? begin, BoustroComponentThemeData? end})
+      {BoustroComponentConfigData? begin, BoustroComponentConfigData? end})
       : super(begin: begin, end: end);
 
   @override
-  BoustroComponentThemeData lerp(double t) =>
-      BoustroComponentThemeData.lerp(begin!, end!, t);
+  BoustroComponentConfigData lerp(double t) =>
+      BoustroComponentConfigData.lerp(begin!, end!, t);
 }
 
-/// Animated version of [BoustroComponentTheme] which automatically transitions
+/// Animated version of [BoustroComponentConfig] which automatically transitions
 /// the colors, etc, over a given duration whenever the given theme changes.
 ///
 /// See also:
 ///
-///  * [BoustroComponentTheme], which [AnimatedBoustroComponentTheme] uses to actually apply the interpolated
+///  * [BoustroComponentConfig], which [AnimatedBoustroComponentTheme] uses to actually apply the interpolated
 ///    theme.
-///  * [BoustroComponentThemeData], which describes the actual configuration of a theme.
+///  * [BoustroComponentConfigData], which describes the actual configuration of a theme.
 class AnimatedBoustroComponentTheme extends ImplicitlyAnimatedWidget {
   /// Creates an animated theme.
   ///
@@ -443,7 +443,7 @@ class AnimatedBoustroComponentTheme extends ImplicitlyAnimatedWidget {
   }) : super(key: key, curve: curve, duration: duration, onEnd: onEnd);
 
   /// The configuration of this theme.
-  final BoustroComponentThemeData data;
+  final BoustroComponentConfigData data;
 
   /// The widget below this widget in the tree.
   final Widget child;
@@ -456,7 +456,7 @@ class AnimatedBoustroComponentTheme extends ImplicitlyAnimatedWidget {
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties
-        .add(DiagnosticsProperty<BoustroComponentThemeData>('data', data));
+        .add(DiagnosticsProperty<BoustroComponentConfigData>('data', data));
   }
 }
 
@@ -470,13 +470,13 @@ class _AnimatedBoustroComponentThemeState
             _data,
             widget.data,
             (dynamic value) => BoustroComponentThemeDataTween(
-                begin: value as BoustroComponentThemeData))!
+                begin: value as BoustroComponentConfigData))!
         as BoustroComponentThemeDataTween;
   }
 
   @override
   Widget build(BuildContext context) {
-    return BoustroComponentTheme(
+    return BoustroComponentConfig(
       data: _data!.evaluate(animation!),
       child: widget.child,
     );
@@ -491,7 +491,7 @@ class _AnimatedBoustroComponentThemeState
   }
 }
 
-/// Builder for [BoustroComponentThemeData].
+/// Builder for [BoustroComponentConfigData].
 ///
 /// Custom embeds or line modifiers are expected to define extension methods
 /// to set any themeable values they require on this type.
@@ -513,9 +513,9 @@ class ComponentThemeBuilder {
   /// Remove a property.
   void remove(String key) => _props.remove(key);
 
-  /// Build the properties that have been set into a [BoustroComponentThemeData].
-  BoustroComponentThemeData build() {
-    return BoustroComponentThemeData(_props.build());
+  /// Build the properties that have been set into a [BoustroComponentConfigData].
+  BoustroComponentConfigData build() {
+    return BoustroComponentConfigData(_props.build());
   }
 }
 

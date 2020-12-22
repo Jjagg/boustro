@@ -28,18 +28,18 @@ that manages formatting of its text.
 Both `SpannedString` and `SpannedTextEditingController` maintain a [`SpanList`](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/SpanList-class.html).
 `SpanList` is an immutable list of [`AttributeSpan`](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/AttributeSpan-class.html).
 
-Attribute spans hold three values:
+Attribute spans hold an attribute and a range:
 
-- A range in the source text to which the attribute is applied. The boundaries of the range are
+- [`Range`](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/Range-class.html):
+  range in the source text to which the attribute is applied. The boundaries of the range are
   indices into the source text, using [Unicode (Extended) Grapheme Clusters](https://unicode.org/reports/tr29/)
   (EGC) as the unit. EGC map to user-perceived characters. EGC indices are used to prevent indices
   in the middle of user-perceived characters.
-- A [`TextAttribute`](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/TextAttribute-class.html).
+- [`TextAttribute`](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/TextAttribute-class.html):
   The attribute can be resolved to a `TextStyle` (to apply formatting) and gestures (for example tap handler that opens a
-  hyperlink).
-- An [`ExpandRule`](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/ExpandRule-class.html)
-  for its start and end indices. These rules determine how the span responds to insertions in the
-  source text.
+  hyperlink) with its `resolve` method, which can optionally use an [`AttributeTheme`](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/AttributeTheme-class.html)
+  to resolve to a style and gestures. The attribute also defines [`SpanExpandRules`](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/SpanExpandRules-class.html)
+  which determine how the span responds to insertions in the source text.
 
 ## Embeds
 
