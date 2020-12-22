@@ -284,7 +284,16 @@ customized.</p>
 <p>All notable changes to this project will be documented in this file.</p>
 <p>The format is based on <a href="https://keepachangelog.com/en/1.0.0/">Keep a Changelog</a>,
 and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
-<h2><a class="header" href="#unreleased" id="unreleased">Unreleased</a></h2>
+<h2><a class="header" href="#a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v040-0packagesflutter_spanned_controller040-0a--2020-12-22" id="a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v040-0packagesflutter_spanned_controller040-0a--2020-12-22"><a href="https://github.com/Jjagg/boustro/tree/release_fsp_v0.4.0-0/packages/flutter_spanned_controller">0.4.0-0</a> — 2020-12-22</a></h2>
+<h3><a class="header" href="#removed" id="removed">Removed</a></h3>
+<ul>
+<li><code>TextAttribute.simple</code>. In favor of custom classes, so each attribute has its own type and
+serialization can use the type to determine which encoder to use.</li>
+</ul>
+<h3><a class="header" href="#changed" id="changed">Changed</a></h3>
+<ul>
+<li>Moved <code>ExpandRules</code> to be a part of attributes themselves.</li>
+</ul>
 <h2><a class="header" href="#a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v030-0packagesflutter_spanned_controller030-0a--2020-12-18" id="a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v030-0packagesflutter_spanned_controller030-0a--2020-12-18"><a href="https://github.com/Jjagg/boustro/tree/release_fsp_v0.3.0-0/packages/flutter_spanned_controller">0.3.0-0</a> — 2020-12-18</a></h2>
 <h3><a class="header" href="#added" id="added">Added</a></h3>
 <ul>
@@ -292,7 +301,7 @@ and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semant
 <li>Range to avoid confusion with <code>TextRange</code>.
 <code>TextRange</code> is designed to be for indexing into <code>String</code> by UTF-16 code units.</li>
 </ul>
-<h3><a class="header" href="#changed" id="changed">Changed</a></h3>
+<h3><a class="header" href="#changed-1" id="changed-1">Changed</a></h3>
 <ul>
 <li><code>TextAttribute</code> now has a resolve method that returns the actual information for
 applying the attribute in the form of <code>TextAttributeValue</code>.</li>
@@ -315,7 +324,7 @@ Finally, I've come up with the right name for this concept :)</li>
 <li><code>SpannedStringBuilder</code> to fluently build <code>SpannedString</code>.</li>
 </ul>
 <h2><a class="header" href="#a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v011-0packagesflutter_spanned_controller011-0a--2020-12-14" id="a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v011-0packagesflutter_spanned_controller011-0a--2020-12-14"><a href="https://github.com/Jjagg/boustro/tree/release_fsp_v0.1.1-0/packages/flutter_spanned_controller">0.1.1-0</a> — 2020-12-14</a></h2>
-<h3><a class="header" href="#changed-1" id="changed-1">Changed</a></h3>
+<h3><a class="header" href="#changed-2" id="changed-2">Changed</a></h3>
 <ul>
 <li>Replaced template README with short explanation.</li>
 </ul>
