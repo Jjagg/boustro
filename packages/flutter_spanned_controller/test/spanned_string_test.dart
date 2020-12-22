@@ -204,7 +204,7 @@ void main() {
             .build(),
         SpannedString(
           'Test',
-          SpanList([sp(RuleAttr.fixed, 0, maxSpanLength)]),
+          SpanList([sp(a, 0, maxSpanLength)]),
         ),
       );
     });
