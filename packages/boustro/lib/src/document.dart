@@ -9,12 +9,20 @@ import 'scope.dart';
 
 /// Rich text represented as a list of [Paragraph]s.
 @immutable
-class Document {
+class Document extends Equatable {
   /// Create a new document.
   const Document(this.paragraphs);
 
   /// The list of paragraphs in this document.
   final BuiltList<Paragraph> paragraphs;
+
+  @override
+  List<Object?> get props => [paragraphs];
+
+  @override
+  String toString() {
+    return paragraphs.toString();
+  }
 }
 
 /// A paragraph in a [Document]. Is either a [LineParagraph] for rich text,
@@ -36,12 +44,12 @@ abstract class Paragraph {
 class LineParagraph extends Paragraph with EquatableMixin {
   /// Create a line of rich text.
   LineParagraph({
-    required String text,
-    required SpanList spans,
+    String? text,
+    SpanList? spans,
     List<LineModifier>? modifiers,
   }) : this.built(
-          text: text.characters,
-          spans: spans,
+          text: (text ?? '').characters,
+          spans: spans ?? SpanList(),
           modifiers: modifiers?.build() ?? BuiltList<LineModifier>(),
         );
 
@@ -108,6 +116,11 @@ abstract class ParagraphEmbed extends Paragraph {
     required BoustroScope scope,
     FocusNode? focusNode,
   });
+
+  @override
+  String toString() {
+    return 'Embed($runtimeType)';
+  }
 }
 
 /// Builds a [Document]. Can be used fluently with cascades.

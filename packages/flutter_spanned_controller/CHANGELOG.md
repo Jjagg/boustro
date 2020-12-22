@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Range to avoid confusion with `TextRange`.
   `TextRange` is designed to be for indexing into `String` by UTF-16 code units.
 
+### Removed
+
+- `TextAttribute.simple`. In favor of custom classes, so each attribute has its own type and
+  serialization can use the type to determine which encoder to use.
+
 ### Changed
 
 - `TextAttribute` now has a resolve method that returns the actual information for

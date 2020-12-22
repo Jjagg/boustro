@@ -2,10 +2,6 @@ import 'package:boustro/boustro.dart';
 import 'package:boustro/convert_delta.dart';
 import 'package:flutter/painting.dart';
 
-/// Attribute with a custom [TextStyle.fontWeight]. Defaults to
-/// [FontWeight.bold].
-final boldAttribute = _BoldAttribute();
-
 class _BoldAttribute extends ThemedTextAttribute {
   _BoldAttribute() : super(debugName: 'bold');
 
@@ -19,15 +15,29 @@ class _BoldAttribute extends ThemedTextAttribute {
   }
 }
 
+/// Attribute with a custom [TextStyle.fontWeight]. Defaults to
+/// [FontWeight.bold].
+final boldAttribute = _BoldAttribute();
+
 /// Codec to convert [boldAttribute] to/from delta (see [DocumentDeltaConverter]).
 final boldAttributeDeltaCodec = deltaBoolAttributeCodec('bold', boldAttribute);
 
+class _ItalicAttribute extends TextAttribute {
+  const _ItalicAttribute();
+
+  @override
+  SpanExpandRules get expandRules => SpanExpandRules.after();
+
+  @override
+  TextAttributeValue resolve(AttributeThemeData theme) =>
+      const TextAttributeValue(
+        debugName: 'italic',
+        style: TextStyle(fontStyle: FontStyle.italic),
+      );
+}
+
 /// Attribute with [TextStyle.fontStyle] set to [FontStyle.italic].
-final italicAttribute = TextAttribute.simple(
-  expandRules: SpanExpandRules.after(),
-  debugName: 'italic',
-  style: const TextStyle(fontStyle: FontStyle.italic),
-);
+const italicAttribute = _ItalicAttribute();
 
 /// Codec to convert [italicAttribute] to/from delta (see [DocumentDeltaConverter]).
 final italicAttributeDeltaCodec = deltaBoolAttributeCodec(
@@ -35,12 +45,22 @@ final italicAttributeDeltaCodec = deltaBoolAttributeCodec(
   italicAttribute,
 );
 
+class _UnderlineAttribute extends TextAttribute {
+  const _UnderlineAttribute();
+
+  @override
+  SpanExpandRules get expandRules => SpanExpandRules.after();
+
+  @override
+  TextAttributeValue resolve(AttributeThemeData theme) =>
+      const TextAttributeValue(
+        debugName: 'underline',
+        style: TextStyle(decoration: TextDecoration.underline),
+      );
+}
+
 /// Attribute with [TextStyle.decoration] set to [TextDecoration.underline].
-final underlineAttribute = TextAttribute.simple(
-  expandRules: SpanExpandRules.after(),
-  debugName: 'underline',
-  style: const TextStyle(decoration: TextDecoration.underline),
-);
+const underlineAttribute = _UnderlineAttribute();
 
 /// Codec to convert [underlineAttribute] to/from delta (see [DocumentDeltaConverter]).
 final underlineAttributeDeltaCodec = deltaBoolAttributeCodec(
@@ -48,12 +68,22 @@ final underlineAttributeDeltaCodec = deltaBoolAttributeCodec(
   underlineAttribute,
 );
 
+class _StrikethroughAttribute extends TextAttribute {
+  const _StrikethroughAttribute();
+
+  @override
+  SpanExpandRules get expandRules => SpanExpandRules.after();
+
+  @override
+  TextAttributeValue resolve(AttributeThemeData theme) =>
+      const TextAttributeValue(
+        debugName: 'strikethrough',
+        style: TextStyle(decoration: TextDecoration.lineThrough),
+      );
+}
+
 /// Attribute with [TextStyle.decoration] set to [TextDecoration.lineThrough].
-final strikethroughAttribute = TextAttribute.simple(
-  expandRules: SpanExpandRules.after(),
-  debugName: 'strikethrough',
-  style: const TextStyle(decoration: TextDecoration.lineThrough),
-);
+const strikethroughAttribute = _StrikethroughAttribute();
 
 /// Codec to convert [underlineAttribute] to/from delta (see [DocumentDeltaConverter]).
 final strikethroughAttributeDeltaCodec = deltaBoolAttributeCodec(

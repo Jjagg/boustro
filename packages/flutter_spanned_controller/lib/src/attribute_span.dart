@@ -33,56 +33,12 @@ abstract class TextAttribute {
   /// Base constant constructor for inheritors that have a constant constructor.
   const TextAttribute();
 
-  /// Constructor for attributes that always return the same value in [resolve].
-  factory TextAttribute.simple({
-    required SpanExpandRules expandRules,
-    String? debugName,
-    TextStyle? style,
-    GestureTapCallback? onTap,
-    GestureTapCallback? onSecondaryTap,
-    GestureTapCallback? onDoubleTap,
-    GestureLongPressCallback? onLongPress,
-  }) {
-    return _SimpleTextAttribute(
-      TextAttributeValue(
-        debugName: debugName,
-        style: style,
-        onTap: onTap,
-        onSecondaryTap: onSecondaryTap,
-        onDoubleTap: onDoubleTap,
-        onLongPress: onLongPress,
-      ),
-      expandRules: expandRules,
-    );
-  }
-
   /// Rules that determine how spans with this attribute grow when insertions
   /// happend at their boundaries.
   SpanExpandRules get expandRules;
 
   /// Returns a text attribute value that can depend on [theme].
   TextAttributeValue resolve(AttributeThemeData theme);
-}
-
-/// A text attribute with a value that does not depend on a [BuildContext].
-class _SimpleTextAttribute extends TextAttribute with EquatableMixin {
-  /// Create a simple text attribute.
-  const _SimpleTextAttribute(
-    this.value, {
-    required this.expandRules,
-  });
-
-  /// The value that will be returned by [resolve].
-  final TextAttributeValue value;
-
-  @override
-  final SpanExpandRules expandRules;
-
-  @override
-  TextAttributeValue resolve(AttributeThemeData theme) => value;
-
-  @override
-  List<Object?> get props => [value];
 }
 
 /// Base class for [TextAttribute] implementations that need an [AttributeTheme]
@@ -206,7 +162,7 @@ enum ExpandRule {
 }
 
 /// Contains an [ExpandRule] for the start and end boundaries of a span.
-class SpanExpandRules {
+class SpanExpandRules extends Equatable {
   /// Create span expand rules.
   const SpanExpandRules(this.start, this.end)
       : assert((start == ExpandRule.fixed) == (end == ExpandRule.fixed),
@@ -251,6 +207,9 @@ class SpanExpandRules {
 
   /// Indicates if these rules where created with [SpanExpandRules.fixed].
   bool get isFixed => start == ExpandRule.fixed;
+
+  @override
+  List<Object?> get props => [start, end];
 }
 
 /// Extensions for SpanAttachment.

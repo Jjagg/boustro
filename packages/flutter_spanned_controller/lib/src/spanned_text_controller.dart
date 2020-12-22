@@ -197,6 +197,22 @@ typedef ProcessTextValue = TextEditingValue Function(
   TextEditingValue,
 );
 
+class _DefaultCompositionAttribute extends TextAttribute {
+  const _DefaultCompositionAttribute();
+
+  @override
+  SpanExpandRules get expandRules => SpanExpandRules.fixed();
+
+  @override
+  TextAttributeValue resolve(AttributeThemeData theme) =>
+      const TextAttributeValue(
+        debugName: 'composition underline',
+        style: TextStyle(decoration: TextDecoration.underline),
+      );
+}
+
+const _defaultCompositionAttribute = _DefaultCompositionAttribute();
+
 /// A TextEditingController with rich text capabilities.
 class SpannedTextEditingController implements TextEditingController {
   /// Create a new SpannedTextEditingController.
@@ -206,12 +222,8 @@ class SpannedTextEditingController implements TextEditingController {
     this.attributeTheme,
     String? text,
     SpanList? spans,
-  })  : compositionAttribute = compositionAttribute ??
-            TextAttribute.simple(
-              expandRules: SpanExpandRules.fixed(),
-              debugName: 'composition underline',
-              style: const TextStyle(decoration: TextDecoration.underline),
-            ),
+  })  : compositionAttribute =
+            compositionAttribute ?? _defaultCompositionAttribute,
         _textController = TextEditingController(text: text),
         _spans = spans ?? SpanList();
 
