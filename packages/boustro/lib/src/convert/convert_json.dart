@@ -156,17 +156,18 @@ class DocumentJsonCodec extends Codec<Document, dynamic> {
 
 const String _paragraphsKey = 'paragraphs';
 
-const String _lineKey = 'line';
-const String _embedKey = 'embed';
+const String _lineType = 'line';
+const String _embedType = 'embed';
 
 const String _textKey = 'text';
 const String _modifiersKey = 'mods';
 const String _spansKey = 'spans';
 
+const String _embedKey = 'embed';
+
 const String _typeKey = 'type';
 const String _valueKey = 'value';
 
-const String _attributeKey = 'attr';
 const String _startKey = 'start';
 const String _endKey = 'end';
 
@@ -185,7 +186,7 @@ class _JsonDecoder extends Converter<dynamic, Document> {
   Document convert(dynamic input) {
     final root =
         _expectProperties(() => 'Root object', input, [_paragraphsKey]);
-    final paragraphs = _expectProperty<List<Object>>(
+    final paragraphs = _expectProperty<List<dynamic>>(
         () => 'Root object', root, _paragraphsKey);
     final decodedParagraphs = <Paragraph>[];
 
@@ -193,26 +194,26 @@ class _JsonDecoder extends Converter<dynamic, Document> {
       if (p is! Map<String, dynamic>) {
         throw const FormatException('paragraph items must be objects.');
       }
-      if (p.keys.length != 1) {
-        throw const FormatException(
-            '''Paragraph objects must have exactly one property that must be either 'line' or 'embed'.''');
-      }
-      final key = p.keys.single;
-      if (key == _lineKey) {
+      //if (p.keys.length != 1) {
+      //  throw const FormatException(
+      //      '''Paragraph objects must have exactly one property that must be either 'line' or 'embed'.''');
+      //}
+      final type = p[_typeKey] as Object?;
+      if (type == _lineType) {
         final lineMap = _expectProperties(
-          () => '$_paragraphsKey.$_lineKey',
-          p[_lineKey],
-          [_textKey, _modifiersKey, _spansKey],
+          () => _paragraphsKey,
+          p,
+          [_typeKey, _textKey, _modifiersKey, _spansKey],
         );
         final text = _expectProperty<String?>(
-            () => '$_paragraphsKey.$_lineKey.$_textKey', lineMap, _textKey);
-        final modifiers = _expectProperty<List<Object>?>(
-          () => '$_paragraphsKey.$_lineKey.$_modifiersKey',
+            () => '$_paragraphsKey.$_textKey', lineMap, _textKey);
+        final modifiers = _expectProperty<List<dynamic>?>(
+          () => '$_paragraphsKey.$_modifiersKey',
           lineMap,
           _modifiersKey,
         )?.map(_parseLineModifier).toList();
-        final spans = _expectProperty<List<Object>?>(
-          () => '$_paragraphsKey.$_lineKey.$_spansKey',
+        final spans = _expectProperty<List<dynamic>?>(
+          () => '$_paragraphsKey.$_spansKey',
           lineMap,
           _spansKey,
         )?.map(_parseSpan);
@@ -223,12 +224,16 @@ class _JsonDecoder extends Converter<dynamic, Document> {
           modifiers: modifiers,
         );
         decodedParagraphs.add(line);
-      } else if (key == _embedKey) {
-        final embed = _expectTypeValue(
-          () => '$_paragraphsKey.$_embedKey',
-          p[_embedKey],
-          embedDecoders,
-        );
+      } else if (type == _embedType) {
+        final type = _expectProperty<String>(
+            () => '$_paragraphsKey.$_embedKey', p, _embedKey);
+        final decoder = embedDecoders[type];
+        if (decoder == null) {
+          throw FormatException('Missing decoder for embed of type $type.');
+        }
+        final value = p[_valueKey] as Object?;
+        final embed = decoder(value);
+
         decodedParagraphs.add(embed);
       } else {
         throw const FormatException(
@@ -239,36 +244,43 @@ class _JsonDecoder extends Converter<dynamic, Document> {
     return Document(decodedParagraphs.build());
   }
 
-  LineModifier _parseLineModifier(Object map) {
-    return _expectTypeValue(
-      () => '$_paragraphsKey.$_lineKey.$_modifiersKey',
+  LineModifier _parseLineModifier(dynamic map) {
+    final typedMap = _expectProperties(
+      () => '$_paragraphsKey.$_modifiersKey',
       map,
+      [_typeKey, _valueKey],
+    );
+    return _parseTypeValue(
+      () => '$_paragraphsKey.$_modifiersKey',
+      typedMap,
       lineModifierDecoders,
     );
   }
 
-  AttributeSpan _parseSpan(Object map) {
+  AttributeSpan _parseSpan(dynamic map) {
     final spanMap = _expectProperties(
-      () => '$_paragraphsKey.$_lineKey.$_spansKey',
+      () => '$_paragraphsKey.$_spansKey',
       map,
-      [_attributeKey, _startKey, _endKey],
+      [_typeKey, _valueKey, _startKey, _endKey],
     );
 
-    final attribute = _expectTypeValue(
-      () => '$_paragraphsKey.$_lineKey.$_spansKey',
-      spanMap[_attributeKey],
+    final attribute = _parseTypeValue(
+      () => '$_paragraphsKey.$_spansKey',
+      spanMap,
       attributeDecoders,
     );
-    final start = _expectProperty<int>(
-      () => '$_paragraphsKey.$_lineKey.$_spansKey.$_startKey',
-      spanMap,
-      _startKey,
-    );
-    final end = _expectProperty<int>(
-      () => '$_paragraphsKey.$_lineKey.$_spansKey.$_endKey',
-      spanMap,
-      _endKey,
-    );
+    final start = _expectProperty<int?>(
+          () => '$_paragraphsKey.$_spansKey.$_startKey',
+          spanMap,
+          _startKey,
+        ) ??
+        0;
+    final end = _expectProperty<int?>(
+          () => '$_paragraphsKey.$_spansKey.$_endKey',
+          spanMap,
+          _endKey,
+        ) ??
+        maxSpanLength;
 
     return AttributeSpan(attribute, start, end);
   }
@@ -290,7 +302,10 @@ class _JsonEncoder extends Converter<Document, dynamic> {
     return <String, dynamic>{
       'paragraphs': [
         for (final p in input.paragraphs)
-          {_getParagraphType(p): _encodeParagraph(p)}
+          <String, dynamic>{
+            _typeKey: _getParagraphType(p),
+            ..._encodeParagraph(p),
+          }
       ]
     };
   }
@@ -298,7 +313,7 @@ class _JsonEncoder extends Converter<Document, dynamic> {
   String _getParagraphType(Paragraph p) =>
       p is LineParagraph ? 'line' : 'embed';
 
-  Object _encodeParagraph(Paragraph p) {
+  Map<String, Object> _encodeParagraph(Paragraph p) {
     if (p is LineParagraph) {
       return <String, Object>{
         if (p.text.isNotEmpty) _textKey: p.text.string,
@@ -308,7 +323,7 @@ class _JsonEncoder extends Converter<Document, dynamic> {
           _spansKey: p.spans.iter.map<Object>(_encodeSpan).toList(),
       };
     } else if (p is ParagraphEmbed) {
-      return _encodeWithTypeMap('embed', embeds, p);
+      return _encodeWithTypeMap('embed', embeds, p, typeKey: _embedKey);
     } else {
       throw JsonEncoderException._(
           'Unsupported paragraph type ${p.runtimeType}.');
@@ -321,10 +336,10 @@ class _JsonEncoder extends Converter<Document, dynamic> {
 
   Object _encodeSpan(AttributeSpan span) {
     final attr = _encodeWithTypeMap('attribute', attributes, span.attribute);
-    return {
-      _attributeKey: attr,
-      _startKey: span.start,
-      _endKey: span.end,
+    return <String, dynamic>{
+      ...attr,
+      if (span.start != 0) _startKey: span.start,
+      if (span.end != maxSpanLength) _endKey: span.end,
     };
   }
 }
@@ -336,7 +351,8 @@ T _expectProperty<T>(
 ) {
   final dynamic value = map[key];
   if (value is! T) {
-    throw FormatException('${propertyFunc()} must be of type $T.');
+    throw FormatException(
+        '${propertyFunc()} must be of type $T, but is ${value.runtimeType}.');
   }
   return value;
 }
@@ -357,27 +373,27 @@ Map<String, dynamic> _expectProperties(
 /// Handles the common pattern where a JSON object
 /// '{"type": <type>, "value": <value>?}' is deserialized with a `decoderMap`
 /// where `decoderMap[type]` can decode `value`.
-T _expectTypeValue<T>(
+T _parseTypeValue<T>(
   String Function() property,
-  dynamic map,
+  Map<String, dynamic> map,
   BuiltMap<String, T Function(Object?)> decoderMap,
 ) {
-  final typedMap = _expectProperties(property, map, [_typeKey, _valueKey]);
-  final type = _expectProperty<String>(
-      () => '${property()}.$_typeKey', typedMap, _typeKey);
+  final type =
+      _expectProperty<String>(() => '${property()}.$_typeKey', map, _typeKey);
   final decoder = decoderMap[type];
   if (decoder == null) {
     throw FormatException('Missing decoder for $T of type $type.');
   }
-  final value = typedMap[_valueKey] as Object?;
+  final value = map[_valueKey] as Object?;
   return decoder(value);
 }
 
-Map<String, dynamic> _encodeWithTypeMap<T>(
+Map<String, Object> _encodeWithTypeMap<T>(
   String typeMapKind,
   BuiltMap<Type, ComponentCodec<dynamic>> encoderMap,
-  T value,
-) {
+  T value, {
+  String typeKey = _typeKey,
+}) {
   final encoder = encoderMap[value.runtimeType];
   if (encoder == null) {
     throw JsonEncoderException._(
@@ -385,8 +401,8 @@ Map<String, dynamic> _encodeWithTypeMap<T>(
   }
 
   final encodedValue = encoder.encode(value);
-  return <String, dynamic>{
-    _typeKey: encoder.typeStr,
+  return <String, Object>{
+    typeKey: encoder.typeStr,
     if (encodedValue != null) _valueKey: encodedValue,
   };
 }

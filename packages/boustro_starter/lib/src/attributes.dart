@@ -1,5 +1,4 @@
 import 'package:boustro/boustro.dart';
-import 'package:boustro/convert_delta.dart';
 import 'package:flutter/painting.dart';
 
 class _BoldAttribute extends ThemedTextAttribute {
@@ -19,9 +18,6 @@ class _BoldAttribute extends ThemedTextAttribute {
 /// [FontWeight.bold].
 final boldAttribute = _BoldAttribute();
 
-/// Codec to convert [boldAttribute] to/from delta (see [DocumentDeltaConverter]).
-final boldAttributeDeltaCodec = deltaBoolAttributeCodec('bold', boldAttribute);
-
 class _ItalicAttribute extends TextAttribute {
   const _ItalicAttribute();
 
@@ -38,12 +34,6 @@ class _ItalicAttribute extends TextAttribute {
 
 /// Attribute with [TextStyle.fontStyle] set to [FontStyle.italic].
 const italicAttribute = _ItalicAttribute();
-
-/// Codec to convert [italicAttribute] to/from delta (see [DocumentDeltaConverter]).
-final italicAttributeDeltaCodec = deltaBoolAttributeCodec(
-  'italic',
-  italicAttribute,
-);
 
 class _UnderlineAttribute extends TextAttribute {
   const _UnderlineAttribute();
@@ -62,12 +52,6 @@ class _UnderlineAttribute extends TextAttribute {
 /// Attribute with [TextStyle.decoration] set to [TextDecoration.underline].
 const underlineAttribute = _UnderlineAttribute();
 
-/// Codec to convert [underlineAttribute] to/from delta (see [DocumentDeltaConverter]).
-final underlineAttributeDeltaCodec = deltaBoolAttributeCodec(
-  'underline',
-  underlineAttribute,
-);
-
 class _StrikethroughAttribute extends TextAttribute {
   const _StrikethroughAttribute();
 
@@ -84,12 +68,6 @@ class _StrikethroughAttribute extends TextAttribute {
 
 /// Attribute with [TextStyle.decoration] set to [TextDecoration.lineThrough].
 const strikethroughAttribute = _StrikethroughAttribute();
-
-/// Codec to convert [underlineAttribute] to/from delta (see [DocumentDeltaConverter]).
-final strikethroughAttributeDeltaCodec = deltaBoolAttributeCodec(
-  'strike',
-  strikethroughAttribute,
-);
 
 /// Themeable property getter extensions for the attributes in this library.
 extension AttributeGetters on AttributeThemeData {

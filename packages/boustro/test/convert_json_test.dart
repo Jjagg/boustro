@@ -29,7 +29,8 @@ void main() {
 
       final dynamic json = codec.encode(doc);
       final rawJson = jsonEncode(json);
-      expect(rawJson, '{"paragraphs":[{"line":{"text":"Hello, World!"}}]}');
+      expect(
+          rawJson, '{"paragraphs":[{"type":"line","text":"Hello, World!"}]}');
       final decoded = codec.decode(json);
 
       expect(decoded, doc);
@@ -46,7 +47,7 @@ void main() {
       final dynamic json = codec.encode(doc);
       final rawJson = jsonEncode(json);
       expect(rawJson,
-          '{"paragraphs":[{"line":{"text":"Hello, World!","spans":[{"attr":{"type":"test"},"start":3,"end":7}]}}]}');
+          '{"paragraphs":[{"type":"line","text":"Hello, World!","spans":[{"type":"test","start":3,"end":7}]}]}');
       final decoded = codec.decode(json);
       expect(decoded, doc);
     });
@@ -62,7 +63,7 @@ void main() {
       final dynamic json = codec.encode(doc);
       final rawJson = jsonEncode(json);
       expect(rawJson,
-          '{"paragraphs":[{"line":{"text":"Hello, World!","mods":[{"type":"test"}]}}]}');
+          '{"paragraphs":[{"type":"line","text":"Hello, World!","mods":[{"type":"test"}]}]}');
       final decoded = codec.decode(json);
       expect(decoded, doc);
     });
@@ -74,7 +75,7 @@ void main() {
 
       final dynamic json = codec.encode(doc);
       final rawJson = jsonEncode(json);
-      expect(rawJson, '{"paragraphs":[{"embed":{"type":"test"}}]}');
+      expect(rawJson, '{"paragraphs":[{"type":"embed","embed":"test"}]}');
       final decoded = codec.decode(json);
       expect(decoded, doc);
     });
