@@ -207,18 +207,18 @@ a subclass of Flutter's <a href="https://api.flutter.dev/flutter/widgets/TextEdi
 that manages formatting of its text.</p>
 <p>Both <code>SpannedString</code> and <code>SpannedTextEditingController</code> maintain a <a href="https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/SpanList-class.html"><code>SpanList</code></a>.
 <code>SpanList</code> is an immutable list of <a href="https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/AttributeSpan-class.html"><code>AttributeSpan</code></a>.</p>
-<p>Attribute spans hold three values:</p>
+<p>Attribute spans hold an attribute and a range:</p>
 <ul>
-<li>A range in the source text to which the attribute is applied. The boundaries of the range are
+<li><a href="https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/Range-class.html"><code>Range</code></a>:
+range in the source text to which the attribute is applied. The boundaries of the range are
 indices into the source text, using <a href="https://unicode.org/reports/tr29/">Unicode (Extended) Grapheme Clusters</a>
 (EGC) as the unit. EGC map to user-perceived characters. EGC indices are used to prevent indices
 in the middle of user-perceived characters.</li>
-<li>A <a href="https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/TextAttribute-class.html"><code>TextAttribute</code></a>.
+<li><a href="https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/TextAttribute-class.html"><code>TextAttribute</code></a>:
 The attribute can be resolved to a <code>TextStyle</code> (to apply formatting) and gestures (for example tap handler that opens a
-hyperlink).</li>
-<li>An <a href="https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/ExpandRule-class.html"><code>ExpandRule</code></a>
-for its start and end indices. These rules determine how the span responds to insertions in the
-source text.</li>
+hyperlink) with its <code>resolve</code> method, which can optionally use an <a href="https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/AttributeTheme-class.html"><code>AttributeTheme</code></a>
+to resolve to a style and gestures. The attribute also defines <a href="https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/SpanExpandRules-class.html"><code>SpanExpandRules</code></a>
+which determine how the span responds to insertions in the source text.</li>
 </ul>
 <h2><a class="header" href="#embeds" id="embeds">Embeds</a></h2>
 <p>Embeds in boustro can be pretty much anything as long as it extends <code>ParagraphEmbed</code>.
@@ -284,6 +284,7 @@ customized.</p>
 <p>All notable changes to this project will be documented in this file.</p>
 <p>The format is based on <a href="https://keepachangelog.com/en/1.0.0/">Keep a Changelog</a>,
 and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
+<h2><a class="header" href="#a-hrefhttpsgithubcomjjaggboustrotreemainpackagesflutter_spanned_controllerunreleaseda" id="a-hrefhttpsgithubcomjjaggboustrotreemainpackagesflutter_spanned_controllerunreleaseda"><a href="https://github.com/Jjagg/boustro/tree/main/packages/flutter_spanned_controller">Unreleased</a></a></h2>
 <h2><a class="header" href="#a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v040-0packagesflutter_spanned_controller040-0a--2020-12-22" id="a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v040-0packagesflutter_spanned_controller040-0a--2020-12-22"><a href="https://github.com/Jjagg/boustro/tree/release_fsp_v0.4.0-0/packages/flutter_spanned_controller">0.4.0-0</a> — 2020-12-22</a></h2>
 <h3><a class="header" href="#removed" id="removed">Removed</a></h3>
 <ul>
