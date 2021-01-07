@@ -44,14 +44,6 @@ class ToolbarItem extends StatelessWidget with NestedListItem<ToolbarItem> {
             onPressed: onPressed,
             tooltip: tooltip);
 
-  /// Create a toolbar item with a widget that does not depend
-  /// on the document controller (apart from the [onPressed] callback).
-  const ToolbarItem.simple({
-    required Widget child,
-    required ToolbarItemCallback? onPressed,
-    String? tooltip,
-  }) : this._(title: child, onPressed: onPressed, tooltip: tooltip);
-
   /// Create a toolbar item that - when clicked - shows a submenu of other
   /// items.
   const ToolbarItem.sublist({
@@ -240,10 +232,10 @@ class _ToolbarItemsBuilder extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Flexible(child: list),
-                  ToolbarItem.simple(
+                  ToolbarItem(
                     onPressed: (_, __) => controller.pop(),
                     tooltip: 'Close',
-                    child: const Icon(Icons.close),
+                    title: const Icon(Icons.close),
                   )
                 ],
               );

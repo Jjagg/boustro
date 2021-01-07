@@ -151,12 +151,16 @@ class DocumentEditor extends StatelessWidget {
     final btheme = BoustroTheme.of(context);
     return BoustroScope.editable(
       controller: controller,
-      child: Container(
-        color: btheme.editorColor,
-        child: ValueListenableBuilder<BuiltList<ParagraphState>>(
-          valueListenable: controller,
-          builder: (context, paragraphs, __) =>
-              _buildParagraphs(context, paragraphs),
+      child: FocusScope(
+        node: controller.focusNode,
+        child: Container(
+          color: btheme.editorColor,
+          child: ValueListenableBuilder<BuiltList<ParagraphState>>(
+            valueListenable: controller,
+            builder: (context, paragraphs, __) {
+              return _buildParagraphs(context, paragraphs);
+            },
+          ),
         ),
       ),
     );
@@ -244,9 +248,11 @@ class DocumentEditor extends StatelessWidget {
       result = Padding(
           padding:
               EdgeInsets.only(left: linePadding.left, right: linePadding.right),
-          child: value.modifiers.fold<Widget>(
-            textField,
-            (line, h) => h.modify(buildContext, line),
+          child: ValueListenableBuilder<BuiltList<LineModifier>>(
+            valueListenable: value.modifierController,
+            builder: (context, modifiers, child) => modifiers.fold<Widget>(
+                child!, (line, h) => h.modify(context, line)),
+            child: textField,
           ));
     } else {
       final embed = value as EmbedState;

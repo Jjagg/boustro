@@ -1,15 +1,23 @@
 import 'dart:math' as math;
+
 import 'package:boustro/boustro.dart';
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'attributes.dart';
+import 'embeds/image_embed.dart';
+import 'line_modifiers.dart';
+
+// === ATTRIBUTES ===
 
 Widget Function(
   BuildContext context,
   DocumentController controller,
   ToolbarItem item,
-) _createToggleableToolbarItemBuilder(TextAttribute attribute) {
+) _createToggleableToolbarItemBuilder(
+  ValueListenable<bool> Function(DocumentController) getListener,
+) {
   return (context, controller, item) {
     final btheme = BoustroTheme.of(context);
 
@@ -40,7 +48,7 @@ Widget Function(
     }
 
     return ValueListenableBuilder<bool>(
-      valueListenable: controller.listen(attribute),
+      valueListenable: getListener(controller),
       builder: (context, toggled, button) {
         if (!toggled) {
           return button!;
@@ -79,7 +87,8 @@ ToolbarItem createToggleableToolbarItem(
   IconData icon,
 ) {
   return ToolbarItem(
-    builder: _createToggleableToolbarItemBuilder(attribute),
+    builder: _createToggleableToolbarItemBuilder(
+        (controller) => controller.getAttributeListener(attribute)),
     title: Icon(icon),
     onPressed: (_, controller) =>
         controller.focusedLine?.controller.toggleAttribute(
@@ -109,3 +118,86 @@ final underline = createToggleableToolbarItem(
   underlineAttribute,
   Icons.format_underline_rounded,
 );
+
+// === LINE MODIFIERS ===
+
+/// Toolbar item that toggles the [bulletListModifier] for the focused line.
+final bulletList = ToolbarItem(
+  builder: _createToggleableToolbarItemBuilder(
+      (controller) => controller.getModifierListener(bulletListModifier)),
+  title: const Icon(Icons.list),
+  onPressed: (_, controller) =>
+      controller.toggleLineModifier(bulletListModifier),
+);
+
+// === EMBEDS ===
+
+ToolbarItem? _buildImageButton({
+  required IconData icon,
+  required String tooltip,
+  required Future<ImageProvider<Object>?> Function(BuildContext)? getImage,
+}) {
+  return getImage == null
+      ? null
+      : ToolbarItem(
+          title: Icon(icon),
+          tooltip: tooltip,
+          onPressed: (context, controller) async {
+            final img = await getImage(context);
+            if (img != null) {
+              final EmbedState embed;
+              if (controller.focusNode.hasFocus) {
+                embed = controller.insertEmbedAtCurrent(ImageEmbed(img))!;
+              } else {
+                embed = controller.appendEmbed(ImageEmbed(img));
+              }
+              embed.focusNode.requestFocus();
+              Toolbar.popMenu(context);
+            }
+          },
+        );
+}
+
+/// Create a toolbar item for inserting [ImageEmbed].
+///
+/// At least one of [pickImage] and [snapImage] must not be null.
+///
+/// Use [pickImage] for the action that picks an image from the device gallery.
+/// Use [snapImage] to take a new photo using the device camera.
+///
+/// If both are specified a submenu will be added to select whether the camera
+/// or the gallery should be opened.
+ToolbarItem image({
+  Future<ImageProvider<Object>?> Function(BuildContext)? pickImage,
+  Future<ImageProvider<Object>?> Function(BuildContext)? snapImage,
+}) {
+  assert(pickImage != null || snapImage != null,
+      'At least one of the callbacks should not be null.');
+  final snapImageItem = _buildImageButton(
+    icon: Icons.photo_camera,
+    tooltip: 'Camera',
+    getImage: snapImage,
+  );
+  final pickImageItem = _buildImageButton(
+    icon: Icons.photo_library,
+    tooltip: 'Gallery',
+    getImage: pickImage,
+  );
+
+  if (snapImageItem == null) {
+    return pickImageItem!;
+  }
+
+  if (pickImageItem == null) {
+    return snapImageItem;
+  }
+
+  return ToolbarItem.sublist(
+    title: const Icon(Icons.photo),
+    items: [
+      snapImageItem,
+      pickImageItem,
+    ],
+    tooltip: 'Image',
+  );
+}

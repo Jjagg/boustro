@@ -40,48 +40,46 @@ class StringDiff extends Equatable {
 }
 
 @immutable
-class _AttributeNotifier {
-  const _AttributeNotifier(this.attribute, this.notifier);
-  final TextAttribute attribute;
+class _ToggleStateNotifier<T> {
+  const _ToggleStateNotifier(this.value, this.notifier);
+  final T value;
   final ValueNotifier<bool> notifier;
 }
 
-/// Convenience class that keeps track of whether attributes are applied or not.
-class AttributeListener {
+/// Convenience class that keeps track of whether a [T] is enabled.
+class ToggleStateListener<T> {
   /// Create an attribute listener.
-  AttributeListener();
+  ToggleStateListener();
 
-  final List<_AttributeNotifier> _notifiers = [];
+  final List<_ToggleStateNotifier<T>> _notifiers = [];
 
-  /// Get a value listenable that reports whether [attribute] is applied.
+  /// Get a value listenable that reports whether [value] is enabled.
   ///
-  /// The value of the attribute will be initialized to [initialValue].
-  ValueListenable<bool> listen(TextAttribute attribute,
-      {required bool initialValue}) {
-    final existing =
-        _notifiers.firstWhereOrNull((e) => e.attribute == attribute);
+  /// The state of the value will be initialized to [initialValue].
+  ValueListenable<bool> listen(T value, {bool initialValue = false}) {
+    final existing = _notifiers.firstWhereOrNull((e) => e.value == value);
     if (existing != null) {
       return existing.notifier;
     }
 
     final current = initialValue;
     final notifier = ValueNotifier(current);
-    _notifiers.add(_AttributeNotifier(attribute, notifier));
+    _notifiers.add(_ToggleStateNotifier<T>(value, notifier));
     return notifier;
   }
 
-  /// Remove the listener for [attribute] if there is one.
-  void removeListener(TextAttribute attribute) {
-    _notifiers.removeWhere((n) => n.attribute == attribute);
+  /// Remove the listener for [value] if there is one.
+  void removeListener(T value) {
+    _notifiers.removeWhere((n) => n.value == value);
   }
 
-  /// Notify this listener that the state of some of its attributes might have
+  /// Notify this listener that the state of some of its values might have
   /// changed.
   ///
-  /// [isApplied] is used to determine whether an attribute is applied.
-  void notify(bool Function(TextAttribute) isApplied) {
+  /// [isEnabled] is used to determine whether a value is enabled.
+  void notify(bool Function(T) isEnabled) {
     for (final entry in _notifiers) {
-      final value = isApplied(entry.attribute);
+      final value = isEnabled(entry.value);
       entry.notifier.value = value;
     }
   }
@@ -93,6 +91,12 @@ class AttributeListener {
     }
   }
 }
+
+// TODO typedef for generics to not have to define a class here
+// https://github.com/dart-lang/language/issues/115
+
+/// Convenience class that keeps track of whether attributes are applied or not.
+class AttributeListener extends ToggleStateListener<TextAttribute> {}
 
 /// Passed to [SpannedTextEditingController.setOverride] to indicate if
 /// a [TextAttribute] should be applied or removed.
@@ -425,7 +429,10 @@ class SpannedTextEditingController implements TextEditingController {
       _textController.removeListener(listener);
 
   void _applyOverrides(Range range) {
-    // apply overrides
+    if (range.isCollapsed) {
+      return;
+    }
+
     for (final ao in _attributeOverrides) {
       if (ao.type == OverrideType.apply) {
         final span = AttributeSpan(

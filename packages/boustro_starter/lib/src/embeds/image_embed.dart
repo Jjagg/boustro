@@ -165,7 +165,7 @@ class _ImageEmbed extends StatelessWidget {
             Widget child)
         imageWrapper,
   ) {
-    final maxHeight = ctheme.imageMaxHeight ?? 450;
+    final maxHeight = ctheme.imageMaxHeight ?? 600;
 
     final sideColor = ctheme.imageSideColor ??
         (Theme.of(context).brightness == Brightness.dark

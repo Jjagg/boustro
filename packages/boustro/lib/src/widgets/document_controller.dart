@@ -32,6 +32,21 @@ abstract class ParagraphState {
   });
 }
 
+/// Manages a list of [LineModifier] and notifies whenever the list changes.
+class LineModifierController extends ValueNotifier<BuiltList<LineModifier>> {
+  /// Create a line modifier controller.
+  LineModifierController([Iterable<LineModifier>? modifiers])
+      : super(BuiltList.from(modifiers ?? const <LineModifier>[]));
+
+  /// Get the modifier list.
+  BuiltList<LineModifier> get modifiers => value;
+
+  /// Mutate the list of modifiers.
+  void update(dynamic Function(ListBuilder<LineModifier>) updates) {
+    value = modifiers.rebuild(updates);
+  }
+}
+
 /// Holds focus node and state for a line of text.
 ///
 /// This is the editable variant of [LineParagraph].
@@ -41,45 +56,37 @@ class LineState extends ParagraphState {
   LineState({
     required SpannedTextEditingController controller,
     required FocusNode focusNode,
-    List<LineModifier>? modifiers,
+    Iterable<LineModifier>? modifiers,
   }) : this.built(
           controller: controller,
           focusNode: focusNode,
-          modifiers: modifiers?.build() ?? BuiltList<LineModifier>(),
+          modifierController: LineModifierController(modifiers),
         );
 
   /// Create a text line, directly providing the values for its fields.
   const LineState.built({
     required this.controller,
     required FocusNode focusNode,
-    required this.modifiers,
+    required this.modifierController,
   }) : super(focusNode: focusNode);
-
-  /// Create a copy of this line state, but with properties set to the new
-  /// properties.
-  LineState withModifiers(
-    BuiltList<LineModifier> modifiers,
-  ) {
-    return LineState.built(
-      controller: controller,
-      focusNode: focusNode,
-      modifiers: modifiers,
-    );
-  }
 
   /// The [TextEditingController] that manages the text
   /// and markup of this line.
   final SpannedTextEditingController controller;
 
-  /// Modifiers that can affect how this line is displayed.
+  /// Manages modifiers that can affect how this line is displayed.
   ///
   /// Modifiers are applied in order, wrapping each other. E.g. if modifiers is
   /// equal to `[a, b]`, then they will be applied as `b(a(line))`.
-  final BuiltList<LineModifier> modifiers;
+  final LineModifierController modifierController;
+
+  /// Get the current list of modifiers stored by [modifierController].
+  BuiltList<LineModifier> get modifiers => modifierController.modifiers;
 
   @override
   void dispose() {
     controller.dispose();
+    modifierController.dispose();
     super.dispose();
   }
 
@@ -111,6 +118,10 @@ class EmbedState extends ParagraphState {
       embed(this);
 }
 
+/// Convenience class that keeps track of whether line modifiers are applied or
+/// not.
+class ModifierListener extends ToggleStateListener<LineModifier> {}
+
 /// Manages the contents of a [DocumentEditor].
 ///
 /// Keeps track of the state of its paragraphs and editor:
@@ -129,11 +140,16 @@ class EmbedState extends ParagraphState {
 class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   /// Create a document controller.
   DocumentController({
+    FocusScopeNode? focusNode,
     ScrollController? scrollController,
     Iterable<Paragraph>? paragraphs,
     this.attributeTheme,
-  })  : scrollController = scrollController ?? ScrollController(),
+  })  : focusNode = focusNode ?? FocusScopeNode(),
+        scrollController = scrollController ?? ScrollController(),
         super(BuiltList()) {
+    if (focusNode == null) {
+      _ownedFocusNode = focusNode;
+    }
     if (paragraphs == null) {
       appendLine();
     } else {
@@ -146,7 +162,12 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     }
   }
 
-  /// Get the scroll controller for the [ScrollView] containing the paragraphs.
+  FocusScopeNode? _ownedFocusNode;
+
+  /// The focus scope node for the controller.
+  final FocusScopeNode focusNode;
+
+  /// The scroll controller for the [ScrollView] containing the paragraphs.
   final ScrollController scrollController;
 
   /// Theme that affects the style of attributes.
@@ -276,7 +297,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     );
 
     spanController.addListener(() {
-      _listener.notify(
+      _attributeListener.notify(
         spanController.isApplied,
       );
     });
@@ -290,6 +311,20 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
       focusNode: focusNode,
       modifiers: line?.modifiers.asList(),
     );
+
+    newLine.modifierController.addListener(() {
+      if (newLine.focusNode.hasPrimaryFocus) {
+        _modifierListener.notify(newLine.modifiers.contains);
+      }
+    });
+
+    focusNode.addListener(() {
+      if (focusNode.hasPrimaryFocus) {
+        _modifierListener.notify(newLine.modifiers.contains);
+      } else {
+        _modifierListener.notify((_) => false);
+      }
+    });
 
     _rebuild((r) => r.insert(index, newLine));
     return newLine;
@@ -376,11 +411,11 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     if (focusIndex != null && paragraphs[focusIndex] is LineState) {
       final line = paragraphs[focusIndex] as LineState;
       final hasModifier = line.modifiers.contains(modifier);
-      final modifiers = hasModifier
-          ? line.modifiers.rebuild((r) => r.remove(modifier))
-          : line.modifiers.rebuild((r) => r.insert(0, modifier));
-      final newLine = line.withModifiers(modifiers);
-      paragraphs = paragraphs.rebuild((b) => b[focusIndex] = newLine);
+      if (hasModifier) {
+        line.modifierController.update((r) => r.remove(modifier));
+      } else {
+        line.modifierController.update((r) => r.insert(0, modifier));
+      }
     }
   }
 
@@ -464,9 +499,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
 
       final line = paragraphs[index] as LineState;
       if (line.modifiers.isNotEmpty) {
-        _rebuild(
-          (b) => b[index] = line.withModifiers(BuiltList()),
-        );
+        line.modifierController.update((b) => b.clear());
         return KeyEventResult.handled;
       } else {
         return _tryMergeNext(index - 1);
@@ -511,17 +544,31 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     return KeyEventResult.handled;
   }
 
-  final AttributeListener _listener = AttributeListener();
+  final AttributeListener _attributeListener = AttributeListener();
 
   /// Get a [ValueListenable] that indicates if [attribute]
   /// is applied for the current selection.
-  ValueListenable<bool> listen(TextAttribute attribute) {
-    return _listener.listen(attribute, initialValue: false);
+  ///
+  /// Values will always be false if there is no valid selection.
+  ValueListenable<bool> getAttributeListener(TextAttribute attribute) {
+    return _attributeListener.listen(attribute);
+  }
+
+  final ModifierListener _modifierListener = ModifierListener();
+
+  /// Get a [ValueListenable] that indicates if [modifier]
+  /// is applied for the current line.
+  ///
+  /// Values will always be false if no line is focused.
+  ValueListenable<bool> getModifierListener(LineModifier modifier) {
+    return _modifierListener.listen(modifier);
   }
 
   @override
   void dispose() {
-    _listener.dispose();
+    _attributeListener.dispose();
+    _modifierListener.dispose();
+    _ownedFocusNode?.dispose();
     super.dispose();
   }
 }

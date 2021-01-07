@@ -132,7 +132,7 @@ class LeadingTextModifier extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    var textStyle = theme.primaryTextTheme.subtitle1;
+    var textStyle = theme.textTheme.subtitle1;
     if (style != null) {
       if (textStyle == null) {
         textStyle = style;

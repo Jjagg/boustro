@@ -5,28 +5,27 @@ import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
 import '../document.dart';
 
-// Structure:
-// { // document
+// Document JSON:
+// {
 //   "paragraphs": [
 //     {
-//       "line": {
-//         "text": <text>?,
-//         "modifiers": [
-//           {"type": <type>, "value": <value>?}
-//         ]?,
-//         "spans": [
-//           {
-//             "attribute": { "type": <type>, "value": <value>?},
-//             "start": <start>,
-//             "end": <end>,
-//         ]?
-//       }
-//     },
+//       "type":"line",
+//       "text": <text>?,
+//       "modifiers": [
+//         {"type": <type>, "value": <value>?}
+//       ]?,
+//       "spans": [
+//         {
+//           "type": <type>,
+//           "value": <value>?,
+//           "start": <start>,
+//           "end": <end>,
+//       ]?
+//     } OR
 //     {
-//       "embed": {
-//         "type": <type>
-//         "value": <json serialized value>?
-//       }
+//       "type": "embed",
+//       "embed": <type>
+//       "value": <json serialized value>?
 //     }
 //   ]
 // }
@@ -194,10 +193,6 @@ class _JsonDecoder extends Converter<dynamic, Document> {
       if (p is! Map<String, dynamic>) {
         throw const FormatException('paragraph items must be objects.');
       }
-      //if (p.keys.length != 1) {
-      //  throw const FormatException(
-      //      '''Paragraph objects must have exactly one property that must be either 'line' or 'embed'.''');
-      //}
       final type = p[_typeKey] as Object?;
       if (type == _lineType) {
         final lineMap = _expectProperties(

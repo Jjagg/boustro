@@ -386,12 +386,14 @@ class BoustroComponentConfigData extends Equatable {
       final v1 = a.properties[key];
       final v2 = b.properties[key];
 
-      if (v1 == null) {
-        map[key] = v2!;
-      } else if (v2 == null) {
-        map[key] = v1;
-      } else {
-        map[key] = v1.lerp(v2, t);
+      if (v1 != null || v2 != null) {
+        if (v1 == null) {
+          map[key] = v2!;
+        } else if (v2 == null) {
+          map[key] = v1;
+        } else {
+          map[key] = v1.lerp(v2, t);
+        }
       }
     }
 
