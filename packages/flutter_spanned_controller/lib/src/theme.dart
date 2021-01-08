@@ -49,7 +49,7 @@ class AttributeThemeData extends Equatable {
   const AttributeThemeData(this.properties);
 
   /// Attribute theme data without any properties set.
-  static AttributeThemeData empty =
+  static final AttributeThemeData empty =
       AttributeThemeData(BuiltMap<String, Object>());
 
   /// Properties that can be used to customize [TextAttribute]s.

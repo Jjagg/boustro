@@ -37,6 +37,8 @@ abstract class TextAttribute {
   /// happend at their boundaries.
   SpanExpandRules get expandRules;
 
+  // FIXME resolve should take a BuildContext instead
+
   /// Returns a text attribute value that can depend on [theme].
   TextAttributeValue resolve(AttributeThemeData theme);
 }
@@ -619,23 +621,53 @@ class SpanList extends Equatable {
   ///
   /// If range is collapsed, returns the result of [willApply] for [attribute].
   bool isApplied(TextAttribute attribute, Range range) {
-    return _getSpansIn(range, attribute).any(
+    return getSpansIn(range, attribute).any(
       (s) => s.isApplied(range),
     );
   }
 
-  /// Returns true if an insertion at [index] would get [attribute] applied
-  /// to it due to a spans [ExpandRule].
+  /// If range is not collapsed, returns true if an attribute of type [T] is
+  /// applied to the full range of text.
+  ///
+  /// If range is collapsed, returns the result of [willApplyType] for [T].
+  bool isTypeApplied<T extends TextAttribute>(Range range) {
+    assert(T != dynamic, 'Attribute type must be specified.');
+    return getTypedSpansIn<T>(range).any(
+      (s) => s.isApplied(range),
+    );
+  }
+
+  /// Returns true if an insertion at [index] would apply [attribute] to it due
+  /// to a span's [ExpandRule].
   bool willApply(TextAttribute attribute, int index) {
-    return _getSpansIn(Range.collapsed(index), attribute)
+    return getSpansIn(Range.collapsed(index), attribute)
         .any((s) => s.willApply(index));
   }
 
-  Iterable<AttributeSpan> _getSpansIn(Range range, TextAttribute attr) =>
+  /// Returns true if an insertion at [index] would apply an attribute of type
+  /// [T] to it due to a span's [ExpandRule].
+  bool willApplyType<T extends TextAttribute>(
+    TextAttribute attribute,
+    int index,
+  ) {
+    assert(T != dynamic, 'Attribute type must be specified.');
+    return getTypedSpansIn<T>(Range.collapsed(index))
+        .any((s) => s.willApply(index));
+  }
+
+  /// Get the spans with the specified [attribute] in [range].
+  Iterable<AttributeSpan> getSpansIn(Range range, TextAttribute attribute) =>
       _getSpans(
         _spans.where((s) => s.range.touches(range)),
-        attr,
+        attribute,
       );
+
+  /// Get the spans with attributes of type [T]. in [range].
+  Iterable<AttributeSpan> getTypedSpansIn<T extends TextAttribute>(
+    Range range,
+  ) {
+    return _getTypedSpans<T>(_spans.where((s) => s.range.touches(range)));
+  }
 
   static Iterable<AttributeSpan> _getSpans(
     Iterable<AttributeSpan> spans,
@@ -644,14 +676,24 @@ class SpanList extends Equatable {
     return spans.where((s) => s.attribute == attribute);
   }
 
-  /// Add a span. Merges touching spans with the same attribute.
+  static Iterable<AttributeSpan> _getTypedSpans<T extends TextAttribute>(
+    Iterable<AttributeSpan> spans,
+  ) {
+    return spans.where((s) => s.attribute is T);
+  }
+
+  /// Add a span. Merges touching spans with the same attribute or type.
   ///
   /// Spans touching [span] with an equal [AttributeSpan.attribute] will be
   /// merged.
   SpanList merge(AttributeSpan span) {
     final touching = _spans.where(
-        (s) => s.attribute == span.attribute && s.range.touches(span.range));
+        (s) => s.range.touches(span.range) && s.attribute == span.attribute);
     final toMerge = touching.followedBy([span]);
+    return _mergeSpans(span, toMerge);
+  }
+
+  SpanList _mergeSpans(AttributeSpan span, Iterable<AttributeSpan> toMerge) {
     final start =
         toMerge.fold<int>(maxSpanLength, (m, s) => math.min(m, s.start));
     final end = toMerge.fold<int>(-1, (m, s) => math.max(m, s.end));
@@ -676,16 +718,36 @@ class SpanList extends Equatable {
     return SpanList._sorted(_spans.where((s) => s.attribute != attribute));
   }
 
+  /// Remove all spans of type [T].
+  SpanList removeType<T extends TextAttribute>() {
+    assert(T != dynamic, 'Attribute type must be specified.');
+    // ignore: prefer_iterable_wheretype
+    return SpanList._sorted(_spans.where((s) => s is T));
+  }
+
   /// Remove all spans with the given attribute from [range].
   ///
-  /// This method can remove parts of spans if the range does not cover
-  /// the range of matching spans.
+  /// This method can remove parts of spans if [range] does not cover
+  /// the full range of matching spans.
   SpanList removeFrom(Range range, TextAttribute attribute) {
+    return _removeFrom(range, (attr) => attr == attribute);
+  }
+
+  /// Remove all spans with attributes of type [T].
+  ///
+  /// This method can remove parts of spans if [range] does not cover
+  /// the full range of matching spans.
+  SpanList removeTypeFrom<T extends TextAttribute>(Range range) {
+    assert(T != dynamic, 'Attribute type must be specified.');
+    return _removeFrom(range, (attr) => attr is T);
+  }
+
+  SpanList _removeFrom(Range range, bool Function(TextAttribute) predicate) {
     return SpanList(
       _spans.rebuild(
         (b) => b.expand(
           (s) sync* {
-            if (s.attribute != attribute || !s.range.overlaps(range)) {
+            if (!predicate(s.attribute) || !s.range.overlaps(range)) {
               yield s;
             } else {
               if (s.start < range.start) {
@@ -750,7 +812,7 @@ extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
   TextSpan buildTextSpans({
     required TextStyle style,
     AttributeThemeData? attributeTheme,
-    Map<TextAttributeValue, GestureRecognizer>? recognizers,
+    Map<TextAttribute, GestureRecognizer>? recognizers,
   }) {
     // TODO multiple gestures
     // TODO WidgetSpan support
@@ -770,12 +832,12 @@ extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
 
         final theme = attributeTheme ?? AttributeThemeData.empty;
 
-        final attrs =
-            segment.attributes.map((attr) => attr.resolve(theme)).toList();
+        final attrs = segment.attributes;
+        final values = attrs.map((attr) => attr.resolve(theme)).toList();
 
-        final style = attrs.fold<TextStyle>(
+        final style = values.fold<TextStyle>(
           const TextStyle(),
-          (style, attr) => style.merge(attr.style),
+          (style, v) => style.merge(v.style),
         );
 
         if (recognizers != null) {

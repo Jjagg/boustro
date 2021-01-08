@@ -116,7 +116,7 @@ class SpannedString extends Equatable {
   TextSpan buildTextSpans({
     required TextStyle style,
     AttributeThemeData? attributeTheme,
-    Map<TextAttributeValue, GestureRecognizer>? recognizers,
+    Map<TextAttribute, GestureRecognizer>? recognizers,
   }) {
     if (spans.iter.isEmpty) {
       return TextSpan(text: text.string, style: style);

@@ -26,6 +26,7 @@ class DocumentView extends StatefulWidget {
 
   @override
   _DocumentViewState createState() => _DocumentViewState();
+
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
@@ -34,35 +35,32 @@ class DocumentView extends StatefulWidget {
 }
 
 class _DocumentViewState extends State<DocumentView> {
-  late final Map<TextAttributeValue, GestureRecognizer> _recognizers =
+  late final Map<TextAttribute, GestureRecognizer> _recognizers =
       _createRecognizers();
 
-  Map<TextAttributeValue, GestureRecognizer> _createRecognizers() {
-    final attributes =
-        widget.document.paragraphs.expand<TextAttributeValue>((p) {
-      final attributeTheme = AttributeTheme.of(context);
-      return p
-          .match<Iterable<TextAttribute>>(
-              embed: (e) => [],
-              line: (l) => l.spans.iter.map((s) => s.attribute))
-          .map((attr) => attr.resolve(attributeTheme));
+  Map<TextAttribute, GestureRecognizer> _createRecognizers() {
+    final attributes = widget.document.paragraphs.expand<TextAttribute>((p) {
+      return p.match<Iterable<TextAttribute>>(
+          embed: (e) => [], line: (l) => l.spans.iter.map((s) => s.attribute));
     }).toSet();
 
-    final recognizers = <TextAttributeValue, GestureRecognizer>{};
+    final recognizers = <TextAttribute, GestureRecognizer>{};
     for (final attr in attributes) {
-      if (attr.hasGestures) {
+      final attributeTheme = AttributeTheme.of(context);
+      final value = attr.resolve(attributeTheme);
+      if (value.hasGestures) {
         GestureRecognizer? recognizer;
-        if (attr.onTap != null) {
-          recognizer = TapGestureRecognizer()..onTap = attr.onTap;
-        } else if (attr.onSecondaryTap != null) {
+        if (value.onTap != null) {
+          recognizer = TapGestureRecognizer()..onTap = value.onTap;
+        } else if (value.onSecondaryTap != null) {
           recognizer = TapGestureRecognizer()
-            ..onSecondaryTap = attr.onSecondaryTap;
-        } else if (attr.onDoubleTap != null) {
+            ..onSecondaryTap = value.onSecondaryTap;
+        } else if (value.onDoubleTap != null) {
           recognizer = DoubleTapGestureRecognizer()
-            ..onDoubleTap = attr.onDoubleTap;
-        } else if (attr.onLongPress != null) {
+            ..onDoubleTap = value.onDoubleTap;
+        } else if (value.onLongPress != null) {
           recognizer = LongPressGestureRecognizer()
-            ..onLongPress = attr.onLongPress;
+            ..onLongPress = value.onLongPress;
         }
 
         if (recognizer != null) {
@@ -91,7 +89,6 @@ class _DocumentViewState extends State<DocumentView> {
         color: btheme.editorColor,
         child: ListView.builder(
           padding: editorPadding,
-          shrinkWrap: true,
           itemBuilder: (context, index) {
             return _buildParagraph(context, widget.document.paragraphs[index]);
           },
@@ -105,7 +102,7 @@ class _DocumentViewState extends State<DocumentView> {
     return value.match(line: (line) {
       final atheme = AttributeTheme.of(context);
       final spans = line.spannedText.buildTextSpans(
-        style: const TextStyle(),
+        style: Theme.of(buildContext).textTheme.subtitle1!,
         recognizers: _recognizers,
         attributeTheme: atheme,
       );

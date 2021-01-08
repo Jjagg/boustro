@@ -143,6 +143,18 @@ extension SpannedTextEditingControllerExtension
     spans = spans.merge(span);
   }
 
+  /// Get all attribute spans of type [T] applied to the current selection.
+  ///
+  /// This method is meant to be used for stateful attributes and does not
+  /// currently take overrides into account.
+  Iterable<AttributeSpan> getAppliedSpansWithType<T extends TextAttribute>() {
+    if (!selection.isValid) {
+      return const Iterable<AttributeSpan>.empty();
+    }
+
+    return spans.getTypedSpansIn<T>(_convertRange(selection));
+  }
+
   /// Determines if [attribute] is applied to the full selection (for a ranged
   /// selection) or would be applied on insertion (for a collapsed selection).
   bool isApplied(TextAttribute attribute) {
@@ -289,6 +301,9 @@ class SpannedTextEditingController implements TextEditingController {
     _ignoreSetValue = false;
     spans = newString.spans;
   }
+
+  /// Get the selection as a [Range]. Selection must be valid.
+  Range get selectionRange => _convertRange(selection);
 
   bool _ignoreSetValue = false;
   final List<_AttributeOverride> _attributeOverrides = [];
@@ -516,6 +531,7 @@ class SpannedTextEditingController implements TextEditingController {
 
   /// Normalize [range] and convert from UTF-16 indices to grapheme cluster indices.
   Range _convertRange(TextRange range) {
+    assert(range.isValid, 'Range should be valid.');
     if (!range.isNormalized) {
       // ignore: parameter_assignments
       range = TextRange(start: range.end, end: range.start);

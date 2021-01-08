@@ -19,64 +19,64 @@ Widget Function(
   ValueListenable<bool> Function(DocumentController) getListener,
 ) {
   return (context, controller, item) {
-    final btheme = BoustroTheme.of(context);
-
-    final toolbarColor = btheme.toolbarDecoration?.color ??
-        btheme.toolbarDecoration?.gradient?.colors.firstOrNull ??
-        BoustroThemeData.fallbackForContext(context).toolbarDecoration!.color ??
-        BoustroThemeData.fallbackForContext(context)
-            .toolbarDecoration!
-            .gradient
-            ?.colors
-            .firstOrNull;
-
-    final Color? decorationColor;
-
-    if (toolbarColor != null) {
-      final hslToolbarColor = HSLColor.fromColor(toolbarColor);
-      decorationColor = hslToolbarColor
-          .withLightness(math.max(0, hslToolbarColor.lightness - 0.1))
-          .toColor();
-    } else {
-      final iconTheme = IconTheme.of(context);
-      if (iconTheme.color != null && iconTheme.opacity != null) {
-        decorationColor =
-            iconTheme.color!.withOpacity(math.max(0, iconTheme.opacity! - 0.5));
-      } else {
-        decorationColor = null;
-      }
-    }
-
     return ValueListenableBuilder<bool>(
       valueListenable: getListener(controller),
-      builder: (context, toggled, button) {
-        if (!toggled) {
-          return button!;
-        }
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-          child: Container(
-            decoration: ShapeDecoration(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4)),
-              color: decorationColor,
-            ),
-            child: button,
-          ),
-        );
-      },
+      builder: _buildToggleableButton,
       child: Center(
         child: IconButton(
           splashColor: Colors.transparent,
           onPressed: item.onPressed == null
               ? null
               : () => item.onPressed!(context, controller),
-          icon: item.title,
+          icon: item.title!,
           tooltip: item.tooltip,
         ),
       ),
     );
   };
+}
+
+Widget _buildToggleableButton(
+    BuildContext context, bool toggled, Widget? button) {
+  final Color? decorationColor;
+  final btheme = BoustroTheme.of(context);
+
+  final toolbarColor = btheme.toolbarDecoration?.color ??
+      btheme.toolbarDecoration?.gradient?.colors.firstOrNull ??
+      BoustroThemeData.fallbackForContext(context).toolbarDecoration!.color ??
+      BoustroThemeData.fallbackForContext(context)
+          .toolbarDecoration!
+          .gradient
+          ?.colors
+          .firstOrNull;
+
+  if (toolbarColor != null) {
+    final hslToolbarColor = HSLColor.fromColor(toolbarColor);
+    decorationColor = hslToolbarColor
+        .withLightness(math.max(0, hslToolbarColor.lightness - 0.1))
+        .toColor();
+  } else {
+    final iconTheme = IconTheme.of(context);
+    if (iconTheme.color != null && iconTheme.opacity != null) {
+      decorationColor =
+          iconTheme.color!.withOpacity(math.max(0, iconTheme.opacity! - 0.5));
+    } else {
+      decorationColor = null;
+    }
+  }
+  if (!toggled) {
+    return button!;
+  }
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+    child: Container(
+      decoration: ShapeDecoration(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+        color: decorationColor,
+      ),
+      child: button,
+    ),
+  );
 }
 
 /// Helper function to easily create a toolbar item that toggles a specific
@@ -118,6 +118,125 @@ final underline = createToggleableToolbarItem(
   underlineAttribute,
   Icons.format_underline_rounded,
 );
+
+class _LinkDialog extends StatefulWidget {
+  const _LinkDialog({String text = '', String hintText = ''})
+      : _text = text,
+        _hintText = hintText;
+
+  final String _text;
+  final String _hintText;
+
+  @override
+  _LinkDialogState createState() => _LinkDialogState();
+}
+
+class _LinkDialogState extends State<_LinkDialog> {
+  // ignore: diagnostic_describe_all_properties
+  late final TextEditingController controller =
+      TextEditingController(text: widget._text);
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      content: TextFormField(
+        autofocus: true,
+        controller: controller,
+        keyboardType: TextInputType.url,
+        decoration: InputDecoration(
+          hintText: widget._hintText,
+        ),
+        validator: (text) {
+          return null;
+        },
+      ),
+      actions: [
+        FlatButton(
+          onPressed: () {
+            Navigator.pop(context, null);
+          },
+          child: const Text('Cancel'),
+        ),
+        if (widget._text.isNotEmpty)
+          FlatButton(
+            onPressed: () {
+              Navigator.pop(context, '');
+            },
+            child: const Text('Remove'),
+          ),
+        FlatButton(
+          onPressed: () {
+            Navigator.pop(context, controller.text);
+          },
+          child: const Text('Apply'),
+        )
+      ],
+    );
+  }
+}
+
+/// Toolbar item that applies a [LinkAttribute]. Shows a dialog with a text
+/// field for the url.
+ToolbarItem link({String uriHintText = 'google.com'}) {
+  return ToolbarItem(
+    title: const Icon(Icons.link),
+    tooltip: 'Link',
+    onPressed: (context, controller) async {
+      final line = controller.focusedLine;
+      if (line != null) {
+        final c = line.controller;
+        if (c.selection.isValid) {
+          var canApply = !c.selection.isCollapsed;
+          if (!canApply) {
+            canApply = c.getAppliedSpansWithType<LinkAttribute>().isNotEmpty;
+          }
+
+          if (canApply) {
+            final attrs = c.getAppliedSpansWithType<LinkAttribute>();
+            final initialSpan = attrs.firstOrNull;
+            final initialUri =
+                (initialSpan?.attribute as LinkAttribute?)?.uri ?? '';
+            final range = c.selectionRange;
+            // Show the dialog. Null means do nothing, empty string means remove.
+            var link = await showDialog<String>(
+              context: context,
+              builder: (context) {
+                return _LinkDialog(text: initialUri, hintText: uriHintText);
+              },
+            );
+            if (link != null) {
+              var spans = c.spans;
+
+              if (initialSpan != null) {
+                spans.remove(initialSpan);
+              }
+
+              spans = spans.removeTypeFrom<LinkAttribute>(range);
+              if (link.isNotEmpty) {
+                if (!link.startsWith('https://')) {
+                  link = 'https://$link';
+                }
+
+                final uri = Uri.parse(link);
+                final attr = LinkAttribute(uri.toString());
+                final span = AttributeSpan(attr, range.start, range.end);
+                spans = spans.merge(span);
+              }
+
+              c.spans = spans;
+            }
+          }
+        }
+      }
+    },
+  );
+}
 
 // === LINE MODIFIERS ===
 

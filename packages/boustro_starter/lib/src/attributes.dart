@@ -1,4 +1,6 @@
 import 'package:boustro/boustro.dart';
+import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/painting.dart';
 
 class _BoldAttribute extends ThemedTextAttribute {
@@ -69,10 +71,55 @@ class _StrikethroughAttribute extends TextAttribute {
 /// Attribute with [TextStyle.decoration] set to [TextDecoration.lineThrough].
 const strikethroughAttribute = _StrikethroughAttribute();
 
+/// Attribute that turns the spanned text into a hyperlink based on some URI.
+class LinkAttribute extends TextAttribute with EquatableMixin {
+  /// Create a link attribute with a destination uri.
+  const LinkAttribute(this.uri);
+
+  /// Uri destination of the link.
+  final String uri;
+
+  @override
+  SpanExpandRules get expandRules =>
+      SpanExpandRules(ExpandRule.exclusive, ExpandRule.exclusive);
+
+  @override
+  TextAttributeValue resolve(AttributeThemeData theme) {
+    final style = theme.linkStyle;
+    final onTap = theme.linkOnTap;
+    if (kDebugMode && onTap == null) {
+      // ignore: avoid_print
+      print(
+          'WARNING: onTap handler for LinkAttribute not set on AttributeTheme.');
+    }
+
+    return TextAttributeValue(
+      debugName: 'link<$uri>',
+      style: style,
+      onTap: onTap == null ? null : () => onTap(uri),
+    );
+  }
+
+  @override
+  String toString() {
+    return 'LinkAttribute<$uri>';
+  }
+
+  @override
+  List<Object?> get props => [uri];
+}
+
 /// Themeable property getter extensions for the attributes in this library.
 extension AttributeGetters on AttributeThemeData {
   /// Font weight for text with [boldAttribute] applied.
   FontWeight? get boldFontWeight => get<FontWeight>('boldFontWeight');
+
+  /// Text style to apply to text with the [LinkAttribute] applied.
+  TextStyle? get linkStyle => get<TextStyle>('linkStyle');
+
+  /// onTap gesture handler to use for text with the [LinkAttribute] applied.
+  void Function(String)? get linkOnTap =>
+      get<void Function(String)>('linkOnTap');
 }
 
 /// Themeable property setter extensions for the attributes in this library.
@@ -85,6 +132,26 @@ extension AttributeSetters on AttributeThemeBuilder {
       remove('boldFontWeight');
     } else {
       this['boldFontWeight'] = value;
+    }
+  }
+
+  /// Set the text style to apply to text with the [LinkAttribute] applied.
+  set linkStyle(TextStyle? value) {
+    if (value == null) {
+      remove('linkStyle');
+    } else {
+      this['linkStyle'] = value;
+    }
+  }
+
+  // FIXME linkOnTap should take a BuildContext
+
+  /// onTap gesture handler to use for text with the [LinkAttribute] applied.
+  set linkOnTap(void Function(String)? value) {
+    if (value == null) {
+      remove('linkOnTap');
+    } else {
+      this['linkOnTap'] = value;
     }
   }
 }

@@ -171,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         onPressed: item.onPressed == null
                             ? null
                             : () => item.onPressed!(context, controller),
-                        icon: item.title,
+                        icon: item.title!,
                         tooltip: item.tooltip,
                       ),
                     ),

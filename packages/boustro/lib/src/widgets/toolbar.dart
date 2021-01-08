@@ -13,6 +13,13 @@ typedef ToolbarItemBuilder = Widget Function(
   ToolbarItem item,
 );
 
+/// Builds a widget given a [BuildContext] and a [DocumentController].
+/// Used in [ToolbarItem.custom].
+typedef CustomToolbarItemBuilder = Widget Function(
+  BuildContext context,
+  DocumentController controller,
+);
+
 /// Called when a toolbar item is pressed.
 typedef ToolbarItemCallback = void Function(
   BuildContext context,
@@ -23,8 +30,8 @@ typedef ToolbarItemCallback = void Function(
 @immutable
 class ToolbarItem extends StatelessWidget with NestedListItem<ToolbarItem> {
   const ToolbarItem._({
-    required this.title,
-    required this.tooltip,
+    this.title,
+    this.tooltip,
     this.builder,
     List<ToolbarItem> items = const [],
     ToolbarItemCallback? onPressed,
@@ -44,6 +51,12 @@ class ToolbarItem extends StatelessWidget with NestedListItem<ToolbarItem> {
             onPressed: onPressed,
             tooltip: tooltip);
 
+  /// Create a toolbar item that builds any widget.
+  factory ToolbarItem.custom({required CustomToolbarItemBuilder builder}) {
+    return ToolbarItem._(
+        builder: (context, controller, _) => builder(context, controller));
+  }
+
   /// Create a toolbar item that - when clicked - shows a submenu of other
   /// items.
   const ToolbarItem.sublist({
@@ -53,7 +66,7 @@ class ToolbarItem extends StatelessWidget with NestedListItem<ToolbarItem> {
   }) : this._(title: title, items: items, tooltip: tooltip);
 
   /// Core display of the item. Commonly [Icon] or [Text].
-  final Widget title;
+  final Widget? title;
 
   /// Function that builds this item into a widget.
   final ToolbarItemBuilder? builder;
