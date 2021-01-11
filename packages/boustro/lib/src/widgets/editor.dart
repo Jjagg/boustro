@@ -120,13 +120,12 @@ class _DocumentViewState extends State<DocumentView> {
         ),
       );
     }, embed: (embed) {
-      final scope = BoustroScope.of(buildContext);
       final btheme = BoustroTheme.of(context);
       final padding = btheme.embedPadding ??
           BoustroThemeData.fallbackForContext(buildContext).embedPadding!;
       return Padding(
         padding: padding,
-        child: embed.build(scope: scope),
+        child: embed.createView(context),
       );
     });
   }
@@ -253,8 +252,7 @@ class DocumentEditor extends StatelessWidget {
           ));
     } else {
       final embed = value as EmbedState;
-      final scope = BoustroScope.of(buildContext);
-      result = embed.content.build(scope: scope, focusNode: embed.focusNode);
+      result = embed.createEditor(buildContext);
     }
 
     return result;

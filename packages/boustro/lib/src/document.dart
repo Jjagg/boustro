@@ -29,8 +29,6 @@ class Document extends Equatable {
 /// or a [ParagraphEmbed] for other content.
 @immutable
 abstract class Paragraph {
-  const Paragraph._();
-
   /// Execute [line] if this is a [LineParagraph] and [embed] if this is a
   /// [ParagraphEmbed].
   T match<T>({
@@ -41,7 +39,7 @@ abstract class Paragraph {
 
 /// Immutable representation of a line of rich text in a [Document].
 @immutable
-class LineParagraph extends Paragraph with EquatableMixin {
+class LineParagraph with EquatableMixin implements Paragraph {
   /// Create a line of rich text.
   LineParagraph({
     String? text,
@@ -68,7 +66,7 @@ class LineParagraph extends Paragraph with EquatableMixin {
     required this.text,
     required this.spans,
     required this.modifiers,
-  }) : super._();
+  });
 
   /// Plain text in this line.
   final Characters text;
@@ -98,11 +96,11 @@ class LineParagraph extends Paragraph with EquatableMixin {
   List<Object?> get props => [text, spans, modifiers];
 }
 
-/// Interface for paragraph embeds.
+/// Base class for paragraph embeds.
 @immutable
-abstract class ParagraphEmbed extends Paragraph {
+abstract class ParagraphEmbed implements Paragraph {
   /// Constant base constructor for implementations.
-  const ParagraphEmbed() : super._();
+  const ParagraphEmbed();
 
   @override
   T match<T>({
@@ -111,16 +109,21 @@ abstract class ParagraphEmbed extends Paragraph {
   }) =>
       embed(this);
 
-  /// Function that builds the embed widget.
-  Widget build({
-    required BoustroScope scope,
-    FocusNode? focusNode,
-  });
+  /// Create a widget that displays this embed.
+  Widget createView(BuildContext context);
 
-  @override
-  String toString() {
-    return 'Embed($runtimeType)';
-  }
+  /// Create a controller with this embed as its initial state.
+  ParagraphEmbedController createController();
+}
+
+abstract class ParagraphEmbedController {
+  ParagraphEmbed? toEmbed();
+
+  /// Create an embed editor for this embed controller.
+  Widget createEditor(
+    BuildContext context,
+    FocusNode focusNode,
+  );
 }
 
 /// Builds a [Document]. Can be used fluently with cascades.

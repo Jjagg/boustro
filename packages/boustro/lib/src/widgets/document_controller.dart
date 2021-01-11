@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:built_collection/built_collection.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -104,11 +107,11 @@ class EmbedState extends ParagraphState {
   /// Create an embed.
   const EmbedState({
     required FocusNode focusNode,
-    required this.content,
+    required this.controller,
   }) : super(focusNode: focusNode);
 
-  /// Content of the embed.
-  final ParagraphEmbed content;
+  /// Editor for the embed.
+  final ParagraphEmbedController controller;
 
   @override
   T match<T>({
@@ -116,11 +119,22 @@ class EmbedState extends ParagraphState {
     required T Function(EmbedState) embed,
   }) =>
       embed(this);
+
+  Widget createEditor(BuildContext context) {
+    return controller.createEditor(context, focusNode);
+  }
 }
 
 /// Convenience class that keeps track of whether line modifiers are applied or
 /// not.
 class ModifierListener extends ToggleStateListener<LineModifier> {}
+
+class LineValueChangedEvent {
+  const LineValueChangedEvent(this.controller, this.newValue);
+
+  final SpannedTextEditingController controller;
+  final TextEditingValue newValue;
+}
 
 /// Manages the contents of a [DocumentEditor].
 ///
@@ -173,6 +187,13 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   /// Theme that affects the style of attributes.
   final AttributeThemeData? attributeTheme;
 
+  // EVENTS
+
+  final StreamController<LineValueChangedEvent> _lineValueChangedController =
+      StreamController.broadcast();
+  Stream<LineValueChangedEvent> get onLineValueChanged =>
+      _lineValueChangedController.stream;
+
   @protected
   @override
   BuiltList<ParagraphState> get value => super.value;
@@ -212,7 +233,10 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     SpannedTextEditingController controller,
     TextEditingValue newValue,
   ) {
-    LineState? toFocus;
+    if (newValue != controller.value) {
+      _lineValueChangedController
+          .add(LineValueChangedEvent(controller, newValue));
+    }
 
     if (!newValue.text.contains('\n')) {
       return newValue;
@@ -232,6 +256,8 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
       newValue.text,
       cursor,
     );
+
+    LineState? toFocus;
 
     var t = controller.spannedString.applyDiff(diff);
     CharacterRange? newlineRange;
@@ -272,12 +298,13 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   Document toDocument() {
     final paragraphs = this
         .paragraphs
-        .map((p) => p.match<Paragraph>(
-              line: (l) =>
-                  LineParagraph.fromSpanned(string: l.controller.spannedString),
-              // TODO need a controller to modify embed state.
-              embed: (e) => e.content,
+        .map((p) => p.match<Paragraph?>(
+              line: (l) => LineParagraph.fromSpanned(
+                string: l.controller.spannedString,
+              ),
+              embed: (e) => e.controller.toEmbed(),
             ))
+        .whereNotNull()
         .toBuiltList();
     return Document(paragraphs);
   }
@@ -467,7 +494,10 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   /// Insert an embed at [index].
   EmbedState insertEmbed(int index, ParagraphEmbed embed) {
     final focus = FocusNode();
-    final state = EmbedState(focusNode: focus, content: embed);
+    final state = EmbedState(
+      focusNode: focus,
+      controller: embed.createController(),
+    );
 
     if (index == paragraphs.length) {
       appendLine();

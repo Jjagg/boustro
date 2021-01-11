@@ -30,6 +30,12 @@ class StringDiff extends Equatable {
   /// Inserted text.
   final Characters inserted;
 
+  /// True if the diff indicates the compared strings where identical.
+  bool get isEmpty => inserted.isEmpty && deleted.isEmpty;
+
+  /// True if the diff indicates the compared strings where not identical.
+  bool get isNotEmpty => inserted.isNotEmpty || deleted.isNotEmpty;
+
   @override
   String toString() {
     return '''Diff($index, -'$deleted', +'$inserted')''';

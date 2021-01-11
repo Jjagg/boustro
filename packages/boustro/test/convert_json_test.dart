@@ -128,4 +128,14 @@ class TestEmbed extends ParagraphEmbed with EquatableMixin {
 
   @override
   List<Object?> get props => [];
+
+  @override
+  ParagraphEmbedController createController() {
+    throw UnimplementedError();
+  }
+
+  @override
+  Widget createView(BuildContext context) {
+    throw UnimplementedError();
+  }
 }

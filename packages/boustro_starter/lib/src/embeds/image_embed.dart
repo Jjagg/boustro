@@ -1,63 +1,94 @@
 import 'dart:io';
 
 import 'package:boustro/boustro.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-/// Embed that presents an image.
-///
-/// Its value should be an [ImageProvider].
-///
-/// While editing, tapping the image will focus it.
-class ImageEmbed extends ParagraphEmbed {
-  /// Create an image embed.
+@immutable
+class ImageEmbed extends ParagraphEmbed with EquatableMixin {
   const ImageEmbed(this.image);
 
-  /// Image that this embed displays.
   final ImageProvider image;
 
   @override
-  Widget build({
-    required BoustroScope scope,
-    FocusNode? focusNode,
-  }) {
-    return _ImageEmbed(
-      image: image,
-      scope: scope,
-      focusNode: focusNode,
-    );
+  Widget createView(BuildContext context) {
+    return ImageEmbedView(image: image);
   }
+
+  @override
+  ParagraphEmbedController createController() {
+    return ImageEmbedController(value: image);
+  }
+
+  @override
+  List<Object?> get props => [image];
 }
 
-class _ImageEmbed extends StatelessWidget {
-  const _ImageEmbed({
-    required this.image,
-    required this.scope,
-    required this.focusNode,
-  });
+class _ImageWrapper extends StatelessWidget {
+  const _ImageWrapper({Key? key, required this.child}) : super(key: key);
 
-  final ImageProvider image;
-  final BoustroScope scope;
-  final FocusNode? focusNode;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final ctheme = BoustroComponentConfig.of(context);
-    if (!scope.isEditable) {
-      return _buildContent(context, ctheme, _center);
-    }
+    final maxHeight = ctheme.imageMaxHeight ?? 1000;
 
+    final sideColor = ctheme.imageSideColor ??
+        (Theme.of(context).brightness == Brightness.dark
+            ? Colors.deepPurple.shade900.withOpacity(0.2)
+            : Colors.brown.withOpacity(0.2));
+
+    return Container(
+      constraints: BoxConstraints(maxHeight: maxHeight),
+      color: sideColor,
+      child: child,
+    );
+  }
+}
+
+class ImageEmbedView extends StatelessWidget {
+  const ImageEmbedView({Key? key, required this.image}) : super(key: key);
+
+  final ImageProvider image;
+
+  @override
+  Widget build(BuildContext context) {
+    return _ImageWrapper(
+      child: Center(
+        heightFactor: 1,
+        child: Image(
+          image: image,
+          fit: BoxFit.contain,
+        ),
+      ),
+    );
+  }
+}
+
+/// Embed that presents an image.
+///
+/// While editing, tapping the image will focus it.
+class ImageEmbedEditor extends StatelessWidget {
+  /// Create an image embed.
+  const ImageEmbedEditor({
+    Key? key,
+    required this.controller,
+    required this.focusNode,
+  }) : super(key: key);
+
+  final ImageEmbedController controller;
+  final FocusNode focusNode;
+
+  @override
+  Widget build(BuildContext context) {
     return Focus(
       focusNode: focusNode,
       child: Builder(
         builder: (context) {
           final focusNode = Focus.of(context);
-          final child = _buildContent(
-            context,
-            ctheme,
-            _buildOverlay,
-          );
 
           return GestureDetector(
             onTap: () {
@@ -65,26 +96,26 @@ class _ImageEmbed extends StatelessWidget {
                 focusNode.requestFocus();
               }
             },
-            child: child,
+            child: _ImageWrapper(
+              child: _buildOverlay(
+                  context,
+                  Image(
+                    image: controller.image,
+                    fit: BoxFit.contain,
+                  )),
+            ),
           );
         },
       ),
     );
   }
 
-  Widget _center(
-    BuildContext context,
-    BoustroComponentConfigData ctheme,
-    Widget child,
-  ) {
-    return Center(child: child);
-  }
-
   Widget _buildOverlay(
     BuildContext context,
-    BoustroComponentConfigData ctheme,
     Widget child,
   ) {
+    final ctheme = BoustroComponentConfig.of(context);
+    final scope = BoustroScope.of(context);
     final hasFocus = Focus.of(context).hasFocus;
     final pickImg = ctheme.imagePickImage;
     return Center(
@@ -157,44 +188,22 @@ class _ImageEmbed extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildContent(
-    BuildContext context,
-    BoustroComponentConfigData ctheme,
-    Widget Function(BuildContext context, BoustroComponentConfigData ctheme,
-            Widget child)
-        imageWrapper,
-  ) {
-    final maxHeight = ctheme.imageMaxHeight ?? 600;
+class ImageEmbedController extends ValueNotifier<ImageProvider>
+    implements ParagraphEmbedController {
+  ImageEmbedController({required ImageProvider value}) : super(value);
 
-    final sideColor = ctheme.imageSideColor ??
-        (Theme.of(context).brightness == Brightness.dark
-            ? Colors.deepPurple.shade900.withOpacity(0.2)
-            : Colors.brown.withOpacity(0.2));
+  ImageProvider get image => value;
 
-    Widget widget = Image(
-      image: image,
-      fit: BoxFit.contain,
-    );
-
-    widget = imageWrapper(context, ctheme, widget);
-
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: maxHeight),
-      child: Container(
-        color: sideColor,
-        child: widget,
-      ),
-    );
+  @override
+  Widget createEditor(BuildContext context, FocusNode focusNode) {
+    return ImageEmbedEditor(controller: this, focusNode: focusNode);
   }
 
   @override
-  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    super.debugFillProperties(properties);
-    properties
-      ..add(DiagnosticsProperty<ImageProvider>('image', image))
-      ..add(DiagnosticsProperty<BoustroScope>('scope', scope))
-      ..add(DiagnosticsProperty<FocusNode?>('focusNode', focusNode));
+  ParagraphEmbed? toEmbed() {
+    return ImageEmbed(value);
   }
 }
 
