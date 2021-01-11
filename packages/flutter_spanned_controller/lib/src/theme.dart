@@ -79,7 +79,13 @@ class AttributeThemeBuilder {
   ///
   /// If the key was already in the map, its associated value is changed.
   /// Otherwise the key/value pair is added to the map.
-  void operator []=(String key, Object value) => _properties[key] = value;
+  void operator []=(String key, Object? value) {
+    if (value == null) {
+      _properties.remove(key);
+    } else {
+      _properties[key] = value;
+    }
+  }
 
   /// Remove a property.
   void remove(String key) {

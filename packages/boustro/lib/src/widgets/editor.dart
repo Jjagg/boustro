@@ -46,8 +46,7 @@ class _DocumentViewState extends State<DocumentView> {
 
     final recognizers = <TextAttribute, GestureRecognizer>{};
     for (final attr in attributes) {
-      final attributeTheme = AttributeTheme.of(context);
-      final value = attr.resolve(attributeTheme);
+      final value = attr.resolve(context);
       if (value.hasGestures) {
         GestureRecognizer? recognizer;
         if (value.onTap != null) {
@@ -100,11 +99,10 @@ class _DocumentViewState extends State<DocumentView> {
 
   Widget _buildParagraph(BuildContext buildContext, Paragraph value) {
     return value.match(line: (line) {
-      final atheme = AttributeTheme.of(context);
       final spans = line.spannedText.buildTextSpans(
+        context: buildContext,
         style: Theme.of(buildContext).textTheme.subtitle1!,
         recognizers: _recognizers,
-        attributeTheme: atheme,
       );
 
       final btheme = BoustroTheme.of(context);

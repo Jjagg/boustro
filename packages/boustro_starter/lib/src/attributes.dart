@@ -2,6 +2,7 @@ import 'package:boustro/boustro.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/painting.dart';
+import 'package:flutter/material.dart';
 
 class _BoldAttribute extends ThemedTextAttribute {
   _BoldAttribute() : super(debugName: 'bold');
@@ -27,8 +28,7 @@ class _ItalicAttribute extends TextAttribute {
   SpanExpandRules get expandRules => SpanExpandRules.after();
 
   @override
-  TextAttributeValue resolve(AttributeThemeData theme) =>
-      const TextAttributeValue(
+  TextAttributeValue resolve(BuildContext context) => const TextAttributeValue(
         debugName: 'italic',
         style: TextStyle(fontStyle: FontStyle.italic),
       );
@@ -44,8 +44,7 @@ class _UnderlineAttribute extends TextAttribute {
   SpanExpandRules get expandRules => SpanExpandRules.after();
 
   @override
-  TextAttributeValue resolve(AttributeThemeData theme) =>
-      const TextAttributeValue(
+  TextAttributeValue resolve(BuildContext context) => const TextAttributeValue(
         debugName: 'underline',
         style: TextStyle(decoration: TextDecoration.underline),
       );
@@ -61,8 +60,7 @@ class _StrikethroughAttribute extends TextAttribute {
   SpanExpandRules get expandRules => SpanExpandRules.after();
 
   @override
-  TextAttributeValue resolve(AttributeThemeData theme) =>
-      const TextAttributeValue(
+  TextAttributeValue resolve(BuildContext context) => const TextAttributeValue(
         debugName: 'strikethrough',
         style: TextStyle(decoration: TextDecoration.lineThrough),
       );
@@ -70,6 +68,66 @@ class _StrikethroughAttribute extends TextAttribute {
 
 /// Attribute with [TextStyle.decoration] set to [TextDecoration.lineThrough].
 const strikethroughAttribute = _StrikethroughAttribute();
+
+/// Attribute for headings. Intended to be used as a line style.
+///
+/// Uses the common HTML-style headings with levels 1-6
+/// (inclusive).
+///
+/// The default style for headings is:
+///
+/// 1. [TextTheme.headline4]
+/// 2. [TextTheme.headline5]
+/// 3. [TextTheme.headline6]
+/// 4. [TextTheme.subtitle1]
+/// 5. [TextTheme.subtitle1]
+/// 6. [TextTheme.subtitle1]
+class HeadingAttribute extends TextAttribute with EquatableMixin {
+  /// Create a heading attribute with a level between 1 and 6 (inclusive).
+  const HeadingAttribute(this.level)
+      : assert(level >= 1 && level <= 6,
+            'Level should be between 1 and 6 (inclusive).');
+
+  /// Level of the heading.
+  final int level;
+
+  @override
+  SpanExpandRules get expandRules => SpanExpandRules.fixed();
+
+  @override
+  List<Object?> get props => [level];
+
+  @override
+  TextAttributeValue resolve(BuildContext context) {
+    final attrTheme = AttributeTheme.of(context);
+    final theme = Theme.of(context);
+    final TextStyle? style;
+    switch (level) {
+      case 1:
+        style = attrTheme.headingStyle1 ?? theme.textTheme.headline4;
+        break;
+      case 2:
+        style = attrTheme.headingStyle2 ?? theme.textTheme.headline5;
+        break;
+      case 3:
+        style = attrTheme.headingStyle3 ?? theme.textTheme.headline6;
+        break;
+      case 4:
+        style = attrTheme.headingStyle4 ?? theme.textTheme.subtitle1;
+        break;
+      case 5:
+        style = attrTheme.headingStyle5 ?? theme.textTheme.subtitle1;
+        break;
+      case 6:
+        style = attrTheme.headingStyle6 ?? theme.textTheme.subtitle1;
+        break;
+      default:
+        throw Exception('Invalid heading level "$level".');
+    }
+
+    return TextAttributeValue(style: style);
+  }
+}
 
 /// Attribute that turns the spanned text into a hyperlink based on some URI.
 class LinkAttribute extends TextAttribute with EquatableMixin {
@@ -84,7 +142,8 @@ class LinkAttribute extends TextAttribute with EquatableMixin {
       SpanExpandRules(ExpandRule.exclusive, ExpandRule.exclusive);
 
   @override
-  TextAttributeValue resolve(AttributeThemeData theme) {
+  TextAttributeValue resolve(BuildContext context) {
+    final theme = AttributeTheme.of(context);
     final style = theme.linkStyle;
     final onTap = theme.linkOnTap;
     if (kDebugMode && onTap == null) {
@@ -114,6 +173,24 @@ extension AttributeGetters on AttributeThemeData {
   /// Font weight for text with [boldAttribute] applied.
   FontWeight? get boldFontWeight => get<FontWeight>('boldFontWeight');
 
+  /// Style of [HeadingAttribute] with level 1.
+  TextStyle? get headingStyle1 => get<TextStyle>('headingStyle1');
+
+  /// Style of [HeadingAttribute] with level 2.
+  TextStyle? get headingStyle2 => get<TextStyle>('headingStyle2');
+
+  /// Style of [HeadingAttribute] with level 3.
+  TextStyle? get headingStyle3 => get<TextStyle>('headingStyle3');
+
+  /// Style of [HeadingAttribute] with level 4.
+  TextStyle? get headingStyle4 => get<TextStyle>('headingStyle4');
+
+  /// Style of [HeadingAttribute] with level 5.
+  TextStyle? get headingStyle5 => get<TextStyle>('headingStyle5');
+
+  /// Style of [HeadingAttribute] with level 6.
+  TextStyle? get headingStyle6 => get<TextStyle>('headingStyle6');
+
   /// Text style to apply to text with the [LinkAttribute] applied.
   TextStyle? get linkStyle => get<TextStyle>('linkStyle');
 
@@ -127,31 +204,31 @@ extension AttributeGetters on AttributeThemeData {
 /// See the getters in [AttributeGetters] for more information on the properties.
 extension AttributeSetters on AttributeThemeBuilder {
   /// Set the font weight for text with [boldAttribute] applied.
-  set boldFontWeight(FontWeight? value) {
-    if (value == null) {
-      remove('boldFontWeight');
-    } else {
-      this['boldFontWeight'] = value;
-    }
-  }
+  set boldFontWeight(FontWeight? value) => this['boldFontWeight'] = value;
+
+  /// Set the style of [HeadingAttribute] with level 1.
+  set headingStyle1(TextStyle? value) => this['headingStyle1'] = value;
+
+  /// Set the style of [HeadingAttribute] with level 2.
+  set headingStyle2(TextStyle? value) => this['headingStyle2'] = value;
+
+  /// Set the style of [HeadingAttribute] with level 3.
+  set headingStyle3(TextStyle? value) => this['headingStyle3'] = value;
+
+  /// Set the style of [HeadingAttribute] with level 4.
+  set headingStyle4(TextStyle? value) => this['headingStyle4'] = value;
+
+  /// Set the style of [HeadingAttribute] with level 5.
+  set headingStyle5(TextStyle? value) => this['headingStyle5'] = value;
+
+  /// Set the style of [HeadingAttribute] with level 6.
+  set headingStyle6(TextStyle? value) => this['headingStyle6'] = value;
 
   /// Set the text style to apply to text with the [LinkAttribute] applied.
-  set linkStyle(TextStyle? value) {
-    if (value == null) {
-      remove('linkStyle');
-    } else {
-      this['linkStyle'] = value;
-    }
-  }
+  set linkStyle(TextStyle? value) => this['linkStyle'] = value;
 
   // FIXME linkOnTap should take a BuildContext
 
   /// onTap gesture handler to use for text with the [LinkAttribute] applied.
-  set linkOnTap(void Function(String)? value) {
-    if (value == null) {
-      remove('linkOnTap');
-    } else {
-      this['linkOnTap'] = value;
-    }
-  }
+  set linkOnTap(void Function(String)? value) => this['linkOnTap'] = value;
 }

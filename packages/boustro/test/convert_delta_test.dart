@@ -7,6 +7,7 @@
 import 'dart:convert';
 
 import 'package:boustro/convert_delta.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // TODO We don't want strong mode implicit-dynamic here, but I don't think
@@ -146,7 +147,7 @@ void main() {
 
 class TestAttribute extends TextAttribute {
   @override
-  TextAttributeValue resolve(AttributeThemeData theme) {
+  TextAttributeValue resolve(BuildContext context) {
     throw UnimplementedError();
   }
 

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
 abstract class MockAttr extends TextAttribute with EquatableMixin {
@@ -11,7 +12,7 @@ abstract class MockAttr extends TextAttribute with EquatableMixin {
       );
 
   @override
-  TextAttributeValue resolve(AttributeThemeData theme) {
+  TextAttributeValue resolve(BuildContext context) {
     throw UnimplementedError();
   }
 

@@ -90,7 +90,23 @@ class _MyAppState extends State<MyApp> {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeMode,
-          home: HomeScreen(),
+          home: BoustroConfig(
+            attributeTheme: (AttributeThemeBuilder()
+                  ..boldFontWeight = FontWeight.w900)
+                .build(),
+            componentConfigData:
+                Theme.of(context).brightness == Brightness.light
+                    ? (ComponentThemeBuilder()
+                          ..imageMaxHeight = 400
+                          ..imageSideColor = Colors.brown.withOpacity(0.2))
+                        .build()
+                    : (ComponentThemeBuilder()
+                          ..imageMaxHeight = 350
+                          ..imageSideColor =
+                              Colors.deepPurple.shade900.withOpacity(0.2))
+                        .build(),
+            builder: (_) => HomeScreen(),
+          ),
         ),
       ),
     );
@@ -105,9 +121,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late final scrollController = ScrollController();
   late final controller = DocumentController(
-      scrollController: scrollController,
-      attributeTheme:
-          (AttributeThemeBuilder()..boldFontWeight = FontWeight.w900).build());
+    scrollController: scrollController,
+    buildContext: context,
+  );
 
   @override
   void dispose() {
@@ -118,116 +134,99 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBoustroTheme(
-      data: BoustroTheme.of(context), // Use the default theme
-      child: AnimatedBoustroComponentTheme(
-        data: Theme.of(context).brightness == Brightness.light
-            ? (ComponentThemeBuilder()
-                  ..imageMaxHeight = 400
-                  ..imageSideColor = Colors.brown.withOpacity(0.2))
-                .build()
-            : (ComponentThemeBuilder()
-                  ..imageMaxHeight = 350
-                  ..imageSideColor =
-                      Colors.deepPurple.shade900.withOpacity(0.2))
-                .build(),
-        child: Scaffold(
-          appBar: AppBar(
-            title: Text('Boustro'),
-            actions: [
-              Builder(
-                builder: (context) => IconButton(
-                  icon: const Icon(Icons.check),
-                  onPressed: () {
-                    Navigator.of(context)
-                        .push<void>(MaterialPageRoute<void>(builder: (context) {
-                      return Scaffold(
-                        body: DocumentView(
-                          document: controller.toDocument(),
-                        ),
-                      );
-                    }));
-                  },
-                ),
-              )
-            ],
-          ),
-          body: Column(
-            children: [
-              Expanded(
-                child: DocumentEditor(
-                  controller: controller,
-                ),
-              ),
-              Toolbar(
-                documentController: controller,
-                defaultItemBuilder: (context, controller, item) {
-                  return Padding(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-                    child: Center(
-                      child: IconButton(
-                        splashColor: Colors.transparent,
-                        onPressed: item.onPressed == null
-                            ? null
-                            : () => item.onPressed!(context, controller),
-                        icon: item.title!,
-                        tooltip: item.tooltip,
-                      ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Boustro'),
+        actions: [
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.check),
+              onPressed: () {
+                Navigator.of(context)
+                    .push<void>(MaterialPageRoute<void>(builder: (context) {
+                  return Scaffold(
+                    body: DocumentView(
+                      document: controller.toDocument(),
                     ),
                   );
-                },
-                items: [
-                  toolbar_items.bold,
-                  toolbar_items.italic,
-                  toolbar_items.underline,
-                  ToolbarItem.sublist(
-                    title: const Icon(Icons.photo),
-                    items: [
-                      ToolbarItem(
-                        title: const Icon(Icons.photo_camera),
-                        onPressed: (context, controller) {
-                          final embed =
-                              controller.insertEmbedAtCurrent(const ImageEmbed(
-                            NetworkImage(
-                                'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
-                          ));
-                          embed?.focusNode.requestFocus();
-                          if (embed != null) {
-                            Toolbar.popMenu(context);
-                          }
-                        },
-                      ),
-                      ToolbarItem(
-                        title: const Icon(Icons.photo_library),
-                        onPressed: (_, __) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content:
-                                  Text('Left as an exercise to the reader.'),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                    tooltip: 'Insert image',
+                }));
+              },
+            ),
+          )
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: DocumentEditor(
+              controller: controller,
+            ),
+          ),
+          Toolbar(
+            documentController: controller,
+            defaultItemBuilder: (context, controller, item) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                child: Center(
+                  child: IconButton(
+                    splashColor: Colors.transparent,
+                    onPressed: item.onPressed == null
+                        ? null
+                        : () => item.onPressed!(context, controller),
+                    icon: item.title!,
+                    tooltip: item.tooltip,
                   ),
+                ),
+              );
+            },
+            items: [
+              toolbar_items.bold,
+              toolbar_items.italic,
+              toolbar_items.underline,
+              ToolbarItem.sublist(
+                title: const Icon(Icons.photo),
+                items: [
                   ToolbarItem(
-                    title: const Icon(Icons.list),
+                    title: const Icon(Icons.photo_camera),
                     onPressed: (context, controller) {
-                      controller.toggleLineModifier(bulletListModifier);
+                      final embed =
+                          controller.insertEmbedAtCurrent(const ImageEmbed(
+                        NetworkImage(
+                            'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
+                      ));
+                      embed?.focusNode.requestFocus();
+                      if (embed != null) {
+                        Toolbar.popMenu(context);
+                      }
                     },
                   ),
                   ToolbarItem(
-                    title: const Icon(Icons.wb_sunny),
-                    onPressed: (context, __) =>
-                        ThemeModeScope.of(context).toggle(context),
+                    title: const Icon(Icons.photo_library),
+                    onPressed: (_, __) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Left as an exercise to the reader.'),
+                        ),
+                      );
+                    },
                   ),
                 ],
+                tooltip: 'Insert image',
+              ),
+              ToolbarItem(
+                title: const Icon(Icons.list),
+                onPressed: (context, controller) {
+                  controller.toggleLineModifier(bulletListModifier);
+                },
+              ),
+              ToolbarItem(
+                title: const Icon(Icons.wb_sunny),
+                onPressed: (context, __) =>
+                    ThemeModeScope.of(context).toggle(context),
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }

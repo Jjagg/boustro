@@ -7,7 +7,6 @@ import 'package:flutter/widgets.dart';
 
 import 'attribute_span.dart';
 import 'spanned_string.dart';
-import 'theme.dart';
 
 /// Result of [SpannedTextEditingController.diffStrings].
 class StringDiff extends Equatable {
@@ -226,8 +225,7 @@ class _DefaultCompositionAttribute extends TextAttribute {
   SpanExpandRules get expandRules => SpanExpandRules.fixed();
 
   @override
-  TextAttributeValue resolve(AttributeThemeData theme) =>
-      const TextAttributeValue(
+  TextAttributeValue resolve(BuildContext context) => const TextAttributeValue(
         debugName: 'composition underline',
         style: TextStyle(decoration: TextDecoration.underline),
       );
@@ -239,12 +237,13 @@ const _defaultCompositionAttribute = _DefaultCompositionAttribute();
 class SpannedTextEditingController implements TextEditingController {
   /// Create a new SpannedTextEditingController.
   SpannedTextEditingController({
+    required BuildContext buildContext,
     TextAttribute? compositionAttribute,
     this.processTextValue = _defaultProcessTextValue,
-    this.attributeTheme,
     String? text,
     SpanList? spans,
-  })  : compositionAttribute =
+  })  : _buildContext = buildContext,
+        compositionAttribute =
             compositionAttribute ?? _defaultCompositionAttribute,
         _textController = TextEditingController(text: text),
         _spans = spans ?? SpanList();
@@ -252,6 +251,7 @@ class SpannedTextEditingController implements TextEditingController {
   /// Create a new spanned text editing controller with the same state as this
   /// one.
   SpannedTextEditingController copy() => SpannedTextEditingController(
+      buildContext: _buildContext,
       compositionAttribute: compositionAttribute,
       processTextValue: processTextValue,
       text: text,
@@ -266,6 +266,7 @@ class SpannedTextEditingController implements TextEditingController {
     SpanList? spans,
   }) {
     return SpannedTextEditingController(
+      buildContext: _buildContext,
       compositionAttribute: compositionAttribute ?? this.compositionAttribute,
       processTextValue: processTextValue ?? this.processTextValue,
       text: text ?? this.text,
@@ -273,8 +274,8 @@ class SpannedTextEditingController implements TextEditingController {
     );
   }
 
-  /// The theme for the attributes applied by this span.
-  final AttributeThemeData? attributeTheme;
+  // This is temporary and required because of https://github.com/Jjagg/boustro/issues/10.
+  final BuildContext _buildContext;
 
   /// The attribute that's applied to the active composition.
   ///
@@ -411,7 +412,7 @@ class SpannedTextEditingController implements TextEditingController {
     // want gestures on spans to be handled while editing.
     return segments.buildTextSpans(
       style: style ?? const TextStyle(),
-      attributeTheme: attributeTheme,
+      context: _buildContext,
     );
   }
 

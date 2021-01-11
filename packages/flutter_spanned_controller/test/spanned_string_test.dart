@@ -144,9 +144,16 @@ void main() {
   });
 
   group('buildTextSpans', () {
-    test('plain', () {
-      final sp = SpannedString('Hello').buildTextSpans(style: TextStyle());
-      expect(sp, TextSpan(text: 'Hello', style: TextStyle()));
+    testWidgets('plain', (t) async {
+      Builder(
+        builder: (context) {
+          final sp = SpannedString('Hello')
+              .buildTextSpans(context: context, style: TextStyle());
+          expect(sp, TextSpan(text: 'Hello', style: TextStyle()));
+
+          return Container();
+        },
+      );
     });
   });
 

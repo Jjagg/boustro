@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `GestureRecognizers` on spans are now indexed with their attribute instead of the resolved attribute value,
   because function object equality does not work with inline lambdas.
 
+### Changed
+
+- `TextAttribute.resolve` now takes a `BuildContext` instead of taking an `AttributeTheme` directly.
+
 ## [0.4.0-0] — 2020-12-22
 
 ### Removed

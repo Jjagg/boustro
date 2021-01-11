@@ -39,8 +39,8 @@ abstract class TextAttribute {
 
   // FIXME resolve should take a BuildContext instead
 
-  /// Returns a text attribute value that can depend on [theme].
-  TextAttributeValue resolve(AttributeThemeData theme);
+  /// Returns a text attribute value that can depend on [context].
+  TextAttributeValue resolve(BuildContext context);
 }
 
 /// Base class for [TextAttribute] implementations that need an [AttributeTheme]
@@ -64,8 +64,8 @@ abstract class ThemedTextAttribute extends TextAttribute {
   final TextAttributeValue _valueWithoutStyle;
 
   @override
-  TextAttributeValue resolve(AttributeThemeData theme) {
-    final style = getStyle(theme);
+  TextAttributeValue resolve(BuildContext context) {
+    final style = getStyle(AttributeTheme.of(context));
     return _valueWithoutStyle.copyWith(style: style);
   }
 
@@ -811,7 +811,7 @@ extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
   /// spans.
   TextSpan buildTextSpans({
     required TextStyle style,
-    AttributeThemeData? attributeTheme,
+    required BuildContext context,
     Map<TextAttribute, GestureRecognizer>? recognizers,
   }) {
     // TODO multiple gestures
@@ -830,10 +830,8 @@ extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
 
         GestureRecognizer? spanRecognizer;
 
-        final theme = attributeTheme ?? AttributeThemeData.empty;
-
         final attrs = segment.attributes;
-        final values = attrs.map((attr) => attr.resolve(theme)).toList();
+        final values = attrs.map((attr) => attr.resolve(context)).toList();
 
         final style = values.fold<TextStyle>(
           const TextStyle(),

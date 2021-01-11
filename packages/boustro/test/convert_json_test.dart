@@ -100,7 +100,7 @@ class TestAttribute extends TextAttribute with EquatableMixin {
   SpanExpandRules get expandRules => SpanExpandRules.after();
 
   @override
-  TextAttributeValue resolve(AttributeThemeData theme) {
+  TextAttributeValue resolve(BuildContext context) {
     throw UnimplementedError();
   }
 

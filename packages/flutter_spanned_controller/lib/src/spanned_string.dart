@@ -6,7 +6,6 @@ import 'package:meta/meta.dart';
 
 import 'attribute_span.dart';
 import 'spanned_text_controller.dart';
-import 'theme.dart';
 
 /// Rich text represented with a [String] and a [SpanList].
 @immutable
@@ -115,7 +114,7 @@ class SpannedString extends Equatable {
   /// See [AttributeSegmentsExtensions].
   TextSpan buildTextSpans({
     required TextStyle style,
-    AttributeThemeData? attributeTheme,
+    required BuildContext context,
     Map<TextAttribute, GestureRecognizer>? recognizers,
   }) {
     if (spans.iter.isEmpty) {
@@ -125,7 +124,7 @@ class SpannedString extends Equatable {
     final segments = spans.getSegments(text);
     return segments.buildTextSpans(
       style: style,
-      attributeTheme: attributeTheme,
+      context: context,
       recognizers: recognizers,
     );
   }
