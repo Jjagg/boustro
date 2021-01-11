@@ -7,10 +7,8 @@
 import 'dart:convert';
 
 import 'package:boustro/convert_json.dart';
-import 'package:boustro/src/scope.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/src/widgets/focus_manager.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -121,11 +119,6 @@ class TestLineMod extends LineModifier with EquatableMixin {
 }
 
 class TestEmbed extends ParagraphEmbed with EquatableMixin {
-  @override
-  Widget build({required BoustroScope scope, FocusNode? focusNode}) {
-    throw UnimplementedError();
-  }
-
   @override
   List<Object?> get props => [];
 

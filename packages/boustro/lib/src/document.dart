@@ -5,8 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
-import 'scope.dart';
-
 /// Rich text represented as a list of [Paragraph]s.
 @immutable
 class Document extends Equatable {
@@ -116,7 +114,9 @@ abstract class ParagraphEmbed implements Paragraph {
   ParagraphEmbedController createController();
 }
 
+/// Controller for a [ParagraphEmbed].
 abstract class ParagraphEmbedController {
+  /// Convert the current state of the controller to a [ParagraphEmbed].
   ParagraphEmbed? toEmbed();
 
   /// Create an embed editor for this embed controller.

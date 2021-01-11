@@ -6,10 +6,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
+/// Embed that displays an image.
 @immutable
 class ImageEmbed extends ParagraphEmbed with EquatableMixin {
+  /// Create an image embed.
   const ImageEmbed(this.image);
 
+  /// Provider for the image.
   final ImageProvider image;
 
   @override
@@ -49,9 +52,12 @@ class _ImageWrapper extends StatelessWidget {
   }
 }
 
+/// Widget for [ImageEmbed].
 class ImageEmbedView extends StatelessWidget {
+  /// Create an image embed view.
   const ImageEmbedView({Key? key, required this.image}) : super(key: key);
 
+  /// Provider for the image.
   final ImageProvider image;
 
   @override
@@ -66,9 +72,15 @@ class ImageEmbedView extends StatelessWidget {
       ),
     );
   }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<ImageProvider<Object>>('image', image));
+  }
 }
 
-/// Embed that presents an image.
+/// Editor for [ImageEmbed].
 ///
 /// While editing, tapping the image will focus it.
 class ImageEmbedEditor extends StatelessWidget {
@@ -79,7 +91,10 @@ class ImageEmbedEditor extends StatelessWidget {
     required this.focusNode,
   }) : super(key: key);
 
+  /// Controller that manages the current image provider.
   final ImageEmbedController controller;
+
+  /// Focus node that manages input focus for the editor.
   final FocusNode focusNode;
 
   @override
@@ -188,12 +203,23 @@ class ImageEmbedEditor extends StatelessWidget {
       ),
     );
   }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+        DiagnosticsProperty<ImageEmbedController>('controller', controller));
+    properties.add(DiagnosticsProperty<FocusNode>('focusNode', focusNode));
+  }
 }
 
+/// Controller for [ImageEmbed].
 class ImageEmbedController extends ValueNotifier<ImageProvider>
     implements ParagraphEmbedController {
+  /// Create an image embed controller with an initial image provider.
   ImageEmbedController({required ImageProvider value}) : super(value);
 
+  /// Get the image provider.
   ImageProvider get image => value;
 
   @override

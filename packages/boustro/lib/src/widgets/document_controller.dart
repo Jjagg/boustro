@@ -120,6 +120,7 @@ class EmbedState extends ParagraphState {
   }) =>
       embed(this);
 
+  /// Create an editor for this embed state.
   Widget createEditor(BuildContext context) {
     return controller.createEditor(context, focusNode);
   }
@@ -129,10 +130,15 @@ class EmbedState extends ParagraphState {
 /// not.
 class ModifierListener extends ToggleStateListener<LineModifier> {}
 
+/// Event data for [DocumentController.onLineValueChanged].
 class LineValueChangedEvent {
+  /// Create a LineValueChangedEvent.
   const LineValueChangedEvent(this.controller, this.newValue);
 
+  /// Controller for the line that had its value changed.
   final SpannedTextEditingController controller;
+
+  /// The new value that will be set on [controller].
   final TextEditingValue newValue;
 }
 
@@ -191,6 +197,11 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
 
   final StreamController<LineValueChangedEvent> _lineValueChangedController =
       StreamController.broadcast();
+
+  /// Stream of events fired when a text line's [TextEditingValue] changes.
+  ///
+  /// This event can be useful for automatically applying some formatting to a
+  /// line, for example to automatically turn URL's into clickable links.
   Stream<LineValueChangedEvent> get onLineValueChanged =>
       _lineValueChangedController.stream;
 
