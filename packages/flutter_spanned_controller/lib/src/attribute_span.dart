@@ -655,14 +655,19 @@ class SpanList extends Equatable {
         .any((s) => s.willApply(index));
   }
 
+  /// Get the spans with the specified [attribute].
+  Iterable<AttributeSpan> getSpans(TextAttribute attribute) =>
+      _getSpans(_spans, attribute);
+
   /// Get the spans with the specified [attribute] in [range].
   Iterable<AttributeSpan> getSpansIn(Range range, TextAttribute attribute) =>
-      _getSpans(
-        _spans.where((s) => s.range.touches(range)),
-        attribute,
-      );
+      _getSpans(_spans.where((s) => s.range.touches(range)), attribute);
 
-  /// Get the spans with attributes of type [T]. in [range].
+  /// Get the spans with attributes of type [T].
+  Iterable<AttributeSpan> getTypedSpans<T extends TextAttribute>() =>
+      _getTypedSpans<T>(_spans);
+
+  /// Get the spans with attributes of type [T] in [range].
   Iterable<AttributeSpan> getTypedSpansIn<T extends TextAttribute>(
     Range range,
   ) {
@@ -722,7 +727,7 @@ class SpanList extends Equatable {
   SpanList removeType<T extends TextAttribute>() {
     assert(T != dynamic, 'Attribute type must be specified.');
     // ignore: prefer_iterable_wheretype
-    return SpanList._sorted(_spans.where((s) => s is T));
+    return SpanList._sorted(_spans.where((s) => s.attribute is! T));
   }
 
   /// Remove all spans with the given attribute from [range].

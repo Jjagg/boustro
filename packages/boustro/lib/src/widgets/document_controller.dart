@@ -126,20 +126,66 @@ class EmbedState extends ParagraphState {
   }
 }
 
-/// Convenience class that keeps track of whether line modifiers are applied or
-/// not.
-class ModifierListener extends ToggleStateListener<LineModifier> {}
-
 /// Event data for [DocumentController.onLineValueChanged].
 class LineValueChangedEvent {
   /// Create a LineValueChangedEvent.
-  const LineValueChangedEvent(this.controller, this.newValue);
+  const LineValueChangedEvent(this.controller);
 
   /// Controller for the line that had its value changed.
   final SpannedTextEditingController controller;
+}
 
-  /// The new value that will be set on [controller].
-  final TextEditingValue newValue;
+@immutable
+class _ToggleStateNotifier<T> {
+  const _ToggleStateNotifier(this.value, this.notifier);
+  final T value;
+  final ValueNotifier<bool> notifier;
+}
+
+/// Convenience class that keeps track of whether a [T] is enabled.
+class _ToggleStateListener<T> {
+  /// Create a toggle state listener.
+  _ToggleStateListener();
+
+  final List<_ToggleStateNotifier<T>> _notifiers = [];
+
+  /// Get a value listenable that reports whether [value] is enabled.
+  ///
+  /// The state of the value will be initialized to [initialValue].
+  ValueListenable<bool> listen(T value, {bool initialValue = false}) {
+    final existing = _notifiers.firstWhereOrNull((e) => e.value == value);
+    if (existing != null) {
+      return existing.notifier;
+    }
+
+    final current = initialValue;
+    final notifier = ValueNotifier(current);
+    _notifiers.add(_ToggleStateNotifier<T>(value, notifier));
+    return notifier;
+  }
+
+  /// Remove the listener for [value] if there is one.
+  void removeListener(T value) {
+    _notifiers.removeWhere((n) => n.value == value);
+  }
+
+  /// Notify this listener that the state of some of its values might have
+  /// changed.
+  ///
+  /// [isEnabled] is used to determine whether a value is enabled.
+  void notify(bool Function(T) isEnabled) {
+    for (final entry in _notifiers) {
+      final value = isEnabled(entry.value);
+      entry.notifier.value = value;
+    }
+  }
+
+  /// Dispose all listeners.
+  void dispose() {
+    for (final entry in _notifiers) {
+      entry.notifier.dispose();
+    }
+  }
 }
 
 /// Manages the contents of a [DocumentEditor].
@@ -245,11 +291,6 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     SpannedTextEditingController controller,
     TextEditingValue newValue,
   ) {
-    if (newValue != controller.value) {
-      _lineValueChangedController
-          .add(LineValueChangedEvent(controller, newValue));
-    }
-
     if (!newValue.text.contains('\n')) {
       return newValue;
     }
@@ -336,9 +377,16 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     );
 
     spanController.addListener(() {
+      _lineValueChangedController.add(LineValueChangedEvent(spanController));
       _attributeListener.notify(
         spanController.isApplied,
       );
+      //_attributeTypeListener.notify((t) {
+      //  final spans = spanController.spans;
+      //  final selection = spanController.selectionRange;
+      //  return selection.isCollapsed ?
+      //  spans.getTypedSpansIn<t>(selection.start)
+      //})
     });
 
     final focusNode = FocusNode(
@@ -586,7 +634,12 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     return KeyEventResult.handled;
   }
 
-  final AttributeListener _attributeListener = AttributeListener();
+  final _ToggleStateListener<TextAttribute> _attributeListener =
+      _ToggleStateListener<TextAttribute>();
+  final _ToggleStateListener<Type> _attributeTypeListener =
+      _ToggleStateListener<Type>();
+  final _ToggleStateListener<LineModifier> _modifierListener =
+      _ToggleStateListener<LineModifier>();
 
   /// Get a [ValueListenable] that indicates if [attribute]
   /// is applied for the current selection.
@@ -596,7 +649,13 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     return _attributeListener.listen(attribute);
   }
 
-  final ModifierListener _modifierListener = ModifierListener();
+  /// Get a [ValueListenable] that indicates if an attribute of type [T]
+  /// is applied for the current selection.
+  ///
+  /// Values will always be false if there is no valid selection.
+  ValueListenable<bool> getAttributeTypeListener<T extends TextAttribute>() {
+    return _attributeTypeListener.listen(T);
+  }
 
   /// Get a [ValueListenable] that indicates if [modifier]
   /// is applied for the current line.
@@ -609,6 +668,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   @override
   void dispose() {
     _attributeListener.dispose();
+    _attributeTypeListener.dispose();
     _modifierListener.dispose();
     _ownedFocusNode?.dispose();
     super.dispose();

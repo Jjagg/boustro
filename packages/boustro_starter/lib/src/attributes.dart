@@ -69,9 +69,27 @@ class _StrikethroughAttribute extends TextAttribute {
 /// Attribute with [TextStyle.decoration] set to [TextDecoration.lineThrough].
 const strikethroughAttribute = _StrikethroughAttribute();
 
+/// [HeadingAttribute] with level 1.
+const heading1Attribute = HeadingAttribute(1);
+
+/// [HeadingAttribute] with level 2.
+const heading2Attribute = HeadingAttribute(2);
+
+/// [HeadingAttribute] with level 3.
+const heading3Attribute = HeadingAttribute(3);
+
+/// [HeadingAttribute] with level 4.
+const heading4Attribute = HeadingAttribute(4);
+
+/// [HeadingAttribute] with level 5.
+const heading5Attribute = HeadingAttribute(5);
+
+/// [HeadingAttribute] with level 6.
+const heading6Attribute = HeadingAttribute(6);
+
 /// Attribute for headings. Intended to be used as a line style.
 ///
-/// Uses the common HTML-style headings with levels 1-6
+/// Uses the common HTML-style for headings with levels 1-6
 /// (inclusive).
 ///
 /// The default style for headings is:

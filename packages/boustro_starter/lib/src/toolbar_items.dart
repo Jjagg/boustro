@@ -16,28 +16,50 @@ Widget Function(
   DocumentController controller,
   ToolbarItem item,
 ) _createToggleableToolbarItemBuilder(
-  ValueListenable<bool> Function(DocumentController) getListener,
-) {
+  ValueListenable<bool> Function(DocumentController) getToggledListener, {
+  ValueListenable<bool> Function(DocumentController)? getEnabledListener,
+}) {
   return (context, controller, item) {
+    if (getEnabledListener != null) {
+      return ValueListenableBuilder<bool>(
+        valueListenable: getEnabledListener(controller),
+        builder: (context, enabled, child) => ValueListenableBuilder<bool>(
+          valueListenable: getToggledListener(controller),
+          builder: _buildToggleableButton,
+          child: Center(
+            child: _buildIconButton(context, item, controller, enabled),
+          ),
+        ),
+      );
+    }
+
     return ValueListenableBuilder<bool>(
-      valueListenable: getListener(controller),
+      valueListenable: getToggledListener(controller),
       builder: _buildToggleableButton,
       child: Center(
-        child: IconButton(
-          splashColor: Colors.transparent,
-          onPressed: item.onPressed == null
-              ? null
-              : () => item.onPressed!(context, controller),
-          icon: item.title!,
-          tooltip: item.tooltip,
-        ),
+        child: _buildIconButton(context, item, controller, true),
       ),
     );
   };
 }
 
+Widget _buildIconButton(BuildContext context, ToolbarItem item,
+    DocumentController controller, bool enableTap) {
+  return IconButton(
+    splashColor: Colors.transparent,
+    onPressed: item.onPressed == null
+        ? null
+        : () => item.onPressed!(context, controller),
+    icon: item.title!,
+    tooltip: item.tooltip,
+  );
+}
+
 Widget _buildToggleableButton(
-    BuildContext context, bool toggled, Widget? button) {
+  BuildContext context,
+  bool toggled,
+  Widget? button,
+) {
   final Color? decorationColor;
   final btheme = BoustroTheme.of(context);
 
@@ -119,22 +141,38 @@ final underline = createToggleableToolbarItem(
   Icons.format_underline_rounded,
 );
 
-class _LinkDialog extends StatefulWidget {
-  const _LinkDialog({String text = '', String hintText = ''})
-      : _text = text,
-        _hintText = hintText;
+/// Toolbar item that toggles the [HeadingAttribute] with level 1 for the
+/// focused line.
+ToolbarItem title = ToolbarItem(
+  builder: _createToggleableToolbarItemBuilder(
+      (controller) => controller.getAttributeListener(heading1Attribute)),
+  title: const Icon(Icons.title),
+  onPressed: (_, controller) => controller.toggleLineStyle(heading1Attribute),
+);
 
-  final String _text;
-  final String _hintText;
+class _LinkDialog extends StatefulWidget {
+  const _LinkDialog({this.text = '', this.hintText = ''});
+
+  /// Initial text for the link text field.
+  final String text;
+
+  /// Hint text for the link text field when [text] is empty.
+  final String hintText;
 
   @override
   _LinkDialogState createState() => _LinkDialogState();
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(StringProperty('text', text));
+    properties.add(StringProperty('hintText', hintText));
+  }
 }
 
 class _LinkDialogState extends State<_LinkDialog> {
   // ignore: diagnostic_describe_all_properties
   late final TextEditingController controller =
-      TextEditingController(text: widget._text);
+      TextEditingController(text: widget.text);
 
   @override
   void dispose() {
@@ -150,9 +188,10 @@ class _LinkDialogState extends State<_LinkDialog> {
         controller: controller,
         keyboardType: TextInputType.url,
         decoration: InputDecoration(
-          hintText: widget._hintText,
+          hintText: widget.hintText,
         ),
         validator: (text) {
+          // TODO link validator
           return null;
         },
       ),
@@ -163,7 +202,7 @@ class _LinkDialogState extends State<_LinkDialog> {
           },
           child: const Text('Cancel'),
         ),
-        if (widget._text.isNotEmpty)
+        if (widget.text.isNotEmpty)
           FlatButton(
             onPressed: () {
               Navigator.pop(context, '');
@@ -202,7 +241,7 @@ ToolbarItem link({String uriHintText = 'google.com'}) {
             final initialSpan = attrs.firstOrNull;
             final initialUri =
                 (initialSpan?.attribute as LinkAttribute?)?.uri ?? '';
-            final range = c.selectionRange;
+            final range = initialSpan?.range ?? c.selectionRange;
             // Show the dialog. Null means do nothing, empty string means remove.
             var link = await showDialog<String>(
               context: context,
@@ -212,10 +251,6 @@ ToolbarItem link({String uriHintText = 'google.com'}) {
             );
             if (link != null) {
               var spans = c.spans;
-
-              if (initialSpan != null) {
-                spans.remove(initialSpan);
-              }
 
               spans = spans.removeTypeFrom<LinkAttribute>(range);
               if (link.isNotEmpty) {

@@ -158,8 +158,20 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         children: [
           Expanded(
-            child: DocumentEditor(
+            // Demo the auto formatter text separated with hashtags, mentions
+            // and URLs.
+            child: AutoFormatter(
               controller: controller,
+              rules: [
+                FormatRule(
+                    TwitterPatterns.validHashtag, (_) => italicAttribute),
+                FormatRule(
+                    TwitterPatterns.validMention, (_) => italicAttribute),
+                FormatRule(TwitterPatterns.extractUrl, (_) => boldAttribute),
+              ],
+              child: DocumentEditor(
+                controller: controller,
+              ),
             ),
           ),
           Toolbar(
@@ -183,42 +195,15 @@ class _HomeScreenState extends State<HomeScreen> {
               toolbar_items.bold,
               toolbar_items.italic,
               toolbar_items.underline,
-              ToolbarItem.sublist(
-                title: const Icon(Icons.photo),
-                items: [
-                  ToolbarItem(
-                    title: const Icon(Icons.photo_camera),
-                    onPressed: (context, controller) {
-                      final embed =
-                          controller.insertEmbedAtCurrent(const ImageEmbed(
-                        NetworkImage(
-                            'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
-                      ));
-                      embed?.focusNode.requestFocus();
-                      if (embed != null) {
-                        Toolbar.popMenu(context);
-                      }
-                    },
-                  ),
-                  ToolbarItem(
-                    title: const Icon(Icons.photo_library),
-                    onPressed: (_, __) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Left as an exercise to the reader.'),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-                tooltip: 'Insert image',
+              toolbar_items.link(),
+              toolbar_items.title,
+              toolbar_items.image(
+                pickImage: (_) async => NetworkImage(
+                    'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
+                snapImage: (_) async => NetworkImage(
+                    'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
               ),
-              ToolbarItem(
-                title: const Icon(Icons.list),
-                onPressed: (context, controller) {
-                  controller.toggleLineModifier(bulletListModifier);
-                },
-              ),
+              toolbar_items.bulletList,
               ToolbarItem(
                 title: const Icon(Icons.wb_sunny),
                 onPressed: (context, __) =>

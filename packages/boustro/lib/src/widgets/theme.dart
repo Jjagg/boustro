@@ -5,68 +5,10 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
 import '../document.dart';
 import 'editor.dart';
 import 'toolbar.dart';
-
-/// Encapsulates all boustro configuration.
-///
-/// This is just for convenience, to flatten the inherited widgets that
-/// configure boustro's behavior and look.
-@immutable
-class BoustroConfig extends StatelessWidget {
-  /// Create a boustro configuration.
-  const BoustroConfig({
-    Key? key,
-    this.boustroTheme,
-    this.componentConfigData,
-    this.attributeTheme,
-    required this.builder,
-  }) : super(key: key);
-
-  /// Theme of boustro widgets.
-  final BoustroThemeData? boustroTheme;
-
-  /// Configuration of boustro components.
-  final BoustroComponentConfigData? componentConfigData;
-
-  /// Theming for text attributes.
-  final AttributeThemeData? attributeTheme;
-
-  /// Child builder of this widget.
-  final WidgetBuilder builder;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBoustroTheme(
-      data: boustroTheme ?? BoustroTheme.of(context), // Use the default theme
-      child: AnimatedBoustroComponentTheme(
-        data: componentConfigData ?? BoustroComponentConfigData.empty(),
-        child: AttributeTheme(
-          data: attributeTheme ?? AttributeThemeData.empty,
-          child: Builder(builder: builder),
-        ),
-      ),
-    );
-  }
-
-  @override
-  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    super.debugFillProperties(properties);
-    properties.add(DiagnosticsProperty<BoustroThemeData?>(
-        'boustroTheme', boustroTheme,
-        defaultValue: null));
-    properties.add(DiagnosticsProperty<BoustroComponentConfigData?>(
-        'componentConfigData', componentConfigData,
-        defaultValue: null));
-    properties.add(DiagnosticsProperty<AttributeThemeData?>(
-        'attributeTheme', attributeTheme,
-        defaultValue: null));
-    properties.add(ObjectFlagProperty.has('builder', builder));
-  }
-}
 
 /// Provides theming for boustro widgets.
 class BoustroTheme extends InheritedTheme {

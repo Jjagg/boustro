@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -43,65 +42,6 @@ class StringDiff extends Equatable {
   @override
   List<Object?> get props => [index, deleted, inserted];
 }
-
-@immutable
-class _ToggleStateNotifier<T> {
-  const _ToggleStateNotifier(this.value, this.notifier);
-  final T value;
-  final ValueNotifier<bool> notifier;
-}
-
-/// Convenience class that keeps track of whether a [T] is enabled.
-class ToggleStateListener<T> {
-  /// Create an attribute listener.
-  ToggleStateListener();
-
-  final List<_ToggleStateNotifier<T>> _notifiers = [];
-
-  /// Get a value listenable that reports whether [value] is enabled.
-  ///
-  /// The state of the value will be initialized to [initialValue].
-  ValueListenable<bool> listen(T value, {bool initialValue = false}) {
-    final existing = _notifiers.firstWhereOrNull((e) => e.value == value);
-    if (existing != null) {
-      return existing.notifier;
-    }
-
-    final current = initialValue;
-    final notifier = ValueNotifier(current);
-    _notifiers.add(_ToggleStateNotifier<T>(value, notifier));
-    return notifier;
-  }
-
-  /// Remove the listener for [value] if there is one.
-  void removeListener(T value) {
-    _notifiers.removeWhere((n) => n.value == value);
-  }
-
-  /// Notify this listener that the state of some of its values might have
-  /// changed.
-  ///
-  /// [isEnabled] is used to determine whether a value is enabled.
-  void notify(bool Function(T) isEnabled) {
-    for (final entry in _notifiers) {
-      final value = isEnabled(entry.value);
-      entry.notifier.value = value;
-    }
-  }
-
-  /// Dispose all listeners.
-  void dispose() {
-    for (final entry in _notifiers) {
-      entry.notifier.dispose();
-    }
-  }
-}
-
-// TODO typedef for generics to not have to define a class here
-// https://github.com/dart-lang/language/issues/115
-
-/// Convenience class that keeps track of whether attributes are applied or not.
-class AttributeListener extends ToggleStateListener<TextAttribute> {}
 
 /// Passed to [SpannedTextEditingController.setOverride] to indicate if
 /// a [TextAttribute] should be applied or removed.
@@ -396,17 +336,22 @@ class SpannedTextEditingController implements TextEditingController {
       );
     }
 
-    final segments = !value.isComposingRangeValid ||
-            !withComposing ||
-            value.composing.isCollapsed
-        ? spans.getSegments(text.characters)
-        : (spans.merge(
-            AttributeSpan(
-              compositionAttribute,
-              value.composing.start,
-              value.composing.end,
-            ),
-          )).getSegments(text.characters);
+    final Iterable<AttributeSegment> segments;
+
+    if (!value.isComposingRangeValid ||
+        !withComposing ||
+        value.composing.isCollapsed) {
+      segments = spans.getSegments(text.characters);
+    } else {
+      final composingRange = _convertRange(value.composing);
+      segments = (spans.merge(
+        AttributeSpan(
+          compositionAttribute,
+          composingRange.start,
+          composingRange.end,
+        ),
+      )).getSegments(text.characters);
+    }
 
     // We don't pass gesture recognizers here, because we don't
     // want gestures on spans to be handled while editing.

@@ -7,13 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `ToggleStateListener`, which is a generalization of `AttributeListener`.
 - `StringDiff.isEmpty` and `StringDiff.isNotEmpty`.
+- `getSpans` and `getTypedSpans` to `SpanList`
 
 ### Fixed
 
 - `GestureRecognizers` on spans are now indexed with their attribute instead of the resolved attribute value,
   because function object equality does not work with inline lambdas.
+- `SpannedTextEditingController.buildTextSpan` did not translate composition indices, causing an exception in
+  some cases with characters that take up multiple code units in UTF-16 (like most emoji).
 
 ### Changed
 
