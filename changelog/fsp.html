@@ -174,12 +174,19 @@ and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semant
 <h2><a class="header" href="#a-hrefhttpsgithubcomjjaggboustrotreemainpackagesflutter_spanned_controllerunreleaseda" id="a-hrefhttpsgithubcomjjaggboustrotreemainpackagesflutter_spanned_controllerunreleaseda"><a href="https://github.com/Jjagg/boustro/tree/main/packages/flutter_spanned_controller">Unreleased</a></a></h2>
 <h3><a class="header" href="#added" id="added">Added</a></h3>
 <ul>
-<li><code>ToggleStateListener</code>, which is a generalization of <code>AttributeListener</code></li>
+<li><code>StringDiff.isEmpty</code> and <code>StringDiff.isNotEmpty</code>.</li>
+<li><code>getSpans</code> and <code>getTypedSpans</code> to <code>SpanList</code></li>
 </ul>
 <h3><a class="header" href="#fixed" id="fixed">Fixed</a></h3>
 <ul>
 <li><code>GestureRecognizers</code> on spans are now indexed with their attribute instead of the resolved attribute value,
 because function object equality does not work with inline lambdas.</li>
+<li><code>SpannedTextEditingController.buildTextSpan</code> did not translate composition indices, causing an exception in
+some cases with characters that take up multiple code units in UTF-16 (like most emoji).</li>
+</ul>
+<h3><a class="header" href="#changed" id="changed">Changed</a></h3>
+<ul>
+<li><code>TextAttribute.resolve</code> now takes a <code>BuildContext</code> instead of taking an <code>AttributeTheme</code> directly.</li>
 </ul>
 <h2><a class="header" href="#a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v040-0packagesflutter_spanned_controller040-0a--2020-12-22" id="a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v040-0packagesflutter_spanned_controller040-0a--2020-12-22"><a href="https://github.com/Jjagg/boustro/tree/release_fsp_v0.4.0-0/packages/flutter_spanned_controller">0.4.0-0</a> — 2020-12-22</a></h2>
 <h3><a class="header" href="#removed" id="removed">Removed</a></h3>
@@ -187,7 +194,7 @@ because function object equality does not work with inline lambdas.</li>
 <li><code>TextAttribute.simple</code>. In favor of custom classes, so each attribute has its own type and
 serialization can use the type to determine which encoder to use.</li>
 </ul>
-<h3><a class="header" href="#changed" id="changed">Changed</a></h3>
+<h3><a class="header" href="#changed-1" id="changed-1">Changed</a></h3>
 <ul>
 <li>Moved <code>ExpandRules</code> to be a part of attributes themselves.</li>
 </ul>
@@ -198,7 +205,7 @@ serialization can use the type to determine which encoder to use.</li>
 <li>Range to avoid confusion with <code>TextRange</code>.
 <code>TextRange</code> is designed to be for indexing into <code>String</code> by UTF-16 code units.</li>
 </ul>
-<h3><a class="header" href="#changed-1" id="changed-1">Changed</a></h3>
+<h3><a class="header" href="#changed-2" id="changed-2">Changed</a></h3>
 <ul>
 <li><code>TextAttribute</code> now has a resolve method that returns the actual information for
 applying the attribute in the form of <code>TextAttributeValue</code>.</li>
@@ -221,7 +228,7 @@ Finally, I've come up with the right name for this concept :)</li>
 <li><code>SpannedStringBuilder</code> to fluently build <code>SpannedString</code>.</li>
 </ul>
 <h2><a class="header" href="#a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v011-0packagesflutter_spanned_controller011-0a--2020-12-14" id="a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v011-0packagesflutter_spanned_controller011-0a--2020-12-14"><a href="https://github.com/Jjagg/boustro/tree/release_fsp_v0.1.1-0/packages/flutter_spanned_controller">0.1.1-0</a> — 2020-12-14</a></h2>
-<h3><a class="header" href="#changed-2" id="changed-2">Changed</a></h3>
+<h3><a class="header" href="#changed-3" id="changed-3">Changed</a></h3>
 <ul>
 <li>Replaced template README with short explanation.</li>
 </ul>
