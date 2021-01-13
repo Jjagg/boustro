@@ -148,8 +148,7 @@ class _AutoFormatterState extends State<AutoFormatter> {
         final chars = CharacterRange.at(text, match.start, match.end);
         final start = chars.charactersBefore.length;
         final end = start + chars.currentCharacters.length;
-        final attribute =
-            AutoFormatTextAttribute(rule.matchToAttribute(match));
+        final attribute = AutoFormatTextAttribute(rule.matchToAttribute(match));
         final span = AttributeSpan(attribute, start, end);
         spans = spans.merge(span);
       }
