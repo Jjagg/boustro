@@ -1,13 +1,25 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
 import 'document_controller.dart';
 
+/// Attribute used by [AutoFormatter].
+///
+/// This attribute wraps another attribute and [resolve] will delegate to the
+/// wrapped attribute.
+///
+/// This attribute is used by [AutoFormatter] so it can distinguish
+/// automatically applied attributes from manually applied attributes of the
+/// same type.
 @immutable
-class _AutoFormatTextAttribute extends TextAttribute {
-  const _AutoFormatTextAttribute(this.attribute);
+class AutoFormatTextAttribute extends TextAttribute {
+  /// Create an auto format text attribute.
+  const AutoFormatTextAttribute(this.attribute);
 
+  /// The wrapped attribute that this attribute will delegate to in [resolve].
   final TextAttribute attribute;
 
   @override
@@ -44,6 +56,9 @@ class FormatRule {
 
 /// Widget that automatically applies [TextAttribute]s to a [DocumentController]
 /// based on [FormatRule]s.
+///
+/// The auto formatter is only a widget for convenience. It can be anywhere
+/// in the widget tree.
 class AutoFormatter extends StatefulWidget {
   /// Create an auto formatter.
   const AutoFormatter({
@@ -77,21 +92,31 @@ class AutoFormatter extends StatefulWidget {
 class _AutoFormatterState extends State<AutoFormatter> {
   final Map<SpannedTextEditingController, String> _lastText = {};
 
+  late final StreamSubscription<LineValueChangedEvent>
+      _lineValueChangedSubscription =
+      widget.controller.onLineValueChanged.listen(_handleLineValueChanged);
+
   @override
   void initState() {
     super.initState();
+    widget.controller.addListener(_handleParagraphsChanged);
+  }
 
-    // TODO We should be a little more conservative in calling _autoFormat
-    // for performance reasons, but we'll need to do some bookkeeping or expose
-    // more granular events in DocumentController.
-    widget.controller.onLineValueChanged.listen((event) {
-      _autoFormat(event.controller);
-    });
-    widget.controller.addListener(() {
-      for (final line in widget.controller.paragraphs.whereType<LineState>()) {
-        _autoFormat(line.controller);
-      }
-    });
+  void _handleLineValueChanged(LineValueChangedEvent event) {
+    _autoFormat(event.controller);
+  }
+
+  void _handleParagraphsChanged() {
+    for (final line in widget.controller.paragraphs.whereType<LineState>()) {
+      _autoFormat(line.controller);
+    }
+  }
+
+  @override
+  void dispose() {
+    _lineValueChangedSubscription.cancel();
+    widget.controller.removeListener(_handleParagraphsChanged);
+    super.dispose();
   }
 
   @override
@@ -109,13 +134,14 @@ class _AutoFormatterState extends State<AutoFormatter> {
 
     final text = controller.text;
     var spans = controller.spans;
-    spans = spans.removeType<_AutoFormatTextAttribute>();
+    spans = spans.removeType<AutoFormatTextAttribute>();
 
     for (final rule in widget.rules) {
-      // Check for new matches.
       final matches = rule.exp.allMatches(text);
       for (final match in matches) {
-        if (match.end - match.start == 0) {
+        // Zero-length spans are not allowed, so we filter out zero-length
+        // matches.
+        if (match.end == match.start) {
           continue;
         }
 
@@ -123,7 +149,7 @@ class _AutoFormatterState extends State<AutoFormatter> {
         final start = chars.charactersBefore.length;
         final end = start + chars.currentCharacters.length;
         final attribute =
-            _AutoFormatTextAttribute(rule.matchToAttribute(match));
+            AutoFormatTextAttribute(rule.matchToAttribute(match));
         final span = AttributeSpan(attribute, start, end);
         spans = spans.merge(span);
       }
