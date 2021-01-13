@@ -157,7 +157,7 @@ const String _paragraphsKey = 'paragraphs';
 const String _lineType = 'text';
 
 const String _textKey = 'text';
-const String _modifiersKey = 'mods';
+const String _modifiersKey = 'modifiers';
 const String _spansKey = 'spans';
 
 const String _typeKey = 'type';

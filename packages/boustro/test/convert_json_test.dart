@@ -61,7 +61,7 @@ void main() {
       final dynamic json = codec.encode(doc);
       final rawJson = jsonEncode(json);
       expect(rawJson,
-          '{"paragraphs":[{"type":"text","text":"Hello, World!","mods":[{"type":"test"}]}]}');
+          '{"paragraphs":[{"type":"text","text":"Hello, World!","modifiers":[{"type":"test"}]}]}');
       final decoded = codec.decode(json);
       expect(decoded, doc);
     });
