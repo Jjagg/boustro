@@ -23,7 +23,7 @@ void main() {
         .build();
     final encoded = jsonEncode(c.encode(doc));
     expect(encoded,
-        '{"paragraphs":[{"type":"line","text":"Hello, World!","spans":[{"type":"bold","end":13}]}]}');
+        '{"paragraphs":[{"type":"text","text":"Hello, World!","spans":[{"type":"bold","end":13}]}]}');
     final rt = c.decode(jsonDecode(encoded));
     expect(rt, doc);
   });
@@ -36,7 +36,7 @@ void main() {
         .build();
     final encoded = jsonEncode(c.encode(doc));
     expect(encoded,
-        '{"paragraphs":[{"type":"line","text":"Hello, World!","spans":[{"type":"italic","end":13}]}]}');
+        '{"paragraphs":[{"type":"text","text":"Hello, World!","spans":[{"type":"italic","end":13}]}]}');
     final rt = c.decode(jsonDecode(encoded));
     expect(rt, doc);
   });
@@ -49,7 +49,7 @@ void main() {
         .build();
     final encoded = jsonEncode(c.encode(doc));
     expect(encoded,
-        '{"paragraphs":[{"type":"line","text":"Hello, World!","spans":[{"type":"underline","end":13}]}]}');
+        '{"paragraphs":[{"type":"text","text":"Hello, World!","spans":[{"type":"underline","end":13}]}]}');
     final rt = c.decode(jsonDecode(encoded));
     expect(rt, doc);
   });
@@ -62,7 +62,7 @@ void main() {
         .build();
     final encoded = jsonEncode(c.encode(doc));
     expect(encoded,
-        '{"paragraphs":[{"type":"line","text":"Hello, World!","spans":[{"type":"strike","end":13}]}]}');
+        '{"paragraphs":[{"type":"text","text":"Hello, World!","spans":[{"type":"strike","end":13}]}]}');
     final rt = c.decode(jsonDecode(encoded));
     expect(rt, doc);
   });

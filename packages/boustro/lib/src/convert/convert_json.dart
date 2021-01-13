@@ -23,8 +23,7 @@ import '../document.dart';
 //       ]?
 //     } OR
 //     {
-//       "type": "embed",
-//       "embed": <type>
+//       "type": "<embed type>",
 //       "value": <json serialized value>?
 //     }
 //   ]
@@ -155,14 +154,11 @@ class DocumentJsonCodec extends Codec<Document, dynamic> {
 
 const String _paragraphsKey = 'paragraphs';
 
-const String _lineType = 'line';
-const String _embedType = 'embed';
+const String _lineType = 'text';
 
 const String _textKey = 'text';
 const String _modifiersKey = 'mods';
 const String _spansKey = 'spans';
-
-const String _embedKey = 'embed';
 
 const String _typeKey = 'type';
 const String _valueKey = 'value';
@@ -219,9 +215,7 @@ class _JsonDecoder extends Converter<dynamic, Document> {
           modifiers: modifiers,
         );
         decodedParagraphs.add(line);
-      } else if (type == _embedType) {
-        final type = _expectProperty<String>(
-            () => '$_paragraphsKey.$_embedKey', p, _embedKey);
+      } else {
         final decoder = embedDecoders[type];
         if (decoder == null) {
           throw FormatException('Missing decoder for embed of type $type.');
@@ -230,9 +224,6 @@ class _JsonDecoder extends Converter<dynamic, Document> {
         final embed = decoder(value);
 
         decodedParagraphs.add(embed);
-      } else {
-        throw const FormatException(
-            '''Paragraph objects must have exactly one property that must be either 'line' or 'embed'.''');
       }
     }
 
@@ -296,21 +287,15 @@ class _JsonEncoder extends Converter<Document, dynamic> {
   dynamic convert(Document input) {
     return <String, dynamic>{
       'paragraphs': [
-        for (final p in input.paragraphs)
-          <String, dynamic>{
-            _typeKey: _getParagraphType(p),
-            ..._encodeParagraph(p),
-          }
+        for (final p in input.paragraphs) _encodeParagraph(p),
       ]
     };
   }
 
-  String _getParagraphType(Paragraph p) =>
-      p is LineParagraph ? 'line' : 'embed';
-
   Map<String, Object> _encodeParagraph(Paragraph p) {
     if (p is LineParagraph) {
       return <String, Object>{
+        _typeKey: _lineType,
         if (p.text.isNotEmpty) _textKey: p.text.string,
         if (p.modifiers.isNotEmpty)
           _modifiersKey: p.modifiers.map<Object>(_encodeModifier).toList(),
@@ -318,7 +303,7 @@ class _JsonEncoder extends Converter<Document, dynamic> {
           _spansKey: p.spans.iter.map<Object>(_encodeSpan).toList(),
       };
     } else if (p is ParagraphEmbed) {
-      return _encodeWithTypeMap('embed', embeds, p, typeKey: _embedKey);
+      return _encodeWithTypeMap('embed', embeds, p);
     } else {
       throw JsonEncoderException._(
           'Unsupported paragraph type ${p.runtimeType}.');
