@@ -163,11 +163,9 @@ class _HomeScreenState extends State<HomeScreen> {
             child: AutoFormatter(
               controller: controller,
               rules: [
-                FormatRule(
-                    TwitterPatterns.validHashtag, (_) => italicAttribute),
-                FormatRule(
-                    TwitterPatterns.validMention, (_) => italicAttribute),
-                FormatRule(TwitterPatterns.extractUrl, (_) => boldAttribute),
+                FormatRule(CommonPatterns.hashtag, (_) => italicAttribute),
+                FormatRule(CommonPatterns.mention, (_) => italicAttribute),
+                FormatRule(CommonPatterns.httpUrl, (_) => boldAttribute),
               ],
               child: DocumentEditor(
                 controller: controller,

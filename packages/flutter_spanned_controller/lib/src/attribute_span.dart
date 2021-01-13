@@ -178,6 +178,11 @@ class SpanExpandRules extends Equatable {
   const SpanExpandRules.after()
       : this(ExpandRule.exclusive, ExpandRule.inclusive);
 
+  /// Create a span with [start] set to [ExpandRule.exclusive] and [end] set to
+  /// [ExpandRule.exclusive].
+  const SpanExpandRules.exclusive()
+      : this(ExpandRule.exclusive, ExpandRule.exclusive);
+
   /// Create rules for a span that is fixed in place.
   ///
   /// Spans with these rules will not move or expand when [AttributeSpan.shift]

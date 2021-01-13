@@ -11,8 +11,7 @@ class _AutoFormatTextAttribute extends TextAttribute {
   final TextAttribute attribute;
 
   @override
-  SpanExpandRules get expandRules =>
-      SpanExpandRules(ExpandRule.exclusive, ExpandRule.exclusive);
+  SpanExpandRules get expandRules => SpanExpandRules.exclusive();
 
   @override
   TextAttributeValue resolve(BuildContext context) {
