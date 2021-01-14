@@ -293,7 +293,7 @@ class _AnimatedBoustroThemeState
   @override
   Widget build(BuildContext context) {
     return BoustroTheme(
-      data: _data!.evaluate(animation!),
+      data: _data!.evaluate(animation),
       child: widget.child,
     );
   }
@@ -479,7 +479,7 @@ class _AnimatedBoustroComponentThemeState
   @override
   Widget build(BuildContext context) {
     return BoustroComponentConfig(
-      data: _data!.evaluate(animation!),
+      data: _data!.evaluate(animation),
       child: widget.child,
     );
   }
