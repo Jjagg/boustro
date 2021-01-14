@@ -577,15 +577,17 @@ class SpanList extends Equatable {
     // our start point moves.
 
     final transitions = _spans.expand((s) sync* {
-      if (s.end > t.length) {
-        s = s.copyWith(end: t.length);
+      if (s.start < t.length) {
+        if (s.end > t.length) {
+          s = s.copyWith(end: t.length);
+        }
+        yield _AttributeTransition(
+          s.attribute,
+          _TransitionType.start,
+          s.start,
+        );
+        yield _AttributeTransition(s.attribute, _TransitionType.end, s.end);
       }
-      yield _AttributeTransition(
-        s.attribute,
-        _TransitionType.start,
-        s.start,
-      );
-      yield _AttributeTransition(s.attribute, _TransitionType.end, s.end);
     }).toList()
       ..sort((a, b) => a.index - b.index);
 

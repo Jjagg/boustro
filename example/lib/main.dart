@@ -96,11 +96,11 @@ class _MyAppState extends State<MyApp> {
                 .build(),
             componentConfigData:
                 Theme.of(context).brightness == Brightness.light
-                    ? (ComponentThemeBuilder()
+                    ? (BoustroComponentConfigBuilder()
                           ..imageMaxHeight = 400
                           ..imageSideColor = Colors.brown.withOpacity(0.2))
                         .build()
-                    : (ComponentThemeBuilder()
+                    : (BoustroComponentConfigBuilder()
                           ..imageMaxHeight = 350
                           ..imageSideColor =
                               Colors.deepPurple.shade900.withOpacity(0.2))

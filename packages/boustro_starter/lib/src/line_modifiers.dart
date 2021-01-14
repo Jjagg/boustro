@@ -210,3 +210,134 @@ class NumberedListModifier extends LineModifier {
     );
   }
 }
+
+/// [HeadingModifier] with level 1.
+const heading1Modifier = HeadingModifier(1);
+
+/// [HeadingModifier] with level 2.
+const heading2Modifier = HeadingModifier(2);
+
+/// [HeadingModifier] with level 3.
+const heading3Modifier = HeadingModifier(3);
+
+/// [HeadingModifier] with level 4.
+const heading4Modifier = HeadingModifier(4);
+
+/// [HeadingModifier] with level 5.
+const heading5Modifier = HeadingModifier(5);
+
+/// [HeadingModifier] with level 6.
+const heading6Modifier = HeadingModifier(6);
+
+/// Modifier for headings. Intended to be used as a line style.
+///
+/// Uses the common HTML-style for headings with levels 1-6
+/// (inclusive).
+///
+/// The default style for headings is:
+///
+/// 1. [TextTheme.headline4]
+/// 2. [TextTheme.headline5]
+/// 3. [TextTheme.headline6]
+/// 4. [TextTheme.subtitle1]
+/// 5. [TextTheme.subtitle1]
+/// 6. [TextTheme.subtitle1]
+class HeadingModifier extends LineModifier with EquatableMixin {
+  /// Create a heading attribute with a level between 1 and 6 (inclusive).
+  const HeadingModifier(this.level)
+      : assert(level >= 1 && level <= 6,
+            'Level should be between 1 and 6 (inclusive).');
+
+  /// Level of the heading.
+  final int level;
+
+  @override
+  List<Object?> get props => [level];
+
+  @override
+  Widget modify(BuildContext context, Widget child) {
+    final ctheme = BoustroComponentConfig.of(context);
+    final theme = Theme.of(context);
+    final TextStyle? style;
+    switch (level) {
+      case 1:
+        style = ctheme.headingStyle1 ?? theme.textTheme.headline4;
+        break;
+      case 2:
+        style = ctheme.headingStyle2 ?? theme.textTheme.headline5;
+        break;
+      case 3:
+        style = ctheme.headingStyle3 ?? theme.textTheme.headline6;
+        break;
+      case 4:
+        style = ctheme.headingStyle4 ?? theme.textTheme.subtitle1;
+        break;
+      case 5:
+        style = ctheme.headingStyle5 ?? theme.textTheme.subtitle1;
+        break;
+      case 6:
+        style = ctheme.headingStyle6 ?? theme.textTheme.subtitle1;
+        break;
+      default:
+        throw Exception('Invalid heading level "$level".');
+    }
+    return Theme(
+      data: theme.copyWith(
+        textTheme: theme.textTheme.copyWith(
+          subtitle1: style,
+        ),
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Themeable property getter extensions for the attributes in this library.
+extension LineModGetters on BoustroComponentConfigData {
+  /// Style of [HeadingModifier] with level 1.
+  TextStyle? get headingStyle1 => get<TextStyle>('headingStyle1');
+
+  /// Style of [HeadingModifier] with level 2.
+  TextStyle? get headingStyle2 => get<TextStyle>('headingStyle2');
+
+  /// Style of [HeadingModifier] with level 3.
+  TextStyle? get headingStyle3 => get<TextStyle>('headingStyle3');
+
+  /// Style of [HeadingModifier] with level 4.
+  TextStyle? get headingStyle4 => get<TextStyle>('headingStyle4');
+
+  /// Style of [HeadingModifier] with level 5.
+  TextStyle? get headingStyle5 => get<TextStyle>('headingStyle5');
+
+  /// Style of [HeadingModifier] with level 6.
+  TextStyle? get headingStyle6 => get<TextStyle>('headingStyle6');
+}
+
+/// Themeable property setter extensions for the attributes in this library.
+///
+/// See the getters in [LineModGetters] for more information on the properties.
+extension LineModSetters on BoustroComponentConfigBuilder {
+  /// Set the style of [HeadingModifier] with level 1.
+  set headingStyle1(TextStyle? value) =>
+      this['headingStyle1'] = TextStyleThemeProperty.maybe(value);
+
+  /// Set the style of [HeadingModifier] with level 2.
+  set headingStyle2(TextStyle? value) =>
+      this['headingStyle2'] = TextStyleThemeProperty.maybe(value);
+
+  /// Set the style of [HeadingModifier] with level 3.
+  set headingStyle3(TextStyle? value) =>
+      this['headingStyle3'] = TextStyleThemeProperty.maybe(value);
+
+  /// Set the style of [HeadingModifier] with level 4.
+  set headingStyle4(TextStyle? value) =>
+      this['headingStyle4'] = TextStyleThemeProperty.maybe(value);
+
+  /// Set the style of [HeadingModifier] with level 5.
+  set headingStyle5(TextStyle? value) =>
+      this['headingStyle5'] = TextStyleThemeProperty.maybe(value);
+
+  /// Set the style of [HeadingModifier] with level 6.
+  set headingStyle6(TextStyle? value) =>
+      this['headingStyle6'] = TextStyleThemeProperty.maybe(value);
+}

@@ -255,31 +255,19 @@ extension ImageEmbedTheme on BoustroComponentConfigData {
 /// Themeable property setter extensions for [ImageEmbed].
 ///
 /// See the getters in [ImageEmbedTheme] for more information on the properties.
-extension ImageEmbedThemeSet on ComponentThemeBuilder {
+extension ImageEmbedThemeSet on BoustroComponentConfigBuilder {
   /// Set the max height for an image embed.
   set imageMaxHeight(double? value) {
-    if (value == null) {
-      remove('imageMaxHeight');
-    } else {
-      this['imageMaxHeight'] = DoubleThemeProperty(value);
-    }
+    this['imageMaxHeight'] = DoubleThemeProperty.maybe(value);
   }
 
   /// Set the color painted to the side of the image.
   set imageSideColor(Color? value) {
-    if (value == null) {
-      remove('imageSideColor');
-    } else {
-      this['imageSideColor'] = ColorThemeProperty(value);
-    }
+    this['imageSideColor'] = ColorThemeProperty.maybe(value);
   }
 
   /// Set the closure that's called when an image should be picked.
   set imagePickImage(PickImage? value) {
-    if (value == null) {
-      remove('imagePickImage');
-    } else {
-      this['imagePickImage'] = UnlerpableThemeProperty<PickImage>(value);
-    }
+    this['imagePickImage'] = UnlerpableThemeProperty.maybe<PickImage>(value);
   }
 }

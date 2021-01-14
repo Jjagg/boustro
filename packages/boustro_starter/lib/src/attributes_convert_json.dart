@@ -26,18 +26,6 @@ final strikethrough = TextAttributeCodec.stateless(
   create: () => strikethroughAttribute,
 );
 
-/// Codec to convert [HeadingAttribute] to/from JSON (see [DocumentJsonCodec]).
-final heading = TextAttributeCodec<HeadingAttribute>.stateful(
-  typeStr: 'link',
-  encode: (attr) => attr.level,
-  decode: (level) {
-    if (level is! int) {
-      throw Exception('Expected integer as data for heading attribute.');
-    }
-    return HeadingAttribute(level);
-  },
-);
-
 /// Codec to convert [LinkAttribute] to/from JSON (see [DocumentJsonCodec]).
 final link = TextAttributeCodec<LinkAttribute>.stateful(
   typeStr: 'link',

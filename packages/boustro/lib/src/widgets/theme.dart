@@ -364,10 +364,10 @@ class BoustroComponentConfigData extends Equatable {
     return properties[key]?.value as T?;
   }
 
-  /// Rebuild this theme data by applying updates to a [ComponentThemeBuilder].
+  /// Rebuild this theme data by applying updates to a [BoustroComponentConfigBuilder].
   BoustroComponentConfigData rebuild(
-      dynamic Function(ComponentThemeBuilder) updates) {
-    final builder = ComponentThemeBuilder(properties.toMap());
+      dynamic Function(BoustroComponentConfigBuilder) updates) {
+    final builder = BoustroComponentConfigBuilder(properties.toMap());
     updates(builder);
     return builder.build();
   }
@@ -496,11 +496,11 @@ class _AnimatedBoustroComponentThemeState
 /// Builder for [BoustroComponentConfigData].
 ///
 /// Custom embeds or line modifiers are expected to define extension methods
-/// to set any themeable values they require on this type.
-class ComponentThemeBuilder {
+/// to set any configurable values they require on this type.
+class BoustroComponentConfigBuilder {
   /// Create a component theme builder, optionally with a starting map of
   /// properties.
-  ComponentThemeBuilder([Map<String, ThemeProperty<dynamic>>? props])
+  BoustroComponentConfigBuilder([Map<String, ThemeProperty<dynamic>>? props])
       : _props = props ?? {};
 
   final Map<String, ThemeProperty<dynamic>> _props;
@@ -508,12 +508,15 @@ class ComponentThemeBuilder {
   /// Get the value for [key].
   ThemeProperty<dynamic>? operator [](String key) => _props[key];
 
-  /// Set the value for [key].
-  void operator []=(String key, ThemeProperty<dynamic> value) =>
-      _props[key] = value;
-
-  /// Remove a property.
-  void remove(String key) => _props.remove(key);
+  /// Set the value for [key]. Will remove the key if [prop] or its contained
+  /// value is null.
+  void operator []=(String key, ThemeProperty<dynamic>? prop) {
+    if (prop?.value == null) {
+      _props.remove(key);
+    } else {
+      _props[key] = prop!;
+    }
+  }
 
   /// Build the properties that have been set into a [BoustroComponentConfigData].
   BoustroComponentConfigData build() {
@@ -544,6 +547,10 @@ class UnlerpableThemeProperty<T> extends ThemeProperty<T> {
   /// Create an unlerpable theme property.
   const UnlerpableThemeProperty(T value) : super(value);
 
+  /// Create an unlerpable theme property or return null if [value] is null.
+  static UnlerpableThemeProperty<T>? maybe<T>(T? value) =>
+      value == null ? null : UnlerpableThemeProperty<T>(value);
+
   @override
   ThemeProperty<T> lerp(ThemeProperty<T> other, double t) {
     return t < 0.5 ? this : other;
@@ -554,6 +561,10 @@ class UnlerpableThemeProperty<T> extends ThemeProperty<T> {
 class DoubleThemeProperty extends ThemeProperty<double> {
   /// Create a double theme property.
   const DoubleThemeProperty(double value) : super(value);
+
+  /// Create a double theme property or return null if [value] is null.
+  static DoubleThemeProperty? maybe(double? value) =>
+      value == null ? null : DoubleThemeProperty(value);
 
   @override
   ThemeProperty<double> lerp(ThemeProperty<double> other, double t) {
@@ -566,8 +577,27 @@ class ColorThemeProperty extends ThemeProperty<Color> {
   /// Create a color theme property.
   const ColorThemeProperty(Color value) : super(value);
 
+  /// Create a color theme property or return null if [value] is null.
+  static ColorThemeProperty? maybe(Color? value) =>
+      value == null ? null : ColorThemeProperty(value);
+
   @override
   ThemeProperty<Color> lerp(ThemeProperty<Color> other, double t) {
     return ColorThemeProperty(Color.lerp(value, other.value, t)!);
+  }
+}
+
+/// [ThemeProperty] implementation for [TextStyle] values.
+class TextStyleThemeProperty extends ThemeProperty<TextStyle> {
+  /// Create a text style theme property.
+  const TextStyleThemeProperty(TextStyle value) : super(value);
+
+  /// Create a text style theme property or return null if [value] is null.
+  static TextStyleThemeProperty? maybe(TextStyle? value) =>
+      value == null ? null : TextStyleThemeProperty(value);
+
+  @override
+  ThemeProperty<TextStyle> lerp(ThemeProperty<TextStyle> other, double t) {
+    return TextStyleThemeProperty(TextStyle.lerp(value, other.value, t)!);
   }
 }

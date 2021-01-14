@@ -141,13 +141,13 @@ final underline = createToggleableToolbarItem(
   Icons.format_underline_rounded,
 );
 
-/// Toolbar item that toggles the [HeadingAttribute] with level 1 for the
+/// Toolbar item that toggles the [HeadingModifier] with level 1 for the
 /// focused line.
 ToolbarItem title = ToolbarItem(
   builder: _createToggleableToolbarItemBuilder(
-      (controller) => controller.getAttributeListener(heading1Attribute)),
+      (controller) => controller.getModifierListener(heading1Modifier)),
   title: const Icon(Icons.title),
-  onPressed: (_, controller) => controller.toggleLineStyle(heading1Attribute),
+  onPressed: (_, controller) => controller.toggleLineModifier(heading1Modifier),
 );
 
 class _LinkDialog extends StatefulWidget {
