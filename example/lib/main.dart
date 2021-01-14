@@ -163,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: AutoFormatter(
               controller: controller,
               rules: [
-                FormatRule(CommonPatterns.hashtag, (_) => italicAttribute),
+                FormatRule(CommonPatterns.hashtag, (_) => boldAttribute),
                 FormatRule(CommonPatterns.mention, (_) => italicAttribute),
                 FormatRule(CommonPatterns.httpUrl, (_) => boldAttribute),
               ],

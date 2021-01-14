@@ -92,13 +92,13 @@ class AutoFormatter extends StatefulWidget {
 class _AutoFormatterState extends State<AutoFormatter> {
   final Map<SpannedTextEditingController, String> _lastText = {};
 
-  late final StreamSubscription<LineValueChangedEvent>
-      _lineValueChangedSubscription =
-      widget.controller.onLineValueChanged.listen(_handleLineValueChanged);
+  StreamSubscription<LineValueChangedEvent>? _lineValueChangedSubscription;
 
   @override
   void initState() {
     super.initState();
+    _lineValueChangedSubscription =
+        widget.controller.onLineValueChanged.listen(_handleLineValueChanged);
     widget.controller.addListener(_handleParagraphsChanged);
   }
 
@@ -114,7 +114,7 @@ class _AutoFormatterState extends State<AutoFormatter> {
 
   @override
   void dispose() {
-    _lineValueChangedSubscription.cancel();
+    _lineValueChangedSubscription?.cancel();
     widget.controller.removeListener(_handleParagraphsChanged);
     super.dispose();
   }

@@ -208,40 +208,37 @@ class CommonPatterns {
   ///
   /// Captured groups are:
   ///
-  /// 1. Full hashtag including hash sign.
-  /// 2. Hash sign (either # or ＃)
-  /// 3. Tag content without leading hash sign.
+  /// 0. Full hashtag including hash sign.
+  /// 1. Hash sign (either # or ＃)
+  /// 2. Tag content without leading hash sign.
   ///
   /// Tag content may not contain only numbers.
   static final RegExp hashtag = RegExp(
-      _hashtagBoundary +
-          '(' + // $1 Full hashtag
+      '(?<=($_hashtagBoundary))' +
           '($_hashSigns)' + // $2 hash sign
           '(?!\\uFE0F|\\u20E3)' +
           // $3 tag content
-          '($_hashtagAlphaNumeric*$_hashtagAlpha$_hashtagAlphaNumeric*)' +
-          ')',
+          '($_hashtagAlphaNumeric*$_hashtagAlpha$_hashtagAlphaNumeric*)',
+      //'($_hashtagBoundary)($_hashSigns)(?!\\uFE0F|\\u20E3)($_hashtagAlphaNumeric*$_hashtagAlpha$_hashtagAlphaNumeric*)',
       caseSensitive: false);
 
   /// Matches a valid http or https URL.
   ///
   /// Captured groups are:
   ///
-  /// 1. Full URL
-  /// 2. Protocol: http:// or https:// (optional)
-  /// 3. Domain
-  /// 4. Port number without leading colon (optional)
-  /// 5. URL path including leading forward slash (optional)
-  /// 6. Query string (optional)
+  /// 0. Full URL
+  /// 1. Protocol: http:// or https:// (optional)
+  /// 2. Domain
+  /// 3. Port number without leading colon (optional)
+  /// 4. URL path including leading forward slash (optional)
+  /// 5. Query string (optional)
   static final RegExp httpUrl = RegExp(
-    _validUrlPrecedingChars +
-        '(' + // $1 URL
-        '(https?:\\/\\/)?' + // $2 Protocol (optional)
-        '($_validDomain)' + // $3 Domain(s)
-        '(?::($_validPortNumber))?' + // $4 Port number (optional)
-        '(\\/$_validUrlPath*)?' + // $5 URL Path
-        '(\\?$_validUrlQueryChars*$_validUrlQueryEndingChars)?' + // $6 Query String
-        ')',
+    '(?<=$_validUrlPrecedingChars)' +
+        '(https?:\\/\\/)?' + // $1 Protocol (optional)
+        '($_validDomain)' + // $2 Domain(s)
+        '(?::($_validPortNumber))?' + // $3 Port number (optional)
+        '(\\/$_validUrlPath*)?' + // $4 URL Path
+        '(\\?$_validUrlQueryChars*$_validUrlQueryEndingChars)?', // $5 Query String
     caseSensitive: false,
   );
 
@@ -250,15 +247,13 @@ class CommonPatterns {
   ///
   /// Captured groups are:
   ///
-  /// 1. Full mention including at sign
-  /// 2. At sign (can be @ or ＠)
-  /// 3. Handle without at sign
+  /// 0. Full mention including at sign
+  /// 1. At sign (can be @ or ＠)
+  /// 2. Handle without at sign
   static final RegExp mention = RegExp(
-    _validMentionPrecedingChars +
-        '(' + // $1: Full mention including at sign
-        '($_atSigns)' + // $2: At mark
-        '([a-zA-Z0-9_])' + // $3: mention handle
-        ')',
+    '(?<=$_validMentionPrecedingChars)' +
+        '($_atSigns)' + // $1: At mark
+        '([a-zA-Z0-9_]+)', // $2: mention handle
   );
 
   static const String _astralLetterAndMarks =
@@ -308,7 +303,7 @@ class CommonPatterns {
   static const String _invalidUrlWithoutProtocolPrecedingChars = r'[-_.\/]$';
   static const String _latinAccentChars =
       r'\xC0-\xD6\xD8-\xF6\xF8-\xFF\u0100-\u024F\u0253\u0254\u0256\u0257\u0259\u025B\u0263\u0268\u026F\u0272\u0289\u028B\u02BB\u0300-\u036F\u1E00-\u1EFF';
-  static const String _nonBmpCodePairs = r'[\uD800-\uDBFF][\uDC00-\uDFFF]/';
+  static const String _nonBmpCodePairs = r'[\uD800-\uDBFF][\uDC00-\uDFFF]';
   static const String _punct = r"\!'#%&'\(\)*\+,\\\-\.\/:;<=>\?@\[\]\^_{|}~\$";
   static const String _rtlChars =
       r'[\u0600-\u06FF]|[\u0750-\u077F]|[\u0590-\u05FF]|[\uFE70-\uFEFF]';
@@ -437,7 +432,7 @@ class CommonPatterns {
       ')(?=[^0-9a-zA-Z@+-]|\$))';
   static const String _validGeneralUrlPathChars =
       "[a-z${_cyrillicLettersAndMarks}0-9!\\*';:=\\+,\\.\\\$\\/%#\\[\\]\\-\\u2013_~@\\|&$_latinAccentChars]";
-  static final RegExp _validHashtag = RegExp(
+  static final RegExp validHashtag = RegExp(
       '($_hashtagBoundary)($_hashSigns)(?!\\uFE0F|\\u20E3)($_hashtagAlphaNumeric*$_hashtagAlpha$_hashtagAlphaNumeric*)',
       caseSensitive: false);
   static final RegExp _validMention =
