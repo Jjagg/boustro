@@ -62,12 +62,18 @@ class ImageEmbedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _ImageWrapper(
-      child: Center(
-        heightFactor: 1,
-        child: Image(
-          image: image,
-          fit: BoxFit.contain,
+    final config = BoustroComponentConfig.of(context);
+    final padding =
+        config.imagePadding ?? const EdgeInsets.symmetric(vertical: 10);
+    return Padding(
+      padding: padding.resolve(Directionality.of(context)),
+      child: _ImageWrapper(
+        child: Center(
+          heightFactor: 1,
+          child: Image(
+            image: image,
+            fit: BoxFit.contain,
+          ),
         ),
       ),
     );
@@ -99,28 +105,34 @@ class ImageEmbedEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Focus(
-      focusNode: focusNode,
-      child: Builder(
-        builder: (context) {
-          final focusNode = Focus.of(context);
+    final config = BoustroComponentConfig.of(context);
+    final padding =
+        config.imagePadding ?? const EdgeInsets.symmetric(vertical: 10);
+    return Padding(
+      padding: padding.resolve(Directionality.of(context)),
+      child: Focus(
+        focusNode: focusNode,
+        child: Builder(
+          builder: (context) {
+            final focusNode = Focus.of(context);
 
-          return GestureDetector(
-            onTap: () {
-              if (!focusNode.hasFocus) {
-                focusNode.requestFocus();
-              }
-            },
-            child: _ImageWrapper(
-              child: _buildOverlay(
-                  context,
-                  Image(
-                    image: controller.image,
-                    fit: BoxFit.contain,
-                  )),
-            ),
-          );
-        },
+            return GestureDetector(
+              onTap: () {
+                if (!focusNode.hasFocus) {
+                  focusNode.requestFocus();
+                }
+              },
+              child: _ImageWrapper(
+                child: _buildOverlay(
+                    context,
+                    Image(
+                      image: controller.image,
+                      fit: BoxFit.contain,
+                    )),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -244,30 +256,38 @@ extension ImageEmbedTheme on BoustroComponentConfigData {
   /// The color in [imageSideColor] will be painted to the sides of the image.
   double? get imageMaxHeight => get<double>('imageMaxHeight');
 
-  /// Color painted to the side of the image if it does not cover the full
-  /// width available to it.
-  Color? get imageSideColor => get<Color>('imageSideColor');
+  /// Get the padding around the image embed.
+  EdgeInsets? get imagePadding => get<EdgeInsets>('imagePadding');
 
   /// Get the closure that's called when an image should be picked.
   PickImage? get imagePickImage => get<PickImage>('imagePickImage');
+
+  /// Color painted to the side of the image if it does not cover the full
+  /// width available to it.
+  Color? get imageSideColor => get<Color>('imageSideColor');
 }
 
 /// Themeable property setter extensions for [ImageEmbed].
 ///
 /// See the getters in [ImageEmbedTheme] for more information on the properties.
 extension ImageEmbedThemeSet on BoustroComponentConfigBuilder {
-  /// Set the max height for an image embed.
+  /// Set the maximum height for an image embed.
   set imageMaxHeight(double? value) {
     this['imageMaxHeight'] = DoubleThemeProperty.maybe(value);
   }
 
-  /// Set the color painted to the side of the image.
-  set imageSideColor(Color? value) {
-    this['imageSideColor'] = ColorThemeProperty.maybe(value);
+  /// Set the padding around the image embed.
+  set imagePadding(EdgeInsets? value) {
+    this['imagePadding'] = EdgeInsetsThemeProperty.maybe(value);
   }
 
   /// Set the closure that's called when an image should be picked.
   set imagePickImage(PickImage? value) {
     this['imagePickImage'] = UnlerpableThemeProperty.maybe<PickImage>(value);
+  }
+
+  /// Set the color painted to the side of the image.
+  set imageSideColor(Color? value) {
+    this['imageSideColor'] = ColorThemeProperty.maybe(value);
   }
 }

@@ -81,7 +81,11 @@ class _DocumentViewState extends State<DocumentView> {
   @override
   Widget build(BuildContext context) {
     final btheme = BoustroTheme.of(context);
-    final editorPadding = btheme.editorPadding;
+    final directionality = Directionality.of(context);
+    final editorPadding = (btheme.editorPadding ??
+            BoustroThemeData.fallbackForContext(context).editorPadding!)
+        .resolve(directionality);
+
     return BoustroScope.readonly(
       document: widget.document,
       child: Container(
@@ -97,11 +101,11 @@ class _DocumentViewState extends State<DocumentView> {
     );
   }
 
-  Widget _buildParagraph(BuildContext buildContext, Paragraph value) {
+  Widget _buildParagraph(BuildContext context, Paragraph value) {
     return value.match(line: (line) {
       final spans = line.spannedText.buildTextSpans(
-        context: buildContext,
-        style: Theme.of(buildContext).textTheme.subtitle1!,
+        context: context,
+        style: Theme.of(context).textTheme.subtitle1!,
         recognizers: _recognizers,
       );
 
@@ -120,7 +124,7 @@ class _DocumentViewState extends State<DocumentView> {
     }, embed: (embed) {
       final btheme = BoustroTheme.of(context);
       final padding = btheme.embedPadding ??
-          BoustroThemeData.fallbackForContext(buildContext).embedPadding!;
+          BoustroThemeData.fallbackForContext(context).embedPadding!;
       return Padding(
         padding: padding,
         child: embed.createView(context),
@@ -161,13 +165,13 @@ class DocumentEditor extends StatelessWidget {
   }
 
   Widget _buildParagraphs(
-    BuildContext buildContext,
+    BuildContext context,
     BuiltList<ParagraphState> paragraphs,
   ) {
-    final btheme = BoustroTheme.of(buildContext);
-    final directionality = Directionality.of(buildContext);
+    final btheme = BoustroTheme.of(context);
+    final directionality = Directionality.of(context);
     final editorPadding = (btheme.editorPadding ??
-            BoustroThemeData.fallbackForContext(buildContext).editorPadding!)
+            BoustroThemeData.fallbackForContext(context).editorPadding!)
         .resolve(directionality);
 
     // We want taps in the free area below the listview to set focus
@@ -208,11 +212,11 @@ class DocumentEditor extends StatelessWidget {
     );
   }
 
-  Widget _buildParagraph(BuildContext buildContext, int index) {
-    final btheme = BoustroTheme.of(buildContext);
-    final directionality = Directionality.of(buildContext);
+  Widget _buildParagraph(BuildContext context, int index) {
+    final btheme = BoustroTheme.of(context);
+    final directionality = Directionality.of(context);
     final linePadding = (btheme.linePadding ??
-            BoustroThemeData.fallbackForContext(buildContext).linePadding!)
+            BoustroThemeData.fallbackForContext(context).linePadding!)
         .resolve(directionality);
 
     Widget result;
@@ -250,7 +254,7 @@ class DocumentEditor extends StatelessWidget {
           ));
     } else {
       final embed = value as EmbedState;
-      result = embed.createEditor(buildContext);
+      result = embed.createEditor(context);
     }
 
     return result;

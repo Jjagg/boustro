@@ -177,12 +177,15 @@ class Toolbar extends StatelessWidget {
     return Container(
       height: btheme.toolbarHeight,
       decoration: btheme.toolbarDecoration,
-      child: Padding(
-        padding: padding,
-        child: _ToolbarItemsBuilder(
-          documentController: documentController,
-          defaultItemBuilder: defaultItemBuilder,
-          items: items,
+      child: Material(
+        type: MaterialType.transparency,
+        child: Padding(
+          padding: padding,
+          child: _ToolbarItemsBuilder(
+            documentController: documentController,
+            defaultItemBuilder: defaultItemBuilder,
+            items: items,
+          ),
         ),
       ),
     );

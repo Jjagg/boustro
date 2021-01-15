@@ -308,7 +308,7 @@ class Range extends Equatable {
   // with [start] and [end] flipped.
   //
   // If this range is invalid this returns an identical range.
-  //Range normalize() {
+  //TextRange normalize() {
   //  if (isNormalized) {
   //    return this;
   //  }

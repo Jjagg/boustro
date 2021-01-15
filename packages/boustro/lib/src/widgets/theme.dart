@@ -587,6 +587,21 @@ class ColorThemeProperty extends ThemeProperty<Color> {
   }
 }
 
+/// [ThemeProperty] implementation for [EdgeInsets] values.
+class EdgeInsetsThemeProperty extends ThemeProperty<EdgeInsets> {
+  /// Create a text style theme property.
+  const EdgeInsetsThemeProperty(EdgeInsets value) : super(value);
+
+  /// Create a text style theme property or return null if [value] is null.
+  static EdgeInsetsThemeProperty? maybe(EdgeInsets? value) =>
+      value == null ? null : EdgeInsetsThemeProperty(value);
+
+  @override
+  ThemeProperty<EdgeInsets> lerp(ThemeProperty<EdgeInsets> other, double t) {
+    return EdgeInsetsThemeProperty(EdgeInsets.lerp(value, other.value, t)!);
+  }
+}
+
 /// [ThemeProperty] implementation for [TextStyle] values.
 class TextStyleThemeProperty extends ThemeProperty<TextStyle> {
   /// Create a text style theme property.

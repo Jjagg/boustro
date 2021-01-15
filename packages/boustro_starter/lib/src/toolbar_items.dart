@@ -306,8 +306,9 @@ ToolbarItem? _buildImageButton({
                 embed = controller.appendEmbed(ImageEmbed(img));
               }
               embed.focusNode.requestFocus();
-              Toolbar.popMenu(context);
             }
+
+            Toolbar.popMenu(context);
           },
         );
 }
