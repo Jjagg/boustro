@@ -536,7 +536,10 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   }
 
   /// Insert an embed at the current index.
-  EmbedState? insertEmbedAtCurrent(ParagraphEmbed embed) {
+  EmbedState? insertEmbedAtCurrent(
+    ParagraphEmbed embed, {
+    bool deleteLineIfEmpty = true,
+  }) {
     // We replace the current line if it's empty.
     var index = focusedParagraphIndex;
     if (index == null) {
@@ -548,11 +551,24 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     } else {
       index += 1;
     }
-    return insertEmbed(index, embed);
+    return insertEmbed(index + 1, embed, deleteLineIfEmpty: deleteLineIfEmpty);
   }
 
   /// Insert an embed at [index].
-  EmbedState insertEmbed(int index, ParagraphEmbed embed) {
+  EmbedState insertEmbed(
+    int index,
+    ParagraphEmbed embed, {
+    bool deleteLineIfEmpty = true,
+  }) {
+    // Delete the line if it's an empty text line.
+    if (deleteLineIfEmpty && index > 0) {
+      final p = paragraphs[index - 1];
+      if (p is LineState && p.controller.text.isEmpty) {
+        removeParagraphAt(index - 1);
+        index = index - 1;
+      }
+    }
+
     final focus = FocusNode();
     final state = EmbedState(
       focusNode: focus,

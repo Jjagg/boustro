@@ -19,10 +19,14 @@ class DocumentView extends StatefulWidget {
   const DocumentView({
     Key? key,
     required this.document,
+    this.physics,
   }) : super(key: key);
 
   /// The contents this view will display.
   final Document document;
+
+  /// ScrollPhysics to pass to the [ListView] that holds the paragraphs.
+  final ScrollPhysics? physics;
 
   @override
   _DocumentViewState createState() => _DocumentViewState();
@@ -31,6 +35,8 @@ class DocumentView extends StatefulWidget {
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties.add(DiagnosticsProperty<Document>('document', document));
+    properties.add(DiagnosticsProperty<ScrollPhysics?>('physics', physics,
+        defaultValue: null));
   }
 }
 
@@ -81,21 +87,19 @@ class _DocumentViewState extends State<DocumentView> {
   @override
   Widget build(BuildContext context) {
     final btheme = BoustroTheme.of(context);
-    final directionality = Directionality.of(context);
-    final editorPadding = (btheme.editorPadding ??
-            BoustroThemeData.fallbackForContext(context).editorPadding!)
-        .resolve(directionality);
 
     return BoustroScope.readonly(
       document: widget.document,
       child: Container(
         color: btheme.editorColor,
         child: ListView.builder(
-          padding: editorPadding,
+          padding: const EdgeInsets.all(0),
+          physics: widget.physics,
+          shrinkWrap: true,
+          itemCount: widget.document.paragraphs.length,
           itemBuilder: (context, index) {
             return _buildParagraph(context, widget.document.paragraphs[index]);
           },
-          itemCount: widget.document.paragraphs.length,
         ),
       ),
     );

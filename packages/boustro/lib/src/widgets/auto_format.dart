@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
+import '../../document.dart';
 import 'document_controller.dart';
 
 /// Attribute used by [AutoFormatter].
@@ -54,17 +55,98 @@ class FormatRule {
   }
 }
 
+/// A collection of [FormatRule]s that can be applied to a [SpannedString] using
+/// [applyToString].
+///
+/// For automatic formatting see [AutoFormatter].
+///
+/// Attributes applied with a format ruleset are wrapped in an
+/// [AutoFormatTextAttribute]. When serializing, make sure to delete or
+/// transform these attributes, or provide a serializer for them.
+class FormatRuleset {
+  /// Create a format ruleset.
+  const FormatRuleset(this.rules);
+
+  /// Rules for formatting.
+  final List<FormatRule> rules;
+
+  /// Apply the formatting rules to [source] and return the resulting
+  /// [SpanList].
+  SpanList applyToString(SpannedString source, {bool clearPrevious = true}) {
+    final text = source.text.string;
+    var spans = source.spans;
+    if (clearPrevious) {
+      spans = spans.removeType<AutoFormatTextAttribute>();
+    }
+
+    for (final rule in rules) {
+      final matches = rule.exp.allMatches(text);
+      for (final match in matches) {
+        // Zero-length spans are not allowed, so we filter out zero-length
+        // matches.
+        if (match.end == match.start) {
+          continue;
+        }
+
+        // We have to do some index translation here because regex returns
+        // UTF-16 character indices, but we use ECG (with the characters
+        // package).
+
+        final chars = CharacterRange.at(text, match.start, match.end);
+        final start = chars.charactersBefore.length;
+        final end = start + chars.currentCharacters.length;
+        final attribute = AutoFormatTextAttribute(rule.matchToAttribute(match));
+        final span = AttributeSpan(attribute, start, end);
+        spans = spans.merge(span);
+      }
+    }
+
+    return spans;
+  }
+
+  /// Apply this ruleset to the given document and return the result.
+  Document applyToDocument(Document document, {bool clearPrevious = true}) {
+    return Document(
+      document.paragraphs.rebuild(
+        (b) => b.map(
+          (p) => p.match(
+            line: (l) {
+              return l.copyWith(
+                spans: applyToString(l.spannedText, clearPrevious: clearPrevious),
+              );
+            },
+            embed: (e) => e,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Widget that automatically applies [TextAttribute]s to a [DocumentController]
 /// based on [FormatRule]s.
 ///
 /// The auto formatter is only a widget for convenience. It can be anywhere
 /// in the widget tree.
+///
+/// Attributes applied with the auto formatter are wrapped in an
+/// [AutoFormatTextAttribute]. When serializing, make sure to delete or
+/// transform these attributes, or provide a serializer for them.
 class AutoFormatter extends StatefulWidget {
   /// Create an auto formatter.
-  const AutoFormatter({
+  AutoFormatter({
     Key? key,
     required this.controller,
-    required this.rules,
+    required List<FormatRule> rules,
+    required this.child,
+  })   : ruleset = FormatRuleset(rules),
+        super(key: key);
+
+  /// Create an auto formatter.
+  const AutoFormatter.ruleset({
+    Key? key,
+    required this.controller,
+    required this.ruleset,
     required this.child,
   }) : super(key: key);
 
@@ -72,7 +154,7 @@ class AutoFormatter extends StatefulWidget {
   final DocumentController controller;
 
   /// Rules for formatting.
-  final List<FormatRule> rules;
+  final FormatRuleset ruleset;
 
   /// Child of this widget.
   final Widget child;
@@ -85,7 +167,7 @@ class AutoFormatter extends StatefulWidget {
     super.debugFillProperties(properties);
     properties
         .add(DiagnosticsProperty<DocumentController>('controller', controller));
-    properties.add(IterableProperty<FormatRule>('rules', rules));
+    properties.add(DiagnosticsProperty<FormatRuleset>('ruleset', ruleset));
   }
 }
 
@@ -132,28 +214,7 @@ class _AutoFormatterState extends State<AutoFormatter> {
 
     _lastText[controller] = controller.text;
 
-    final text = controller.text;
-    var spans = controller.spans;
-    spans = spans.removeType<AutoFormatTextAttribute>();
-
-    for (final rule in widget.rules) {
-      final matches = rule.exp.allMatches(text);
-      for (final match in matches) {
-        // Zero-length spans are not allowed, so we filter out zero-length
-        // matches.
-        if (match.end == match.start) {
-          continue;
-        }
-
-        final chars = CharacterRange.at(text, match.start, match.end);
-        final start = chars.charactersBefore.length;
-        final end = start + chars.currentCharacters.length;
-        final attribute = AutoFormatTextAttribute(rule.matchToAttribute(match));
-        final span = AttributeSpan(attribute, start, end);
-        spans = spans.merge(span);
-      }
-    }
-
-    controller.spans = spans;
+    final formattedSpans = widget.ruleset.applyToString(controller.spannedString);
+    controller.spans = formattedSpans;
   }
 }

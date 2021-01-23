@@ -485,7 +485,6 @@ class SpannedTextEditingController implements TextEditingController {
   Range _convertRange(TextRange range) {
     assert(range.isValid, 'Range should be valid.');
     if (!range.isNormalized) {
-      // ignore: parameter_assignments
       range = TextRange(start: range.end, end: range.start);
     }
     final startChars = CharacterRange.at(text, 0, range.start);

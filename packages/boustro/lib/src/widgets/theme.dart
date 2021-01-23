@@ -377,7 +377,7 @@ class BoustroComponentConfigData extends Equatable {
 
   /// Linearly interpolate between two boustro themes.
   ///
-  /// Used by [AnimatedBoustroComponentTheme] to animate between themes.
+  /// Used by [AnimatedBoustroComponentConfig] to animate between themes.
   static BoustroComponentConfigData lerp(
       BoustroComponentConfigData a, BoustroComponentConfigData b, double t) {
     final map = <String, ThemeProperty<dynamic>>{};
@@ -427,15 +427,15 @@ class BoustroComponentThemeDataTween extends Tween<BoustroComponentConfigData> {
 ///
 /// See also:
 ///
-///  * [BoustroComponentConfig], which [AnimatedBoustroComponentTheme] uses to actually apply the interpolated
+///  * [BoustroComponentConfig], which [AnimatedBoustroComponentConfig] uses to actually apply the interpolated
 ///    theme.
 ///  * [BoustroComponentConfigData], which describes the actual configuration of a theme.
-class AnimatedBoustroComponentTheme extends ImplicitlyAnimatedWidget {
+class AnimatedBoustroComponentConfig extends ImplicitlyAnimatedWidget {
   /// Creates an animated theme.
   ///
   /// By default, the theme transition uses a linear curve. The [data] and
   /// [child] arguments must not be null.
-  const AnimatedBoustroComponentTheme({
+  const AnimatedBoustroComponentConfig({
     Key? key,
     required this.data,
     Curve curve = Curves.linear,
@@ -463,7 +463,7 @@ class AnimatedBoustroComponentTheme extends ImplicitlyAnimatedWidget {
 }
 
 class _AnimatedBoustroComponentThemeState
-    extends AnimatedWidgetBaseState<AnimatedBoustroComponentTheme> {
+    extends AnimatedWidgetBaseState<AnimatedBoustroComponentConfig> {
   BoustroComponentThemeDataTween? _data;
 
   @override

@@ -1,28 +1,30 @@
-import 'dart:io';
-
 import 'package:boustro/boustro.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 /// Embed that displays an image.
 @immutable
 class ImageEmbed extends ParagraphEmbed with EquatableMixin {
   /// Create an image embed.
-  const ImageEmbed(this.image);
+  const ImageEmbed({required this.image, this.alt});
 
   /// Provider for the image.
   final ImageProvider image;
 
+  /// Alt text for the image.
+  final String? alt;
+
   @override
   Widget createView(BuildContext context) {
-    return ImageEmbedView(image: image);
+    return ImageEmbedView(image: image, alt: alt);
   }
 
   @override
   ParagraphEmbedController createController() {
-    return ImageEmbedController(value: image);
+    return ImageEmbedController(ImageData(image: image, alt: alt));
   }
 
   @override
@@ -55,10 +57,17 @@ class _ImageWrapper extends StatelessWidget {
 /// Widget for [ImageEmbed].
 class ImageEmbedView extends StatelessWidget {
   /// Create an image embed view.
-  const ImageEmbedView({Key? key, required this.image}) : super(key: key);
+  const ImageEmbedView({
+    Key? key,
+    required this.image,
+    this.alt,
+  }) : super(key: key);
 
   /// Provider for the image.
   final ImageProvider image;
+
+  /// Alt text, passed to [Image.semanticLabel].
+  final String? alt;
 
   @override
   Widget build(BuildContext context) {
@@ -71,8 +80,9 @@ class ImageEmbedView extends StatelessWidget {
         child: Center(
           heightFactor: 1,
           child: Image(
-            image: image,
             fit: BoxFit.contain,
+            semanticLabel: alt,
+            image: image,
           ),
         ),
       ),
@@ -83,6 +93,7 @@ class ImageEmbedView extends StatelessWidget {
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties.add(DiagnosticsProperty<ImageProvider<Object>>('image', image));
+    properties.add(StringProperty('alt', alt));
   }
 }
 
@@ -95,6 +106,8 @@ class ImageEmbedEditor extends StatelessWidget {
     Key? key,
     required this.controller,
     required this.focusNode,
+    this.enableImageEdit = true,
+    this.enableAltTextEdit = true,
   }) : super(key: key);
 
   /// Controller that manages the current image provider.
@@ -102,6 +115,14 @@ class ImageEmbedEditor extends StatelessWidget {
 
   /// Focus node that manages input focus for the editor.
   final FocusNode focusNode;
+
+  /// If enabled there will be a button on top of the image to pick another
+  /// image. True by default.
+  final bool enableImageEdit;
+
+  /// If enabled there will be a button on top of the image to change the alt
+  /// text. True by default.
+  final bool enableAltTextEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -124,11 +145,16 @@ class ImageEmbedEditor extends StatelessWidget {
               },
               child: _ImageWrapper(
                 child: _buildOverlay(
-                    context,
-                    Image(
-                      image: controller.image,
+                  context,
+                  ValueListenableBuilder<ImageData>(
+                    valueListenable: controller,
+                    builder: (context, imageData, _) => Image(
                       fit: BoxFit.contain,
-                    )),
+                      semanticLabel: imageData.alt,
+                      image: imageData.image,
+                    ),
+                  ),
+                ),
               ),
             );
           },
@@ -160,7 +186,7 @@ class ImageEmbedEditor extends StatelessWidget {
               firstChild: const SizedBox(),
               secondChild: Stack(
                 children: [
-                  if (pickImg != null)
+                  if (enableImageEdit && pickImg != null)
                     Align(
                       alignment: Alignment.topLeft,
                       child: Padding(
@@ -168,8 +194,11 @@ class ImageEmbedEditor extends StatelessWidget {
                         child: _buildButton(
                           context: context,
                           icon: Icons.edit,
-                          onPressed: () {
-                            // TODO edit image
+                          onPressed: () async {
+                            final image = await pickImg(context);
+                            if (image != null) {
+                              controller.data = ImageData(image: image);
+                            }
                           },
                         ),
                       ),
@@ -187,6 +216,28 @@ class ImageEmbedEditor extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (enableAltTextEdit)
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: _buildButton(
+                          context: context,
+                          icon: Icons.accessibility_new,
+                          onPressed: () async {
+                            // edit alt text
+                            final alt = await showDialog<String?>(
+                              context: context,
+                              builder: (context) =>
+                                  _AltTextDialog(text: controller.alt),
+                            );
+                            if (alt != null) {
+                              controller.alt = alt;
+                            }
+                          },
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -205,8 +256,8 @@ class ImageEmbedEditor extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.black.withOpacity(0.2)
-            : Colors.white.withOpacity(0.2),
+            ? Colors.black.withOpacity(0.3)
+            : Colors.white.withOpacity(0.3),
         borderRadius: BorderRadius.circular(10),
       ),
       child: IconButton(
@@ -222,17 +273,115 @@ class ImageEmbedEditor extends StatelessWidget {
     properties.add(
         DiagnosticsProperty<ImageEmbedController>('controller', controller));
     properties.add(DiagnosticsProperty<FocusNode>('focusNode', focusNode));
+    properties.add(FlagProperty('enableImageEdit',
+        value: enableImageEdit, ifTrue: 'editable', ifFalse: 'not editable'));
+    properties.add(FlagProperty('enableAltTextEdit',
+        value: enableAltTextEdit,
+        ifTrue: 'alt text editable',
+        ifFalse: 'alt text not editable'));
+  }
+}
+
+class _AltTextDialog extends StatefulWidget {
+  const _AltTextDialog({Key? key, String? text})
+      : _text = text,
+        super(key: key);
+
+  final String? _text;
+
+  @override
+  _AltTextDialogState createState() => _AltTextDialogState();
+}
+
+class _AltTextDialogState extends State<_AltTextDialog> {
+  late final TextEditingController _altTextController =
+      TextEditingController(text: widget._text);
+
+  @override
+  void dispose() {
+    _altTextController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      actions: [
+        FlatButton(
+          onPressed: () {
+            Navigator.pop(context, null);
+          },
+          child: const Text('Cancel'),
+        ),
+        FlatButton(
+          onPressed: () {
+            Navigator.pop(
+              context,
+              _altTextController.text,
+            );
+          },
+          child: const Text('Ok'),
+        )
+      ],
+      title: const Text('Set alt text'),
+      content: TextField(
+        maxLines: null,
+        controller: _altTextController,
+        decoration: const InputDecoration(hintText: 'alt text'),
+        maxLength: 1000,
+        maxLengthEnforcement: MaxLengthEnforcement.enforced,
+      ),
+    );
+  }
+}
+
+/// Data used to render an image.
+@immutable
+class ImageData {
+  /// Create an image data object.
+  const ImageData({required this.image, String? alt})
+      : alt = alt == '' ? null : alt;
+
+  /// Provider of the image.
+  final ImageProvider image;
+
+  /// Alt text for the image for accessibility.
+  final String? alt;
+
+  /// Create a copy of this object with the given fields overriden.
+  ///
+  /// To unset alt, pass the empty string.
+  ImageData copyWith({ImageProvider? image, String? alt}) {
+    return ImageData(
+      image: image ?? this.image,
+      alt: alt ?? this.alt,
+    );
   }
 }
 
 /// Controller for [ImageEmbed].
-class ImageEmbedController extends ValueNotifier<ImageProvider>
+class ImageEmbedController extends ValueNotifier<ImageData>
     implements ParagraphEmbedController {
-  /// Create an image embed controller with an initial image provider.
-  ImageEmbedController({required ImageProvider value}) : super(value);
+  /// Create an image embed controller with initial image data.
+  ImageEmbedController(ImageData value) : super(value);
+
+  /// Get the image data.
+  ImageData get data => value;
+
+  /// Set the image data.
+  set data(ImageData value) => this.value = value;
 
   /// Get the image provider.
-  ImageProvider get image => value;
+  ImageProvider get image => value.image;
+
+  /// Set the image provider.
+  set image(ImageProvider image) => value = value.copyWith(image: image);
+
+  /// Get the alt text.
+  String? get alt => value.alt;
+
+  /// Set the alt text.
+  set alt(String? alt) => value = value.copyWith(alt: alt ?? '');
 
   @override
   Widget createEditor(BuildContext context, FocusNode focusNode) {
@@ -241,12 +390,12 @@ class ImageEmbedController extends ValueNotifier<ImageProvider>
 
   @override
   ParagraphEmbed? toEmbed() {
-    return ImageEmbed(value);
+    return ImageEmbed(image: image, alt: alt);
   }
 }
 
 /// Signature for function used to pick an image.
-typedef PickImage = File? Function();
+typedef PickImage = Future<ImageProvider>? Function(BuildContext context);
 
 /// Themeable property getter extensions for [ImageEmbed].
 extension ImageEmbedTheme on BoustroComponentConfigData {

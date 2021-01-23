@@ -18,6 +18,7 @@ class BoustroConfig extends StatelessWidget {
     this.attributeTheme,
     this.themeCurve,
     this.themeDuration,
+    this.animateTheme = true,
     required this.builder,
   }) : super(key: key);
 
@@ -36,6 +37,9 @@ class BoustroConfig extends StatelessWidget {
   /// Theming for text attributes.
   final AttributeThemeData? attributeTheme;
 
+  /// Indicates if the themes should animate when they change.
+  final bool animateTheme;
+
   /// Child builder of this widget.
   final WidgetBuilder builder;
 
@@ -48,21 +52,31 @@ class BoustroConfig extends StatelessWidget {
     }
 
     if (componentConfigData != null) {
-      widget = AnimatedBoustroComponentTheme(
-        data: componentConfigData!,
-        curve: themeCurve ?? Curves.linear,
-        duration: themeDuration ?? kThemeAnimationDuration,
-        child: widget,
-      );
+      widget = animateTheme
+          ? AnimatedBoustroComponentConfig(
+              data: componentConfigData!,
+              curve: themeCurve ?? Curves.linear,
+              duration: themeDuration ?? kThemeAnimationDuration,
+              child: widget,
+            )
+          : BoustroComponentConfig(
+              data: componentConfigData!,
+              child: widget,
+            );
     }
 
     if (boustroTheme != null) {
-      widget = AnimatedBoustroTheme(
-        data: boustroTheme!,
-        curve: themeCurve ?? Curves.linear,
-        duration: themeDuration ?? kThemeAnimationDuration,
-        child: widget,
-      );
+      widget = animateTheme
+          ? AnimatedBoustroTheme(
+              data: boustroTheme!,
+              curve: themeCurve ?? Curves.linear,
+              duration: themeDuration ?? kThemeAnimationDuration,
+              child: widget,
+            )
+          : BoustroTheme(
+              data: boustroTheme!,
+              child: widget,
+            );
     }
 
     return widget;
@@ -84,5 +98,7 @@ class BoustroConfig extends StatelessWidget {
     properties.add(DiagnosticsProperty<Curve?>('themeCurve', themeCurve));
     properties
         .add(DiagnosticsProperty<Duration?>('themeDuration', themeDuration));
+    properties.add(FlagProperty('animateTheme',
+        value: animateTheme, ifTrue: 'animated', showName: true));
   }
 }

@@ -85,6 +85,19 @@ class LineParagraph with EquatableMixin implements Paragraph {
   }) =>
       line(this);
 
+  /// Create a copy of this line paragraph with the given field values replaced.
+  LineParagraph copyWith({
+    Characters? text,
+    SpanList? spans,
+    BuiltList<LineModifier>? modifiers,
+  }) {
+    return LineParagraph.built(
+      text: text ?? this.text,
+      spans: spans ?? this.spans,
+      modifiers: modifiers ?? this.modifiers,
+    );
+  }
+
   @override
   String toString() {
     return spannedText.toString();

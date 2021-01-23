@@ -300,10 +300,17 @@ ToolbarItem? _buildImageButton({
             final img = await getImage(context);
             if (img != null) {
               final EmbedState embed;
-              if (controller.focusNode.hasFocus) {
-                embed = controller.insertEmbedAtCurrent(ImageEmbed(img))!;
+              // FIXME I've run into cases where the controller's scope node has
+              // primary focus even though there's no focused paragraph.
+              //if (controller.focusNode.hasFocus) {
+              final index = controller.focusedParagraphIndex;
+              if (index != null) {
+                embed = controller.insertEmbed(
+                  index + 1,
+                  ImageEmbed(image: img),
+                );
               } else {
-                embed = controller.appendEmbed(ImageEmbed(img));
+                embed = controller.appendEmbed(ImageEmbed(image: img));
               }
               embed.focusNode.requestFocus();
             }

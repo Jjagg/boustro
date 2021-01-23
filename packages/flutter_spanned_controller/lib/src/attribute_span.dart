@@ -722,17 +722,20 @@ class SpanList extends Equatable {
 
   /// Remove [span].
   SpanList remove(AttributeSpan span) {
+    // TODO Should return this instance when no spans were removed.
     return SpanList._sorted(_spans.where((s) => s != span));
   }
 
   /// Remove all spans with the given attribute.
   SpanList removeAll(TextAttribute attribute) {
+    // TODO Should return this instance when no spans were removed.
     return SpanList._sorted(_spans.where((s) => s.attribute != attribute));
   }
 
   /// Remove all spans of type [T].
   SpanList removeType<T extends TextAttribute>() {
     assert(T != dynamic, 'Attribute type must be specified.');
+    // TODO Should return this instance when no spans were removed.
     // ignore: prefer_iterable_wheretype
     return SpanList._sorted(_spans.where((s) => s.attribute is! T));
   }
@@ -755,6 +758,7 @@ class SpanList extends Equatable {
   }
 
   SpanList _removeFrom(Range range, bool Function(TextAttribute) predicate) {
+    // TODO Should return this instance when no spans were removed.
     return SpanList(
       _spans.rebuild(
         (b) => b.expand(

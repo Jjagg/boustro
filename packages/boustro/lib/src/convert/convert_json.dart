@@ -35,7 +35,7 @@ abstract class ComponentCodec<T> {
   const ComponentCodec.stateful({
     required this.typeStr,
     required T Function(Object?) decode,
-    required Object Function(T) encode,
+    required Object? Function(T) encode,
   })   : _decode = decode,
         _encode = encode,
         _create = null;
@@ -74,7 +74,7 @@ class TextAttributeCodec<T extends TextAttribute> extends ComponentCodec<T> {
   /// Create a text attribute codec for a stateful text attribute.
   const TextAttributeCodec.stateful({
     required String typeStr,
-    required Object Function(T) encode,
+    required Object? Function(T) encode,
     required T Function(Object?) decode,
   }) : super.stateful(typeStr: typeStr, encode: encode, decode: decode);
 
@@ -90,7 +90,7 @@ class LineModifierCodec<T extends LineModifier> extends ComponentCodec<T> {
   /// Create a line modifier codec for a stateful line modifier.
   const LineModifierCodec.stateful({
     required String typeStr,
-    required Object Function(T) encode,
+    required Object? Function(T) encode,
     required T Function(Object?) decode,
   }) : super.stateful(typeStr: typeStr, encode: encode, decode: decode);
 
@@ -106,7 +106,7 @@ class ParagraphEmbedCodec<T extends ParagraphEmbed> extends ComponentCodec<T> {
   /// Create an embed codec for a stateful paragraph embed.
   const ParagraphEmbedCodec.stateful({
     required String typeStr,
-    required Object Function(T) encode,
+    required Object? Function(T) encode,
     required T Function(Object?) decode,
   }) : super.stateful(typeStr: typeStr, encode: encode, decode: decode);
 
@@ -119,7 +119,8 @@ class ParagraphEmbedCodec<T extends ParagraphEmbed> extends ComponentCodec<T> {
 
 /// Convert a document to or from JSON.
 class DocumentJsonCodec extends Codec<Document, dynamic> {
-  ///
+  /// Create a codec to convert a document to or from JSON with codecs for
+  /// attributes, line modifiers and embeds that are supported for conversion.
   factory DocumentJsonCodec({
     Iterable<TextAttributeCodec> attributes = const [],
     Iterable<LineModifierCodec> lineModifiers = const [],
@@ -189,7 +190,13 @@ class _JsonDecoder extends Converter<dynamic, Document> {
       if (p is! Map<String, dynamic>) {
         throw const FormatException('paragraph items must be objects.');
       }
+
       final type = p[_typeKey] as Object?;
+
+      if (type == null) {
+        throw const FormatException('Type must be provided for paragraph.');
+      }
+
       if (type == _lineType) {
         final lineMap = _expectProperties(
           () => _paragraphsKey,
