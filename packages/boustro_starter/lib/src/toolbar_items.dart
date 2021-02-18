@@ -196,20 +196,20 @@ class _LinkDialogState extends State<_LinkDialog> {
         },
       ),
       actions: [
-        FlatButton(
+        TextButton(
           onPressed: () {
             Navigator.pop(context, null);
           },
           child: const Text('Cancel'),
         ),
         if (widget.text.isNotEmpty)
-          FlatButton(
+          TextButton(
             onPressed: () {
               Navigator.pop(context, '');
             },
             child: const Text('Remove'),
           ),
-        FlatButton(
+        TextButton(
           onPressed: () {
             Navigator.pop(context, controller.text);
           },

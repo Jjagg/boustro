@@ -307,13 +307,13 @@ class _AltTextDialogState extends State<_AltTextDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       actions: [
-        FlatButton(
+        TextButton(
           onPressed: () {
             Navigator.pop(context, null);
           },
           child: const Text('Cancel'),
         ),
-        FlatButton(
+        TextButton(
           onPressed: () {
             Navigator.pop(
               context,
