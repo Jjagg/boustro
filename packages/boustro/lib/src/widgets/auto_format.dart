@@ -112,7 +112,8 @@ class FormatRuleset {
           (p) => p.match(
             line: (l) {
               return l.copyWith(
-                spans: applyToString(l.spannedText, clearPrevious: clearPrevious),
+                spans:
+                    applyToString(l.spannedText, clearPrevious: clearPrevious),
               );
             },
             embed: (e) => e,
@@ -214,7 +215,8 @@ class _AutoFormatterState extends State<AutoFormatter> {
 
     _lastText[controller] = controller.text;
 
-    final formattedSpans = widget.ruleset.applyToString(controller.spannedString);
+    final formattedSpans =
+        widget.ruleset.applyToString(controller.spannedString);
     controller.spans = formattedSpans;
   }
 }
