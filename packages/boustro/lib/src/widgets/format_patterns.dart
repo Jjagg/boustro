@@ -432,6 +432,8 @@ class CommonPatterns {
       ')(?=[^0-9a-zA-Z@+-]|\$))';
   static const String _validGeneralUrlPathChars =
       "[a-z${_cyrillicLettersAndMarks}0-9!\\*';:=\\+,\\.\\\$\\/%#\\[\\]\\-\\u2013_~@\\|&$_latinAccentChars]";
+
+  /// Regex pattern for a valid hashtag.
   static final RegExp validHashtag = RegExp(
       '($_hashtagBoundary)($_hashSigns)(?!\\uFE0F|\\u20E3)($_hashtagAlphaNumeric*$_hashtagAlpha$_hashtagAlphaNumeric*)',
       caseSensitive: false);
