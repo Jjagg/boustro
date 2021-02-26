@@ -177,13 +177,11 @@ const _defaultCompositionAttribute = _DefaultCompositionAttribute();
 class SpannedTextEditingController implements TextEditingController {
   /// Create a new SpannedTextEditingController.
   SpannedTextEditingController({
-    required BuildContext buildContext,
     TextAttribute? compositionAttribute,
     this.processTextValue = _defaultProcessTextValue,
     String? text,
     SpanList? spans,
-  })  : _buildContext = buildContext,
-        compositionAttribute =
+  })  : compositionAttribute =
             compositionAttribute ?? _defaultCompositionAttribute,
         _textController = TextEditingController(text: text),
         _spans = spans ?? SpanList();
@@ -191,7 +189,6 @@ class SpannedTextEditingController implements TextEditingController {
   /// Create a new spanned text editing controller with the same state as this
   /// one.
   SpannedTextEditingController copy() => SpannedTextEditingController(
-      buildContext: _buildContext,
       compositionAttribute: compositionAttribute,
       processTextValue: processTextValue,
       text: text,
@@ -206,16 +203,12 @@ class SpannedTextEditingController implements TextEditingController {
     SpanList? spans,
   }) {
     return SpannedTextEditingController(
-      buildContext: _buildContext,
       compositionAttribute: compositionAttribute ?? this.compositionAttribute,
       processTextValue: processTextValue ?? this.processTextValue,
       text: text ?? this.text,
       spans: spans ?? this.spans,
     );
   }
-
-  // This is temporary and required because of https://github.com/Jjagg/boustro/issues/10.
-  final BuildContext _buildContext;
 
   /// The attribute that's applied to the active composition.
   ///
@@ -328,9 +321,14 @@ class SpannedTextEditingController implements TextEditingController {
   }
 
   @override
-  TextSpan buildTextSpan({TextStyle? style, required bool withComposing}) {
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
     if (spans.iter.isEmpty) {
       return _textController.buildTextSpan(
+        context: context,
         style: style,
         withComposing: withComposing,
       );
@@ -357,7 +355,7 @@ class SpannedTextEditingController implements TextEditingController {
     // want gestures on spans to be handled while editing.
     return segments.buildTextSpans(
       style: style ?? const TextStyle(),
-      context: _buildContext,
+      context: context,
     );
   }
 

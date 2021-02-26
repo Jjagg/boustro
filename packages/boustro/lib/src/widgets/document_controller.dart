@@ -206,12 +206,10 @@ class _ToggleStateListener<T> {
 class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   /// Create a document controller.
   DocumentController({
-    required BuildContext buildContext,
     FocusScopeNode? focusNode,
     ScrollController? scrollController,
     Iterable<Paragraph>? paragraphs,
-  })  : _buildContext = buildContext,
-        focusNode = focusNode ?? FocusScopeNode(),
+  })  : focusNode = focusNode ?? FocusScopeNode(),
         scrollController = scrollController ?? ScrollController(),
         super(BuiltList()) {
     if (focusNode == null) {
@@ -236,9 +234,6 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
 
   /// The scroll controller for the [ScrollView] containing the paragraphs.
   final ScrollController scrollController;
-
-  /// BuildContext where the controller was created.
-  final BuildContext _buildContext;
 
   // EVENTS
 
@@ -370,7 +365,6 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   /// Insert a line at [index].
   LineState insertLine(int index, [LineParagraph? line]) {
     final spanController = SpannedTextEditingController(
-      buildContext: _buildContext,
       processTextValue: _processTextValue,
       text: line?.text.string,
       spans: line?.spans,

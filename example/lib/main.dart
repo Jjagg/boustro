@@ -90,23 +90,7 @@ class _MyAppState extends State<MyApp> {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeMode,
-          home: BoustroConfig(
-            attributeTheme: (AttributeThemeBuilder()
-                  ..boldFontWeight = FontWeight.w900)
-                .build(),
-            componentConfigData:
-                Theme.of(context).brightness == Brightness.light
-                    ? (BoustroComponentConfigBuilder()
-                          ..imageMaxHeight = 400
-                          ..imageSideColor = Colors.brown.withOpacity(0.2))
-                        .build()
-                    : (BoustroComponentConfigBuilder()
-                          ..imageMaxHeight = 350
-                          ..imageSideColor =
-                              Colors.deepPurple.shade900.withOpacity(0.2))
-                        .build(),
-            builder: (_) => HomeScreen(),
-          ),
+          home: HomeScreen(),
         ),
       ),
     );
@@ -122,7 +106,6 @@ class _HomeScreenState extends State<HomeScreen> {
   late final scrollController = ScrollController();
   late final controller = DocumentController(
     scrollController: scrollController,
-    buildContext: context,
   );
 
   @override
@@ -138,7 +121,21 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text('Boustro'),
         actions: [
-          Builder(
+          BoustroConfig(
+            attributeTheme: (AttributeThemeBuilder()
+                  ..boldFontWeight = FontWeight.w900)
+                .build(),
+            componentConfigData:
+                Theme.of(context).brightness == Brightness.light
+                    ? (BoustroComponentConfigBuilder()
+                          ..imageMaxHeight = 400
+                          ..imageSideColor = Colors.brown.withOpacity(0.2))
+                        .build()
+                    : (BoustroComponentConfigBuilder()
+                          ..imageMaxHeight = 350
+                          ..imageSideColor =
+                              Colors.deepPurple.shade900.withOpacity(0.2))
+                        .build(),
             builder: (context) => IconButton(
               icon: const Icon(Icons.check),
               onPressed: () {
