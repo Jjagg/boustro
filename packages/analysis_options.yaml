@@ -24,6 +24,7 @@ linter:
     always_use_package_imports: false
     avoid_annotating_with_dynamic: false
     avoid_as: false
+    avoid_empty_else: false
     avoid_returning_null: false
     cascade_invocations: false
     flutter_style_todos: false
