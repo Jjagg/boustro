@@ -207,10 +207,9 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   /// Create a document controller.
   DocumentController({
     FocusScopeNode? focusNode,
-    ScrollController? scrollController,
+    this.scrollController,
     Iterable<Paragraph>? paragraphs,
   })  : focusNode = focusNode ?? FocusScopeNode(),
-        scrollController = scrollController ?? ScrollController(),
         super(BuiltList()) {
     if (focusNode == null) {
       _ownedFocusNode = focusNode;
@@ -233,7 +232,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   final FocusScopeNode focusNode;
 
   /// The scroll controller for the [ScrollView] containing the paragraphs.
-  final ScrollController scrollController;
+  final ScrollController? scrollController;
 
   // EVENTS
 

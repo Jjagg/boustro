@@ -1,59 +1,14 @@
 import 'package:boustro/boustro.dart';
 import 'package:boustro_starter/boustro_starter.dart';
 import 'package:boustro_starter/toolbar_items.dart' as toolbar_items;
+import 'package:example/theme.dart';
 import 'package:flutter/material.dart';
 
 void main() {
   runApp(MyApp());
 }
 
-class ThemeModeScope extends InheritedWidget {
-  const ThemeModeScope({
-    Key? key,
-    required this.notifier,
-    required Widget child,
-  }) : super(key: key, child: child);
-
-  final ThemeModeNotifier notifier;
-
-  static ThemeModeNotifier of(BuildContext context) {
-    final scope = context.dependOnInheritedWidgetOfExactType<ThemeModeScope>();
-    return scope!.notifier;
-  }
-
-  @override
-  bool updateShouldNotify(covariant ThemeModeScope oldWidget) {
-    return notifier != oldWidget.notifier;
-  }
-}
-
-class ThemeModeNotifier extends ValueNotifier<ThemeMode> {
-  ThemeModeNotifier(ThemeMode? value) : super(value ?? ThemeMode.system);
-
-  void setSystem() {
-    value = ThemeMode.system;
-  }
-
-  void toggle(BuildContext context) {
-    Brightness current;
-    if (value == ThemeMode.light) {
-      current = Brightness.light;
-    } else if (value == ThemeMode.dark) {
-      current = Brightness.dark;
-    } else {
-      current = MediaQuery.platformBrightnessOf(context);
-    }
-
-    value = current == Brightness.light ? ThemeMode.dark : ThemeMode.light;
-  }
-}
-
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
+class MyApp extends StatelessWidget {
   final darkTheme = ThemeData(
     primarySwatch: Colors.grey,
     primaryColor: Colors.grey.shade800,
@@ -70,28 +25,15 @@ class _MyAppState extends State<MyApp> {
     dividerColor: Colors.white54,
   );
 
-  late ThemeModeNotifier themeModeNotifier =
-      ThemeModeNotifier(ThemeMode.system);
-
-  @override
-  void dispose() {
-    themeModeNotifier.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
-    return ThemeModeScope(
-      notifier: themeModeNotifier,
-      child: ValueListenableBuilder<ThemeMode>(
-        valueListenable: themeModeNotifier,
-        builder: (context, themeMode, child) => MaterialApp(
-          title: 'Flutter Demo',
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: themeMode,
-          home: HomeScreen(),
-        ),
+    return ThemeBuilder(
+      builder: (context, themeMode, child) => MaterialApp(
+        title: 'Flutter Demo',
+        theme: lightTheme,
+        darkTheme: darkTheme,
+        themeMode: themeMode,
+        home: HomeScreen(),
       ),
     );
   }
@@ -103,14 +45,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late final scrollController = ScrollController();
-  late final controller = DocumentController(
-    scrollController: scrollController,
-  );
+  late final controller = DocumentController();
 
   @override
   void dispose() {
-    scrollController.dispose();
     controller.dispose();
     super.dispose();
   }
