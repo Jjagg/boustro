@@ -402,7 +402,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     spanController.addListener(() {
       _lineValueChangedController.add(LineValueChangedEvent(newLine));
 
-      if (focusedLine?.controller != spanController) {
+      if (!focusNode.hasPrimaryFocus) {
         return;
       }
 
