@@ -170,6 +170,8 @@ class _LinkDialogState extends State<_LinkDialog> {
   // ignore: diagnostic_describe_all_properties
   late final TextEditingController controller =
       TextEditingController(text: widget.text);
+  final _formKey = GlobalKey<FormState>();
+  bool triedApply = false;
 
   @override
   void dispose() {
@@ -180,23 +182,27 @@ class _LinkDialogState extends State<_LinkDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      content: TextFormField(
-        autofocus: true,
-        controller: controller,
-        keyboardType: TextInputType.url,
-        decoration: InputDecoration(
-          hintText: widget.hintText,
-        ),
-        validator: (text) {
-          if (text == null || text == '') {
-            return null;
-          }
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          autofocus: true,
+          autovalidateMode: triedApply ? AutovalidateMode.always : null,
+          controller: controller,
+          keyboardType: TextInputType.url,
+          decoration: InputDecoration(
+            hintText: widget.hintText,
+          ),
+          validator: (text) {
+            if (text == null || text == '') {
+              return null;
+            }
 
-          final match = CommonPatterns.httpUrl.firstMatch(text);
-          final isValid =
-              match != null && match.end - match.start == text.length;
-          return isValid ? null : 'Please enter a valid URL.';
-        },
+            final match = CommonPatterns.httpUrl.firstMatch(text);
+            final isValid =
+                match != null && match.end - match.start == text.length;
+            return isValid ? null : 'Please enter a valid URL.';
+          },
+        ),
       ),
       actions: [
         TextButton(
@@ -214,12 +220,25 @@ class _LinkDialogState extends State<_LinkDialog> {
           ),
         TextButton(
           onPressed: () {
-            Navigator.pop(context, controller.text);
+            if (_formKey.currentState!.validate()) {
+              Navigator.pop(context, controller.text);
+            } else {
+              setState(() {
+                triedApply = true;
+              });
+            }
           },
           child: const Text('Apply'),
         )
       ],
     );
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+        .add(FlagProperty('triedApply', value: triedApply, showName: true));
   }
 }
 
