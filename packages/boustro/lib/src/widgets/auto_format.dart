@@ -186,7 +186,7 @@ class _AutoFormatterState extends State<AutoFormatter> {
   }
 
   void _handleLineValueChanged(LineValueChangedEvent event) {
-    _autoFormat(event.controller);
+    _autoFormat(event.state.controller);
   }
 
   void _handleParagraphsChanged() {

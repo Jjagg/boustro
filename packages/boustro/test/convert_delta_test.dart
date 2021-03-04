@@ -10,9 +10,6 @@ import 'package:boustro/convert_delta.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-// TODO We don't want strong mode implicit-dynamic here, but I don't think
-//      the analyzer lets us disable it for tests.
-
 void main() {
   const opDecoder = OpJsonCodec();
   group('delta json decoder', () {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:boustro/boustro.dart';
@@ -11,11 +12,7 @@ import 'line_modifiers.dart';
 
 // === ATTRIBUTES ===
 
-Widget Function(
-  BuildContext context,
-  DocumentController controller,
-  ToolbarItem item,
-) _createToggleableToolbarItemBuilder(
+ToolbarItemBuilder _createToggleableToolbarItemBuilder(
   ValueListenable<bool> Function(DocumentController) getToggledListener, {
   ValueListenable<bool> Function(DocumentController)? getEnabledListener,
 }) {
@@ -47,7 +44,7 @@ Widget _buildIconButton(BuildContext context, ToolbarItem item,
     DocumentController controller, bool enableTap) {
   return IconButton(
     splashColor: Colors.transparent,
-    onPressed: item.onPressed == null
+    onPressed: !enableTap || item.onPressed == null
         ? null
         : () => item.onPressed!(context, controller),
     icon: item.title!,
@@ -191,8 +188,14 @@ class _LinkDialogState extends State<_LinkDialog> {
           hintText: widget.hintText,
         ),
         validator: (text) {
-          // TODO link validator
-          return null;
+          if (text == null || text == '') {
+            return null;
+          }
+
+          final match = CommonPatterns.httpUrl.firstMatch(text);
+          final isValid =
+              match != null && match.end - match.start == text.length;
+          return isValid ? null : 'Please enter a valid URL.';
         },
       ),
       actions: [
@@ -231,10 +234,8 @@ ToolbarItem link({String uriHintText = 'google.com'}) {
       if (line != null) {
         final c = line.controller;
         if (c.selection.isValid) {
-          var canApply = !c.selection.isCollapsed;
-          if (!canApply) {
-            canApply = c.getAppliedSpansWithType<LinkAttribute>().isNotEmpty;
-          }
+          final canApply = !c.selection.isCollapsed ||
+              c.getAppliedSpansWithType<LinkAttribute>().isNotEmpty;
 
           if (canApply) {
             final attrs = c.getAppliedSpansWithType<LinkAttribute>();
@@ -270,7 +271,88 @@ ToolbarItem link({String uriHintText = 'google.com'}) {
         }
       }
     },
+    builder: (context, controller, item) =>
+        _LinkToolbarItem(controller: controller, toolbarItem: item),
   );
+}
+
+class _LinkToolbarItem extends StatefulWidget {
+  const _LinkToolbarItem({
+    Key? key,
+    required this.controller,
+    required this.toolbarItem,
+  }) : super(key: key);
+
+  final DocumentController controller;
+  final ToolbarItem toolbarItem;
+
+  @override
+  _LinkToolbarItemState createState() => _LinkToolbarItemState();
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+        .add(DiagnosticsProperty<DocumentController>('controller', controller));
+  }
+}
+
+class _LinkToolbarItemState extends State<_LinkToolbarItem> {
+  late final ValueNotifier<bool> enabledListener = ValueNotifier(false);
+  late final StreamSubscription<LineValueChangedEvent> _lineChangedSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _lineChangedSubscription =
+        widget.controller.onLineValueChanged.listen(_handleLineValueChanged);
+  }
+
+  @override
+  void dispose() {
+    enabledListener.dispose();
+    _lineChangedSubscription.cancel();
+    super.dispose();
+  }
+
+  void _handleLineValueChanged(LineValueChangedEvent event) {
+    final state = event.state;
+    if (state.focusNode.hasPrimaryFocus) {
+      enabledListener.value = state.controller.selection.isValid &&
+          !state.controller.selection.isCollapsed;
+    }
+    //print(
+    //    'Enabled ${state.controller.selection.isValid && !state.controller.selection.isCollapsed}');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: enabledListener,
+      builder: (context, enabled, child) => ValueListenableBuilder<bool>(
+        valueListenable:
+            widget.controller.getAttributeTypeListener<LinkAttribute>(),
+        builder: (context, toggled, child) => _buildToggleableButton(
+          context,
+          toggled,
+          Center(
+            child: _buildIconButton(
+              context,
+              widget.toolbarItem,
+              widget.controller,
+              enabled || toggled,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<ValueNotifier<bool>>(
+        'enabledListener', enabledListener));
+  }
 }
 
 // === LINE MODIFIERS ===

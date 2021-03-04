@@ -131,8 +131,6 @@ class TextAttributeValue extends Equatable {
       onDoubleTap != null ||
       onLongPress != null;
 
-  // TODO Conflict resolution
-
   @override
   String toString() {
     return debugName ?? super.toString();
@@ -664,34 +662,21 @@ class SpanList extends Equatable {
 
   /// Get the spans with the specified [attribute].
   Iterable<AttributeSpan> getSpans(TextAttribute attribute) =>
-      _getSpans(_spans, attribute);
+      _spans.where((s) => s.attribute == attribute);
 
   /// Get the spans with the specified [attribute] in [range].
   Iterable<AttributeSpan> getSpansIn(Range range, TextAttribute attribute) =>
-      _getSpans(_spans.where((s) => s.range.touches(range)), attribute);
+      _spans.where((s) => s.range.touches(range) && s.attribute == attribute);
 
   /// Get the spans with attributes of type [T].
   Iterable<AttributeSpan> getTypedSpans<T extends TextAttribute>() =>
-      _getTypedSpans<T>(_spans);
+      _spans.where((s) => s.attribute is T);
 
   /// Get the spans with attributes of type [T] in [range].
   Iterable<AttributeSpan> getTypedSpansIn<T extends TextAttribute>(
     Range range,
   ) {
-    return _getTypedSpans<T>(_spans.where((s) => s.range.touches(range)));
-  }
-
-  static Iterable<AttributeSpan> _getSpans(
-    Iterable<AttributeSpan> spans,
-    TextAttribute attribute,
-  ) {
-    return spans.where((s) => s.attribute == attribute);
-  }
-
-  static Iterable<AttributeSpan> _getTypedSpans<T extends TextAttribute>(
-    Iterable<AttributeSpan> spans,
-  ) {
-    return spans.where((s) => s.attribute is T);
+    return _spans.where((s) => s.range.touches(range) && s.attribute is T);
   }
 
   /// Add a span. Merges touching spans with the same attribute or type.
@@ -722,21 +707,17 @@ class SpanList extends Equatable {
 
   /// Remove [span].
   SpanList remove(AttributeSpan span) {
-    // TODO Should return this instance when no spans were removed.
     return SpanList._sorted(_spans.where((s) => s != span));
   }
 
   /// Remove all spans with the given attribute.
   SpanList removeAll(TextAttribute attribute) {
-    // TODO Should return this instance when no spans were removed.
     return SpanList._sorted(_spans.where((s) => s.attribute != attribute));
   }
 
   /// Remove all spans of type [T].
   SpanList removeType<T extends TextAttribute>() {
     assert(T != dynamic, 'Attribute type must be specified.');
-    // TODO Should return this instance when no spans were removed.
-    // ignore: prefer_iterable_wheretype
     return SpanList._sorted(_spans.where((s) => s.attribute is! T));
   }
 
@@ -758,7 +739,6 @@ class SpanList extends Equatable {
   }
 
   SpanList _removeFrom(Range range, bool Function(TextAttribute) predicate) {
-    // TODO Should return this instance when no spans were removed.
     return SpanList(
       _spans.rebuild(
         (b) => b.expand(
@@ -830,15 +810,6 @@ extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
     required BuildContext context,
     Map<TextAttribute, GestureRecognizer>? recognizers,
   }) {
-    // TODO multiple gestures
-    // TODO WidgetSpan support
-
-    // Flutter issues:
-    // - Support WidgetSpan in SelectableText: https://github.com/flutter/flutter/issues/38474
-    // - Support WidgetSpan in EditableText: https://github.com/flutter/flutter/issues/30688
-    //   I don't think we need gesture recognizers while editing, but this blocks
-    //   inline embeds.
-
     final span = TextSpan(
       style: style,
       children: map((segment) {

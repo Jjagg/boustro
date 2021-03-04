@@ -281,7 +281,6 @@ class _AnimatedBoustroThemeState
 
   @override
   void forEachTween(TweenVisitor<dynamic> visitor) {
-    // TODO(ianh): Use constructor tear-offs when it becomes possible, https://github.com/dart-lang/sdk/issues/10659
     _data = visitor(
             _data,
             widget.data,

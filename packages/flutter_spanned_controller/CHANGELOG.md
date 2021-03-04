@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `StringDiff.isEmpty` and `StringDiff.isNotEmpty`.
 - `getSpans` and `getTypedSpans` to `SpanList`
+- `SpanController.getAppliedSpansWithUnsafeType`
 
 ### Fixed
 

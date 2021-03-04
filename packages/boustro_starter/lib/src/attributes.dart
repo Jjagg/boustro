@@ -84,7 +84,8 @@ class LinkAttribute extends TextAttribute with EquatableMixin {
   @override
   TextAttributeValue resolve(BuildContext context) {
     final theme = AttributeTheme.of(context);
-    final style = theme.linkStyle;
+    final style = theme.linkStyle ??
+        const TextStyle(decoration: TextDecoration.underline);
     final onTap = theme.linkOnTap;
     if (kDebugMode && onTap == null) {
       // ignore: avoid_print

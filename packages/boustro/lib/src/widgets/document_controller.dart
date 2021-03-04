@@ -35,21 +35,6 @@ abstract class ParagraphState {
   });
 }
 
-/// Manages a list of [LineModifier] and notifies whenever the list changes.
-class LineModifierController extends ValueNotifier<BuiltList<LineModifier>> {
-  /// Create a line modifier controller.
-  LineModifierController([Iterable<LineModifier>? modifiers])
-      : super(BuiltList.from(modifiers ?? const <LineModifier>[]));
-
-  /// Get the modifier list.
-  BuiltList<LineModifier> get modifiers => value;
-
-  /// Mutate the list of modifiers.
-  void update(dynamic Function(ListBuilder<LineModifier>) updates) {
-    value = modifiers.rebuild(updates);
-  }
-}
-
 /// Holds focus node and state for a line of text.
 ///
 /// This is the editable variant of [LineParagraph].
@@ -101,6 +86,21 @@ class LineState extends ParagraphState {
       line(this);
 }
 
+/// Manages a list of [LineModifier] and notifies whenever the list changes.
+class LineModifierController extends ValueNotifier<BuiltList<LineModifier>> {
+  /// Create a line modifier controller.
+  LineModifierController([Iterable<LineModifier>? modifiers])
+      : super(BuiltList.from(modifiers ?? const <LineModifier>[]));
+
+  /// Get the modifier list.
+  BuiltList<LineModifier> get modifiers => value;
+
+  /// Mutate the list of modifiers.
+  void update(dynamic Function(ListBuilder<LineModifier>) updates) {
+    value = modifiers.rebuild(updates);
+  }
+}
+
 /// Holds [FocusNode] and content for an embed.
 @immutable
 class EmbedState extends ParagraphState {
@@ -129,10 +129,21 @@ class EmbedState extends ParagraphState {
 /// Event data for [DocumentController.onLineValueChanged].
 class LineValueChangedEvent {
   /// Create a LineValueChangedEvent.
-  const LineValueChangedEvent(this.controller);
+  const LineValueChangedEvent(this.state);
 
-  /// Controller for the line that had its value changed.
-  final SpannedTextEditingController controller;
+  /// State of the line that had its value changed.
+  final LineState state;
+}
+
+/// Event data for [DocumentController.onParagraphAdded] and
+/// [DocumentController.onParagraphRemoved].
+@immutable
+class ParagraphEvent {
+  /// Create a ParagraphEvent.
+  const ParagraphEvent(this.state);
+
+  /// State of the paragraph.
+  final ParagraphState state;
 }
 
 @immutable
@@ -227,6 +238,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   }
 
   FocusScopeNode? _ownedFocusNode;
+  ParagraphState? _focusedParagraph;
 
   /// The focus scope node for the controller.
   final FocusScopeNode focusNode;
@@ -240,11 +252,22 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
       StreamController.broadcast();
 
   /// Stream of events fired when a text line's [TextEditingValue] changes.
-  ///
-  /// This event can be useful for automatically applying some formatting to a
-  /// line, for example to automatically turn URL's into clickable links.
   Stream<LineValueChangedEvent> get onLineValueChanged =>
       _lineValueChangedController.stream;
+
+  final StreamController<ParagraphEvent> _paragraphAddedController =
+      StreamController.broadcast();
+
+  /// Stream of events fired when a paragraph is added.
+  Stream<ParagraphEvent> get onParagraphAdded =>
+      _paragraphAddedController.stream;
+
+  final StreamController<ParagraphEvent> _paragraphRemovedController =
+      StreamController.broadcast();
+
+  /// Stream of events fired when a paragraph is removed.
+  Stream<ParagraphEvent> get onParagraphRemoved =>
+      _paragraphRemovedController.stream;
 
   @protected
   @override
@@ -266,15 +289,12 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
 
   /// Get the index of the focused paragraph or null if no paragraph has focus.
   int? get focusedParagraphIndex {
-    final index = paragraphs.indexWhere((p) => p.focusNode.hasPrimaryFocus);
-    return index == -1 ? null : index;
+    final p = _focusedParagraph;
+    return p == null ? null : paragraphs.indexOf(p);
   }
 
   /// Get the currently focused paragraph, if any.
-  ParagraphState? get focusedParagraph {
-    final index = focusedParagraphIndex;
-    return index == null ? null : paragraphs[index];
-  }
+  ParagraphState? get focusedParagraph => _focusedParagraph;
 
   /// Get the currently focused line. If there is no focused paragraph or the
   /// [focusedParagraph] is not a [LineState] this returns null.
@@ -369,19 +389,6 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
       spans: line?.spans,
     );
 
-    spanController.addListener(() {
-      _lineValueChangedController.add(LineValueChangedEvent(spanController));
-      _attributeListener.notify(
-        spanController.isApplied,
-      );
-      //_attributeTypeListener.notify((t) {
-      //  final spans = spanController.spans;
-      //  final selection = spanController.selectionRange;
-      //  return selection.isCollapsed ?
-      //  spans.getTypedSpansIn<t>(selection.start)
-      //})
-    });
-
     final focusNode = FocusNode(
       onKey: (n, ev) => _onKey(spanController, ev),
     );
@@ -392,6 +399,21 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
       modifiers: line?.modifiers.asList(),
     );
 
+    spanController.addListener(() {
+      _lineValueChangedController.add(LineValueChangedEvent(newLine));
+
+      if (focusedLine?.controller != spanController) {
+        return;
+      }
+
+      _attributeListener.notify(
+        spanController.isApplied,
+      );
+      _attributeTypeListener.notify((type) {
+        return spanController.getAppliedSpansWithUnsafeType(type).isNotEmpty;
+      });
+    });
+
     newLine.modifierController.addListener(() {
       if (newLine.focusNode.hasPrimaryFocus) {
         _modifierListener.notify(newLine.modifiers.contains);
@@ -400,13 +422,18 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
 
     focusNode.addListener(() {
       if (focusNode.hasPrimaryFocus) {
+        _focusedParagraph = newLine;
         _modifierListener.notify(newLine.modifiers.contains);
       } else {
+        if (_focusedParagraph == newLine) {
+          _focusedParagraph = null;
+        }
         _modifierListener.notify((_) => false);
       }
     });
 
     _rebuild((r) => r.insert(index, newLine));
+    _paragraphAddedController.add(ParagraphEvent(newLine));
     return newLine;
   }
 
@@ -485,7 +512,6 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   }
 
   /// Toggles a line modifier for the focused line.
-  // TODO mechanism for ordering and conflicts
   void toggleLineModifier(LineModifier modifier) {
     final focusIndex = focusedParagraphIndex;
     if (focusIndex != null && paragraphs[focusIndex] is LineState) {
@@ -513,6 +539,9 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   void removeParagraphAt(int index) {
     _rebuild((r) {
       final state = r.removeAt(index);
+
+      _paragraphRemovedController.add(ParagraphEvent(state));
+
       // We defer disposal until after the next build, because the
       // EditableText will be removed from the tree and disposed, and it
       // will access our controller, causing issues if we dispose it here
@@ -563,10 +592,19 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     }
 
     final focus = FocusNode();
+
     final state = EmbedState(
       focusNode: focus,
       controller: embed.createController(),
     );
+
+    focusNode.addListener(() {
+      if (focusNode.hasPrimaryFocus) {
+        _focusedParagraph = state;
+      } else if (_focusedParagraph == state) {
+        _focusedParagraph = null;
+      }
+    });
 
     if (index == paragraphs.length) {
       appendLine();
@@ -577,6 +615,8 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     _rebuild((r) {
       r.insert(index == 0 ? 1 : index, state);
     });
+
+    _paragraphAddedController.add(ParagraphEvent(state));
     return state;
   }
 
@@ -676,6 +716,10 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
 
   @override
   void dispose() {
+    _lineValueChangedController.close();
+    _paragraphAddedController.close();
+    _paragraphRemovedController.close();
+
     _attributeListener.dispose();
     _attributeTypeListener.dispose();
     _modifierListener.dispose();

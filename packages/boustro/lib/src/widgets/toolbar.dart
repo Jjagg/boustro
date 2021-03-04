@@ -102,11 +102,9 @@ class ToolbarItem extends StatelessWidget with NestedListItem<ToolbarItem> {
       }
 
       return true;
-    }(), 'unnreachable');
+    }(), 'unreachable');
 
-    toolbarScope!;
-
-    final controller = toolbarScope.controller;
+    final controller = toolbarScope!.controller;
     final builder = this.builder ?? toolbarScope.defaultItemBuilder;
 
     return builder(context, controller, this);

@@ -87,13 +87,17 @@ class _DocumentViewState extends State<DocumentView> {
   @override
   Widget build(BuildContext context) {
     final btheme = BoustroTheme.of(context);
+    final directionality = Directionality.of(context);
+    final editorPadding = (btheme.editorPadding ??
+            BoustroThemeData.fallbackForContext(context).editorPadding!)
+        .resolve(directionality);
 
     return BoustroScope.readonly(
       document: widget.document,
       child: Container(
         color: btheme.editorColor,
         child: ListView.builder(
-          padding: const EdgeInsets.all(0),
+          padding: editorPadding,
           physics: widget.physics,
           shrinkWrap: true,
           itemCount: widget.document.paragraphs.length,

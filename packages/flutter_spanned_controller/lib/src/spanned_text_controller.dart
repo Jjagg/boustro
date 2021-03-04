@@ -100,6 +100,29 @@ extension SpannedTextEditingControllerExtension
     return spans.getTypedSpansIn<T>(_convertRange(selection));
   }
 
+  /// Get all attribute spans of type [type] applied to the current selection.
+  ///
+  /// This method is meant to be used for stateful attributes and does not
+  /// currently take overrides into account.
+  ///
+  /// This is a variant of [getAppliedSpansWithType] that takes the type as a
+  /// regular argument rather than a generic argument. If you statically know
+  /// the type, use [getAppliedSpansWithType]. This method only checks type
+  /// equality and not assignability, so it does not return spans with
+  /// attributes of derived types. For example, if you pass [TextAttribute] for
+  /// [type], no spans will match because their attributes are all derived from
+  /// [TextAttribute].
+  Iterable<AttributeSpan> getAppliedSpansWithUnsafeType(Type type) {
+    if (!selection.isValid) {
+      return const Iterable<AttributeSpan>.empty();
+    }
+
+    final range = _convertRange(selection);
+    return spans.iter.where(
+      (s) => s.range.touches(range) && s.attribute.runtimeType == type,
+    );
+  }
+
   /// Determines if [attribute] is applied to the full selection (for a ranged
   /// selection) or would be applied on insertion (for a collapsed selection).
   bool isApplied(TextAttribute attribute) {
@@ -446,8 +469,6 @@ class SpannedTextEditingController implements TextEditingController {
         oldEnd.current == newEnd.current) {
       end--;
     }
-
-    // TODO clean up this second part
 
     var start = 0;
     final delta = newText.length - oldText.length;
