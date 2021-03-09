@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] — 2021-3-9
+
 - **Added** `StringDiff.isEmpty` and `StringDiff.isNotEmpty`.
 - **Added** `getSpans` and `getTypedSpans` to `SpanList`.
 - **Added** `SpanController.getAppliedSpansWithUnsafeType`.
@@ -56,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Initial release**.
 
 [Unreleased]: https://github.com/Jjagg/boustro/tree/main/packages/flutter_spanned_controller
+[0.5.0]: https://github.com/Jjagg/boustro/tree/release_fsp_v0.5.0/packages/flutter_spanned_controller
 [0.4.0-0]: https://github.com/Jjagg/boustro/tree/release_fsp_v0.4.0-0/packages/flutter_spanned_controller
 [0.3.0-0]: https://github.com/Jjagg/boustro/tree/release_fsp_v0.3.0-0/packages/flutter_spanned_controller
 [0.2.0-0]: https://github.com/Jjagg/boustro/tree/release_fsp_v0.2.0-0/packages/flutter_spanned_controller
