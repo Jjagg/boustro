@@ -285,69 +285,89 @@ customized.</p>
 <p>The format is based on <a href="https://keepachangelog.com/en/1.0.0/">Keep a Changelog</a>,
 and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
 <h2><a class="header" href="#a-hrefhttpsgithubcomjjaggboustrotreemainpackagesflutter_spanned_controllerunreleaseda" id="a-hrefhttpsgithubcomjjaggboustrotreemainpackagesflutter_spanned_controllerunreleaseda"><a href="https://github.com/Jjagg/boustro/tree/main/packages/flutter_spanned_controller">Unreleased</a></a></h2>
-<h3><a class="header" href="#added" id="added">Added</a></h3>
+<h2><a class="header" href="#a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v050packagesflutter_spanned_controller050a--2021-3-9" id="a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v050packagesflutter_spanned_controller050a--2021-3-9"><a href="https://github.com/Jjagg/boustro/tree/release_fsp_v0.5.0/packages/flutter_spanned_controller">0.5.0</a> — 2021-3-9</a></h2>
 <ul>
-<li><code>StringDiff.isEmpty</code> and <code>StringDiff.isNotEmpty</code>.</li>
-<li><code>getSpans</code> and <code>getTypedSpans</code> to <code>SpanList</code></li>
-<li><code>SpanController.getAppliedSpansWithUnsafeType</code></li>
-</ul>
-<h3><a class="header" href="#fixed" id="fixed">Fixed</a></h3>
-<ul>
-<li><code>GestureRecognizers</code> on spans are now indexed with their attribute instead of the resolved attribute value,
-because function object equality does not work with inline lambdas.</li>
-<li><code>SpannedTextEditingController.buildTextSpan</code> did not translate composition indices, causing an exception in
-some cases with characters that take up multiple code units in UTF-16 (like most emoji).</li>
-</ul>
-<h3><a class="header" href="#changed" id="changed">Changed</a></h3>
-<ul>
-<li><code>TextAttribute.resolve</code> now takes a <code>BuildContext</code> instead of taking an <code>AttributeTheme</code> directly.</li>
+<li>
+<p><strong>Added</strong> <code>StringDiff.isEmpty</code> and <code>StringDiff.isNotEmpty</code>.</p>
+</li>
+<li>
+<p><strong>Added</strong> <code>getSpans</code> and <code>getTypedSpans</code> to <code>SpanList</code>.</p>
+</li>
+<li>
+<p><strong>Added</strong> <code>SpanController.getAppliedSpansWithUnsafeType</code>.</p>
+</li>
+<li>
+<p><strong>Fixed</strong>: <code>GestureRecognizers</code> on spans are now indexed with their attribute instead of the resolved attribute value,
+because function object equality does not work with inline lambdas.</p>
+</li>
+<li>
+<p><strong>Fixed</strong>: <code>SpannedTextEditingController.buildTextSpan</code> did not translate composition indices, causing an exception in
+some cases with characters that take up multiple code units in UTF-16 (like most emoji).</p>
+</li>
+<li>
+<p><strong>Changed</strong>: <code>TextAttribute.resolve</code> now takes a <code>BuildContext</code> instead of taking an <code>AttributeTheme</code> directly.</p>
+</li>
+<li>
+<p><strong>Changed</strong>: made <code>TextStyle</code> in <code>buildTextSpans</code> optional.</p>
+</li>
 </ul>
 <h2><a class="header" href="#a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v040-0packagesflutter_spanned_controller040-0a--2020-12-22" id="a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v040-0packagesflutter_spanned_controller040-0a--2020-12-22"><a href="https://github.com/Jjagg/boustro/tree/release_fsp_v0.4.0-0/packages/flutter_spanned_controller">0.4.0-0</a> — 2020-12-22</a></h2>
-<h3><a class="header" href="#removed" id="removed">Removed</a></h3>
 <ul>
-<li><code>TextAttribute.simple</code>. In favor of custom classes, so each attribute has its own type and
-serialization can use the type to determine which encoder to use.</li>
-</ul>
-<h3><a class="header" href="#changed-1" id="changed-1">Changed</a></h3>
-<ul>
-<li>Moved <code>ExpandRules</code> to be a part of attributes themselves.</li>
+<li>
+<p><strong>Removed</strong> <code>TextAttribute.simple</code>. In favor of custom classes, so each attribute has its own type and
+serialization can use the type to determine which encoder to use.</p>
+</li>
+<li>
+<p><strong>Changed</strong>: moved <code>ExpandRules</code> to be a part of attributes themselves.</p>
+</li>
 </ul>
 <h2><a class="header" href="#a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v030-0packagesflutter_spanned_controller030-0a--2020-12-18" id="a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v030-0packagesflutter_spanned_controller030-0a--2020-12-18"><a href="https://github.com/Jjagg/boustro/tree/release_fsp_v0.3.0-0/packages/flutter_spanned_controller">0.3.0-0</a> — 2020-12-18</a></h2>
-<h3><a class="header" href="#added-1" id="added-1">Added</a></h3>
 <ul>
-<li>System to theme <code>TextAttributes</code> with <code>AttributeTheme</code>.</li>
-<li>Range to avoid confusion with <code>TextRange</code>.
-<code>TextRange</code> is designed to be for indexing into <code>String</code> by UTF-16 code units.</li>
-</ul>
-<h3><a class="header" href="#changed-2" id="changed-2">Changed</a></h3>
-<ul>
-<li><code>TextAttribute</code> now has a resolve method that returns the actual information for
-applying the attribute in the form of <code>TextAttributeValue</code>.</li>
-<li>The <code>characters</code> library is used to index with grapheme clusters instead of UTF-16 code units.
-This changes most <code>String</code>-based API to use <code>Characters</code> instead.</li>
-<li>Use <code>Range</code> in <code>AttributeSpan</code> and related classes to avoid confusion with UTF-16 indices used by <code>TextRange</code>.</li>
-<li>Renamed <code>SpanList.spans</code> to <code>iter</code> to prevent confusing <code>spans.spans</code>.</li>
-<li><code>SpannedTextEditingController</code> takes a <code>SpanList</code> now instead of <code>Iterable&lt;AttributeSpan&gt;</code>.</li>
-<li>Renamed <code>InsertBehavior</code> to <code>ExpandRule</code> and <code>FullInsertBehavior</code> to <code>SpanExpandRules</code>.
-Finally, I've come up with the right name for this concept :)</li>
-<li>Rename <code>SpannedString()</code> to <code>SpannedString.chars()</code> and let unnamed constructor take <code>String</code>.</li>
-</ul>
-<h3><a class="header" href="#fixed-1" id="fixed-1">Fixed</a></h3>
-<ul>
-<li>Changed library name from flutter_span_controller to flutter_spann<strong>ed</strong>_controller.</li>
+<li>
+<p><strong>Added</strong> system to theme <code>TextAttributes</code> with <code>AttributeTheme</code>.</p>
+</li>
+<li>
+<p><strong>Added</strong> <code>Range</code> to avoid confusion with <code>TextRange</code>.
+<code>TextRange</code> is designed to be for indexing into <code>String</code> by UTF-16 code units.</p>
+</li>
+<li>
+<p><strong>Changed</strong>: <code>TextAttribute</code> now has a resolve method that returns the actual information for
+applying the attribute in the form of <code>TextAttributeValue</code>.</p>
+</li>
+<li>
+<p><strong>Changed</strong>: the <code>characters</code> library is used to index with grapheme clusters instead of UTF-16 code units.
+This changes most <code>String</code>-based API to use <code>Characters</code> instead.</p>
+</li>
+<li>
+<p><strong>Changed</strong>: use <code>Range</code> in <code>AttributeSpan</code> and related classes to avoid confusion with UTF-16 indices used by <code>TextRange</code>.</p>
+</li>
+<li>
+<p><strong>Changed</strong>: renamed <code>SpanList.spans</code> to <code>iter</code> to prevent confusing <code>spans.spans</code>.</p>
+</li>
+<li>
+<p><strong>Changed</strong>: <code>SpannedTextEditingController</code> takes a <code>SpanList</code> now instead of <code>Iterable&lt;AttributeSpan&gt;</code>.</p>
+</li>
+<li>
+<p><strong>Changed</strong>: renamed <code>InsertBehavior</code> to <code>ExpandRule</code> and <code>FullInsertBehavior</code> to <code>SpanExpandRules</code>.
+Finally, I've come up with the right name for this concept :)</p>
+</li>
+<li>
+<p><strong>Changed</strong>: rename <code>SpannedString()</code> to <code>SpannedString.chars()</code> and let unnamed constructor take <code>String</code>.</p>
+</li>
+<li>
+<p><strong>Fixed</strong>: Changed library name from flutter_span_controller to flutter_spann<strong>ed</strong>_controller.</p>
+</li>
 </ul>
 <h2><a class="header" href="#a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v020-0packagesflutter_spanned_controller020-0a--2020-12-14" id="a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v020-0packagesflutter_spanned_controller020-0a--2020-12-14"><a href="https://github.com/Jjagg/boustro/tree/release_fsp_v0.2.0-0/packages/flutter_spanned_controller">0.2.0-0</a> — 2020-12-14</a></h2>
-<h3><a class="header" href="#added-2" id="added-2">Added</a></h3>
 <ul>
-<li><code>SpannedStringBuilder</code> to fluently build <code>SpannedString</code>.</li>
+<li><strong>Added</strong>: <code>SpannedStringBuilder</code> to fluently build <code>SpannedString</code>.</li>
 </ul>
 <h2><a class="header" href="#a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v011-0packagesflutter_spanned_controller011-0a--2020-12-14" id="a-hrefhttpsgithubcomjjaggboustrotreerelease_fsp_v011-0packagesflutter_spanned_controller011-0a--2020-12-14"><a href="https://github.com/Jjagg/boustro/tree/release_fsp_v0.1.1-0/packages/flutter_spanned_controller">0.1.1-0</a> — 2020-12-14</a></h2>
-<h3><a class="header" href="#changed-3" id="changed-3">Changed</a></h3>
 <ul>
-<li>Replaced template README with short explanation.</li>
+<li><strong>Changed</strong>: Replaced template README with short explanation.</li>
 </ul>
 <h2><a class="header" href="#a-hrefhttpsgithubcomjjaggboustrotree9aa26d5459ecf7447bd8accc6fc31938b1d6d5aapackagesflutter_spanned_controller010-0a--2020-12-11" id="a-hrefhttpsgithubcomjjaggboustrotree9aa26d5459ecf7447bd8accc6fc31938b1d6d5aapackagesflutter_spanned_controller010-0a--2020-12-11"><a href="https://github.com/Jjagg/boustro/tree/9aa26d5459ecf7447bd8accc6fc31938b1d6d5aa/packages/flutter_spanned_controller">0.1.0-0</a> — 2020-12-11</a></h2>
-<p>Initial release.</p>
+<p><strong>Initial release</strong>.</p>
 <h1><a class="header" href="#boustro-changelog" id="boustro-changelog"><code>boustro</code> Changelog</a></h1>
 <h2><a class="header" href="#001---todo-add-release-date" id="001---todo-add-release-date">[0.0.1] - TODO: Add release date.</a></h2>
 <ul>
