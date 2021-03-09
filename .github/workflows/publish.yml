@@ -19,6 +19,15 @@ jobs:
       matrix:
         package:
           - packages/flutter_spanned_controller
+          #- packages/boustro
+          #- packages/boustro_starter
+        include:
+         - package: packages/flutter_spanned_controller
+           tag: fsp
+         #- package: packages/boustro
+         #  tag: boustro
+         #- package: packages/boustro_starter
+         #  tag: starter
 
     steps:
       - name: Checkout
@@ -33,7 +42,7 @@ jobs:
         uses: CumulusDS/get-yaml-paths-action@v0.1.0
         id: pubspec
         with:
-          file: packages/flutter_spanned_controller/pubspec.yaml
+          file: ${{format('{0}/pubspec.yaml', matrix.package)}}
           name: name
           version: version
 
@@ -79,6 +88,7 @@ jobs:
                 id
               }
             }}
-          name: ${{format('refs/tags/release_fsp_v{0}', steps.pubspec.outputs.version)}}
+          name: ${{format('refs/tags/release_{0}_v{1}', matrix.tag, steps.pubspec.outputs.version)}}
           sha: ${{github.sha}}
         if: steps.pubspec.outputs.version != env.CURRENT_VERSION
+
