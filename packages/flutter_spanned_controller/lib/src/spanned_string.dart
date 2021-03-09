@@ -113,8 +113,8 @@ class SpannedString extends Equatable {
   ///
   /// See [AttributeSegmentsExtensions].
   TextSpan buildTextSpans({
-    required TextStyle style,
     required BuildContext context,
+    TextStyle? style,
     Map<TextAttribute, GestureRecognizer>? recognizers,
   }) {
     if (spans.iter.isEmpty) {
@@ -123,8 +123,8 @@ class SpannedString extends Equatable {
 
     final segments = spans.getSegments(text);
     return segments.buildTextSpans(
-      style: style,
       context: context,
+      style: style,
       recognizers: recognizers,
     );
   }

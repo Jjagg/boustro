@@ -806,8 +806,8 @@ extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
   /// If [recognizers] is null, no gesture recognizers will be put on the
   /// spans.
   TextSpan buildTextSpans({
-    required TextStyle style,
     required BuildContext context,
+    TextStyle? style,
     Map<TextAttribute, GestureRecognizer>? recognizers,
   }) {
     final span = TextSpan(

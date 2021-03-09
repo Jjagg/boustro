@@ -211,7 +211,13 @@ class ImageEmbedEditor extends StatelessWidget {
                         context: context,
                         icon: Icons.close,
                         onPressed: () {
-                          scope.controller!.removeCurrentParagraph();
+                          final documentController = scope.controller!;
+                          final index = documentController.paragraphs.indexWhere(
+                            (p) => p.match(
+                                line: (_) => false,
+                                embed: (e) => e.controller == controller),
+                          );
+                          documentController.removeParagraphAt(index);
                         },
                       ),
                     ),

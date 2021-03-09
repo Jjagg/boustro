@@ -366,8 +366,10 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     final paragraphs = this
         .paragraphs
         .map((p) => p.match<Paragraph?>(
-              line: (l) => LineParagraph.fromSpanned(
-                string: l.controller.spannedString,
+              line: (l) => LineParagraph.built(
+                spans: l.controller.spans,
+                text: l.controller.text.characters,
+                modifiers: l.modifierController.modifiers,
               ),
               embed: (e) => e.controller.toEmbed(),
             ))
@@ -424,11 +426,19 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
       if (focusNode.hasPrimaryFocus) {
         _focusedParagraph = newLine;
         _modifierListener.notify(newLine.modifiers.contains);
+        _attributeListener.notify(
+          spanController.isApplied,
+        );
+        _attributeTypeListener.notify((type) {
+          return spanController.getAppliedSpansWithUnsafeType(type).isNotEmpty;
+        });
       } else {
         if (_focusedParagraph == newLine) {
           _focusedParagraph = null;
+          _modifierListener.notify((_) => false);
+          _attributeListener.notify((_) => false);
+          _attributeTypeListener.notify((_) => false);
         }
-        _modifierListener.notify((_) => false);
       }
     });
 
@@ -537,6 +547,10 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
 
   /// Remove the paragraph at [index].
   void removeParagraphAt(int index) {
+    if (index < 0 || index >= paragraphs.length) {
+      return;
+    }
+
     _rebuild((r) {
       final state = r.removeAt(index);
 

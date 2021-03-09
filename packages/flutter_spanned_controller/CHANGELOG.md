@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `TextAttribute.resolve` now takes a `BuildContext` instead of taking an `AttributeTheme` directly.
+- Make `TextStyle` in `buildTextSpans` optional.
 
 ## [0.4.0-0] — 2020-12-22
 

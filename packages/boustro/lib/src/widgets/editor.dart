@@ -113,7 +113,6 @@ class _DocumentViewState extends State<DocumentView> {
     return value.match(line: (line) {
       final spans = line.spannedText.buildTextSpans(
         context: context,
-        style: Theme.of(context).textTheme.subtitle1!,
         recognizers: _recognizers,
       );
 
@@ -122,10 +121,20 @@ class _DocumentViewState extends State<DocumentView> {
               BoustroThemeData.fallbackForContext(context).linePadding!)
           .resolve(Directionality.of(context));
       return Padding(
-        padding:
-            EdgeInsets.only(left: linePadding.left, right: linePadding.right),
+        padding: EdgeInsets.only(
+          left: linePadding.left,
+          right: linePadding.right,
+        ),
         child: line.modifiers.fold<Widget>(
-          Text.rich(spans),
+          Builder(
+            builder: (context) {
+              final style = Theme.of(context).textTheme.subtitle1;
+              return Text.rich(
+                spans,
+                style: style,
+              );
+            },
+          ),
           (line, h) => h.modify(context, line),
         ),
       );
@@ -252,14 +261,15 @@ class DocumentEditor extends StatelessWidget {
       );
 
       result = Padding(
-          padding:
-              EdgeInsets.only(left: linePadding.left, right: linePadding.right),
-          child: ValueListenableBuilder<BuiltList<LineModifier>>(
-            valueListenable: value.modifierController,
-            builder: (context, modifiers, child) => modifiers.fold<Widget>(
-                child!, (line, h) => h.modify(context, line)),
-            child: textField,
-          ));
+        padding:
+            EdgeInsets.only(left: linePadding.left, right: linePadding.right),
+        child: ValueListenableBuilder<BuiltList<LineModifier>>(
+          valueListenable: value.modifierController,
+          builder: (context, modifiers, child) => modifiers.fold<Widget>(
+              child!, (line, h) => h.modify(context, line)),
+          child: textField,
+        ),
+      );
     } else {
       final embed = value as EmbedState;
       result = embed.createEditor(context);
