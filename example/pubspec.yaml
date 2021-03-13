@@ -16,13 +16,11 @@ dependencies:
   image_picker: ^0.7.2
   media_gallery: ^0.1.5
   url_launcher: ^6.0.2
-  plugin_platform_interface: ^2.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  pedantic: ^1.11.0
-
 flutter:
   uses-material-design: true
+

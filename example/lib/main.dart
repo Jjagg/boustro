@@ -10,22 +10,6 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  final darkTheme = ThemeData(
-    primarySwatch: Colors.grey,
-    primaryColor: Colors.grey.shade800,
-    brightness: Brightness.dark,
-    accentColor: Colors.grey.shade100,
-    dividerColor: Colors.black12,
-  );
-
-  final lightTheme = ThemeData(
-    primarySwatch: Colors.grey,
-    primaryColor: Colors.grey.shade200,
-    brightness: Brightness.light,
-    accentColor: Colors.grey.shade50,
-    dividerColor: Colors.white54,
-  );
-
   @override
   Widget build(BuildContext context) {
     return ThemeBuilder(
@@ -46,60 +30,49 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late final controller = DocumentController();
+  final controller = DocumentController();
 
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
+  /// The attribute theme is used to customize the effect of [TextAttribute].
+  AttributeThemeData _buildAttributeTheme(BuildContext context) {
+    final builder = AttributeThemeBuilder();
+    builder.boldFontWeight = FontWeight.w900;
+    builder.linkOnTap = _handleLinkTap;
+    return builder.build();
+  }
+
+  /// The component config is used to customize embeds and line modifiers.
+  BoustroComponentConfigData _buildComponentConfig(BuildContext context) {
+    final builder = BoustroComponentConfigBuilder();
+    builder.imageMaxHeight = 400;
+    builder.imageSideColor = Theme.of(context).brightness == Brightness.light
+        ? Colors.brown.withOpacity(0.2)
+        : Colors.deepPurple.shade900.withOpacity(0.2);
+    return builder.build();
   }
 
   @override
   Widget build(BuildContext context) {
+    // BoustroConfig wraps the three theming classes and provides
+    // an implicit animation to switch between themes.
     return BoustroConfig(
-      attributeTheme: (AttributeThemeBuilder()
-            ..boldFontWeight = FontWeight.w900
-            ..linkOnTap = (context, url) async {
-              if (await canLaunch(url)) {
-                await launch(url);
-              }
-            })
-          .build(),
-      componentConfigData: Theme.of(context).brightness == Brightness.light
-          ? (BoustroComponentConfigBuilder()
-                ..imageMaxHeight = 400
-                ..imageSideColor = Colors.brown.withOpacity(0.2))
-              .build()
-          : (BoustroComponentConfigBuilder()
-                ..imageMaxHeight = 350
-                ..imageSideColor = Colors.deepPurple.shade900.withOpacity(0.2))
-              .build(),
+      attributeTheme: _buildAttributeTheme(context),
+      componentConfigData: _buildComponentConfig(context),
       builder: (context) => Scaffold(
         appBar: AppBar(
           title: Text('Boustro'),
           actions: [
             IconButton(
               icon: const Icon(Icons.check),
-              onPressed: () {
-                Navigator.of(context).push<void>(
-                  MaterialPageRoute<void>(builder: (context) {
-                    return Scaffold(
-                      appBar: AppBar(title: Text('Preview')),
-                      body: DocumentView(
-                        document: controller.toDocument(),
-                      ),
-                    );
-                  }),
-                );
-              },
+              onPressed: _showPreview,
             ),
           ],
         ),
         body: Column(
           children: [
             Expanded(
-              // Demo the auto formatter text separated with hashtags, mentions
-              // and URLs.
+              // The auto formatter automatically applies attributes to text
+              // matching regular expressions. Some patterns are provided
+              // in CommonPatterns for convenience.
               child: AutoFormatter(
                 controller: controller,
                 rules: [
@@ -107,29 +80,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   FormatRule(CommonPatterns.mention, (_) => italicAttribute),
                   FormatRule(CommonPatterns.httpUrl, (_) => boldAttribute),
                 ],
+                // DocumentEditor is the main editor class. It manages the
+                // paragraphs that are either embeds (custom widgets) or
+                // TextFields with custom TextEditingControllers that manage
+                // spans for formatting.
                 child: DocumentEditor(
                   controller: controller,
                 ),
               ),
             ),
+            // The Toolbar contains buttons that can modify the document using
+            // the DocumentController. There are built-in ToolbarItems for the
+            // boustro_starter components. Toolbar has support for nested menus
+            // (try the image button).
             Toolbar(
               documentController: controller,
-              defaultItemBuilder: (context, controller, item) {
-                return Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-                  child: Center(
-                    child: IconButton(
-                      splashColor: Colors.transparent,
-                      onPressed: item.onPressed == null
-                          ? null
-                          : () => item.onPressed!(context, controller),
-                      icon: item.title!,
-                      tooltip: item.tooltip,
-                    ),
-                  ),
-                );
-              },
+              defaultItemBuilder: _defaultToolbarItemBuilder,
               items: [
                 toolbar_items.bold,
                 toolbar_items.italic,
@@ -155,4 +121,66 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  Future<void> _showPreview() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) => Scaffold(
+          appBar: AppBar(title: Text('Preview')),
+          // DocumentView displays a document readonly.
+          body: DocumentView(
+            document: controller.toDocument(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _defaultToolbarItemBuilder(
+    BuildContext context,
+    DocumentController controller,
+    ToolbarItem item,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+      child: Center(
+        child: IconButton(
+          splashColor: Colors.transparent,
+          onPressed: item.onPressed == null
+              ? null
+              : () => item.onPressed!(context, controller),
+          icon: item.title!,
+          tooltip: item.tooltip,
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
 }
+
+Future<void> _handleLinkTap(BuildContext context, String url) async {
+  if (await canLaunch(url)) {
+    await launch(url);
+  }
+}
+
+final darkTheme = ThemeData(
+  primarySwatch: Colors.grey,
+  primaryColor: Colors.grey.shade800,
+  brightness: Brightness.dark,
+  accentColor: Colors.grey.shade100,
+  dividerColor: Colors.black12,
+);
+
+final lightTheme = ThemeData(
+  primarySwatch: Colors.grey,
+  primaryColor: Colors.grey.shade200,
+  brightness: Brightness.light,
+  accentColor: Colors.grey.shade50,
+  dividerColor: Colors.white54,
+);
