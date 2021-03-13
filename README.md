@@ -15,9 +15,31 @@ Boustro is a rich text editor for Flutter.
 
 ## Features
 
+### Easy to customize
+
+Boustro is designed to be extremely customizable.
+
+The boustro library itself does not define any of formatting modifiers or embedded content.
+Instead it provides the base infrastructure to implement these components outside of boustro.
+This way, any custom components can be implemented in user code.
+
+Documentation on writing custom components has not yet been written. For now, check out the
+implementation of the start components in `boustro_starter`.
+
+Of course, there's some common components a rich text editor is supposed to have out of the box.
+To that end, a supplementary library called `boustro_starter` is developed alongside boustro.
+It contains a bunch of components that you can directly use with boustro.
+
 ### Themeable with dark and light defaults
 
-### Easy to customize
+Boustro defines extensible theming classes that let users customize the base editor,
+as well as any components implemented outside of boustro itself. These theme classes
+even support lerping, for a nice animation when switching themes.
+
+### Cross-platform
+
+Boustro builds on Flutter's built-in text widgets, without any custom rendering,
+so it runs on all platforms supported by Flutter.
 
 ## Getting Started
 
@@ -26,9 +48,9 @@ Check out the [example](example).
 ### Glossary and Concepts
 
 - **Document**: Immutable representation of a rich text document.
-- **Paragraph**: A line of text or non-inline embed.
+- **Paragraph**: Can be either a line of text or (non-inline) embed.
 - **Line**: A line of text with rich formatting.
-- **Embed**: Any content in a document that is not rich text.
+- **Embed**: Any content in a document that is not a Line.
 - **Line modifier**: Wraps a line and can change the way it's displayed.
 - **Text attribute**: Applied to text to set its formatting or add gesture recognizers.
 - **Span**: Text range with a text attribute and rules for how the range behaves when text is inserted (whether it is expanded or not).
@@ -60,3 +82,4 @@ go upvote these issues if you'd like to see these limitations overcome.
 ## Alternatives
 
 - [Zefyr](https://github.com/memspace/zefyr): A big inspiration for this project.
+
