@@ -3,7 +3,7 @@ description: >
   TextEditingController implementation that allows for rich text styling in
   Flutter.
 
-version: 0.5.0
+version: 0.5.0+1
 homepage: https://jjagg.dev/boustro
 repository: https://github.com/Jjagg/boustro
 
