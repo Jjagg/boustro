@@ -43,7 +43,7 @@ so it runs on all platforms supported by Flutter.
 
 ## Getting Started
 
-Check out the [example](example).
+Check out the [example](packages/boustro_starter/example).
 
 ### Glossary and Concepts
 

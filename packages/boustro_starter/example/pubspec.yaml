@@ -11,7 +11,7 @@ dependencies:
     sdk: flutter
 
   boustro_starter:
-    path: ../packages/boustro_starter
+    path: ..
 
   image_picker: ^0.7.2
   media_gallery: ^0.1.5
