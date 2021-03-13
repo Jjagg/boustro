@@ -20,7 +20,7 @@ Boustro is a rich text editor for Flutter.
 Boustro is designed to be extremely customizable.
 
 The boustro library itself does not define any of formatting modifiers or embedded content.
-Instead it provides the base infrastructure to implement these components outside of boustro.
+Instead, it provides the base infrastructure to implement these components outside of boustro.
 This way, any custom components can be implemented in user code.
 
 Documentation on writing custom components has not yet been written. For now, check out the
