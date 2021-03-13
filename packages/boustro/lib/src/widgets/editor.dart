@@ -27,8 +27,11 @@ class DocumentView extends StatefulWidget {
   final Document document;
 
   /// ScrollPhysics to pass to the [ListView] that holds the paragraphs.
+  /// See [ScrollView.physics].
   final ScrollPhysics? physics;
 
+  /// Whether the document view is the primary scroll view.
+  /// See [ScrollView.primary].
   final bool? primaryScroll;
 
   @override
@@ -40,6 +43,7 @@ class DocumentView extends StatefulWidget {
     properties.add(DiagnosticsProperty<Document>('document', document));
     properties.add(DiagnosticsProperty<ScrollPhysics?>('physics', physics,
         defaultValue: null));
+    properties.add(DiagnosticsProperty<bool?>('primaryScroll', primaryScroll));
   }
 }
 
