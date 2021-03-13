@@ -9,6 +9,12 @@
             "cwd": "example",
             "request": "launch",
             "type": "dart",
-        }
+        },
+        {
+            "name": "fsp example",
+            "cwd": "packages/flutter_spanned_controller/example",
+            "request": "launch",
+            "type": "dart",
+        },
     ]
 }
