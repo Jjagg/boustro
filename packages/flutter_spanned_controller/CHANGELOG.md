@@ -1,8 +1,8 @@
-## [0.5.0+1]
+## 0.5.0+1
 
 - Add example.
 
-## [0.5.0]
+## 0.5.0
 
 - **Added** `StringDiff.isEmpty` and `StringDiff.isNotEmpty`.
 - **Added** `getSpans` and `getTypedSpans` to `SpanList`.
@@ -16,14 +16,14 @@
 - **Changed**: `TextAttribute.resolve` now takes a `BuildContext` instead of taking an `AttributeTheme` directly.
 - **Changed**: made `TextStyle` in `buildTextSpans` optional.
 
-## [0.4.0-0]
+## 0.4.0-0
 
 - **Removed** `TextAttribute.simple`. In favor of custom classes, so each attribute has its own type and
   serialization can use the type to determine which encoder to use.
 
 - **Changed**: moved `ExpandRules` to be a part of attributes themselves.
 
-## [0.3.0-0]
+## 0.3.0-0
 
 - **Added** system to theme `TextAttributes` with `AttributeTheme`.
 - **Added** `Range` to avoid confusion with `TextRange`.
@@ -42,23 +42,14 @@
 
 - **Fixed**: Changed library name from flutter\_span\_controller to flutter\_spann**ed**\_controller.
 
-## [0.2.0-0]
+## 0.2.0-0
 
 - **Added**: `SpannedStringBuilder` to fluently build `SpannedString`.
 
-## [0.1.1-0]
+## 0.1.1-0
 
 - **Changed**: Replaced template README with short explanation.
 
-## [0.1.0-0]
+## 0.1.0-0
 
 **Initial release**.
-
-[Unreleased]: https://github.com/Jjagg/boustro/tree/main/packages/flutter_spanned_controller
-[0.5.0+1]: https://github.com/Jjagg/boustro/tree/release_fsp_v0.5.0+1/packages/flutter_spanned_controller
-[0.5.0]: https://github.com/Jjagg/boustro/tree/release_fsp_v0.5.0/packages/flutter_spanned_controller
-[0.4.0-0]: https://github.com/Jjagg/boustro/tree/release_fsp_v0.4.0-0/packages/flutter_spanned_controller
-[0.3.0-0]: https://github.com/Jjagg/boustro/tree/release_fsp_v0.3.0-0/packages/flutter_spanned_controller
-[0.2.0-0]: https://github.com/Jjagg/boustro/tree/release_fsp_v0.2.0-0/packages/flutter_spanned_controller
-[0.1.1-0]: https://github.com/Jjagg/boustro/tree/release_fsp_v0.1.1-0/packages/flutter_spanned_controller
-[0.1.0-0]: https://github.com/Jjagg/boustro/tree/9aa26d5459ecf7447bd8accc6fc31938b1d6d5aa/packages/flutter_spanned_controller
