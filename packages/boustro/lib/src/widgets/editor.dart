@@ -20,6 +20,7 @@ class DocumentView extends StatefulWidget {
     Key? key,
     required this.document,
     this.physics,
+    this.primaryScroll,
   }) : super(key: key);
 
   /// The contents this view will display.
@@ -27,6 +28,8 @@ class DocumentView extends StatefulWidget {
 
   /// ScrollPhysics to pass to the [ListView] that holds the paragraphs.
   final ScrollPhysics? physics;
+
+  final bool? primaryScroll;
 
   @override
   _DocumentViewState createState() => _DocumentViewState();
@@ -87,18 +90,15 @@ class _DocumentViewState extends State<DocumentView> {
   @override
   Widget build(BuildContext context) {
     final btheme = BoustroTheme.of(context);
-    final directionality = Directionality.of(context);
-    final editorPadding = (btheme.editorPadding ??
-            BoustroThemeData.fallbackForContext(context).editorPadding!)
-        .resolve(directionality);
 
     return BoustroScope.readonly(
       document: widget.document,
       child: Container(
         color: btheme.editorColor,
         child: ListView.builder(
-          padding: editorPadding,
+          addAutomaticKeepAlives: false,
           physics: widget.physics,
+          primary: widget.primaryScroll,
           shrinkWrap: true,
           itemCount: widget.document.paragraphs.length,
           itemBuilder: (context, index) {
@@ -129,9 +129,15 @@ class _DocumentViewState extends State<DocumentView> {
           Builder(
             builder: (context) {
               final style = Theme.of(context).textTheme.subtitle1;
-              return Text.rich(
-                spans,
-                style: style,
+              return Padding(
+                padding: EdgeInsets.only(
+                  top: linePadding.top,
+                  bottom: linePadding.bottom,
+                ),
+                child: Text.rich(
+                  spans,
+                  style: style,
+                ),
               );
             },
           ),
