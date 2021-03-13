@@ -1,3 +1,4 @@
+// ignore_for_file: diagnostic_describe_all_properties, use_key_in_widget_constructors, public_member_api_docs
 import 'package:flutter/material.dart';
 import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 

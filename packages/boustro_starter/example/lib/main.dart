@@ -1,9 +1,11 @@
+// ignore_for_file: diagnostic_describe_all_properties, use_key_in_widget_constructors, public_member_api_docs
 import 'package:boustro/boustro.dart';
 import 'package:boustro_starter/boustro_starter.dart';
 import 'package:boustro_starter/toolbar_items.dart' as toolbar_items;
-import 'package:example/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import 'theme.dart';
 
 void main() {
   runApp(MyApp());
@@ -59,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
       componentConfigData: _buildComponentConfig(context),
       builder: (context) => Scaffold(
         appBar: AppBar(
-          title: Text('Boustro'),
+          title: const Text('Boustro'),
           actions: [
             IconButton(
               icon: const Icon(Icons.check),
@@ -103,9 +105,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 toolbar_items.link(),
                 toolbar_items.title,
                 toolbar_items.image(
-                  pickImage: (_) async => NetworkImage(
+                  pickImage: (_) async => const NetworkImage(
                       'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
-                  snapImage: (_) async => NetworkImage(
+                  snapImage: (_) async => const NetworkImage(
                       'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
                 ),
                 toolbar_items.bulletList,
@@ -126,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (context) => Scaffold(
-          appBar: AppBar(title: Text('Preview')),
+          appBar: AppBar(title: const Text('Preview')),
           // DocumentView displays a document readonly.
           body: DocumentView(
             document: controller.toDocument(),
