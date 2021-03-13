@@ -20,11 +20,14 @@ jobs:
           - packages/flutter_spanned_controller
           - packages/boustro
           - packages/boustro_starter
-          - example
+          - packages/flutter_spanned_controller/example
+          - packages/boustro_starter/example
         include:
           - package: packages/boustro_starter
             no-tests: true
-          - package: example
+          - package: packages/flutter_spanned_controller/example
+            no-tests: true
+          - package: packages/boustro_starter/example
             no-tests: true
 
     steps:
