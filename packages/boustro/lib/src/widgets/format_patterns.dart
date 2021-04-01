@@ -219,7 +219,6 @@ class CommonPatterns {
           '(?!\\uFE0F|\\u20E3)' +
           // $3 tag content
           '($_hashtagAlphaNumeric*$_hashtagAlpha$_hashtagAlphaNumeric*)',
-      //'($_hashtagBoundary)($_hashSigns)(?!\\uFE0F|\\u20E3)($_hashtagAlphaNumeric*$_hashtagAlpha$_hashtagAlphaNumeric*)',
       caseSensitive: false);
 
   /// Matches a valid http or https URL.

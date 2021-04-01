@@ -376,7 +376,7 @@ class SpannedTextEditingController implements TextEditingController {
 
     // We don't pass gesture recognizers here, because we don't
     // want gestures on spans to be handled while editing.
-    return segments.buildTextSpans(
+    return segments.buildTextSpan(
       style: style ?? const TextStyle(),
       context: context,
     );

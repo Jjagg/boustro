@@ -1,10 +1,15 @@
+## 0.6.0
+
+- **Changed**: Renamed `buildTextSpans` to `buildTextSpan` for consistency.
+- **Changed**: Introduced `AttributeGestureMapper` for easier `GestureRecognizer` lifecycle management.
+
 ## 0.5.0+2
 
 - Simple changelog for pub.dev.
 
 ## 0.5.0+1
 
-- Add example.
+- Added example.
 
 ## 0.5.0
 

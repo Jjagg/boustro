@@ -12,29 +12,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return ThemeBuilder(
-      builder: (context, themeMode, child) => MaterialApp(
-        title: 'Flutter Demo',
-        theme: lightTheme,
-        darkTheme: darkTheme,
-        themeMode: themeMode,
-        home: HomeScreen(),
-      ),
-    );
-  }
-}
-
-class HomeScreen extends StatefulWidget {
-  @override
-  _HomeScreenState createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  final controller = DocumentController();
-
-  /// The attribute theme is used to customize the effect of [TextAttribute].
+  /// The attribute theme is used to customize the effect of [TextAttribute]s.
   AttributeThemeData _buildAttributeTheme(BuildContext context) {
     final builder = AttributeThemeBuilder();
     builder.boldFontWeight = FontWeight.w900;
@@ -54,72 +32,96 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return ThemeBuilder(
+      builder: (context, themeMode, child) {
+        return BoustroConfig(
+          attributeTheme: _buildAttributeTheme(context),
+          componentConfigData: _buildComponentConfig(context),
+          builder: (context) => MaterialApp(
+            title: 'Flutter Demo',
+            theme: lightTheme,
+            darkTheme: darkTheme,
+            themeMode: themeMode,
+            home: HomeScreen(),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final controller = DocumentController();
+
+  @override
+  Widget build(BuildContext context) {
     // BoustroConfig wraps the three theming classes and provides
     // an implicit animation to switch between themes.
-    return BoustroConfig(
-      attributeTheme: _buildAttributeTheme(context),
-      componentConfigData: _buildComponentConfig(context),
-      builder: (context) => Scaffold(
-        appBar: AppBar(
-          title: const Text('Boustro'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.check),
-              onPressed: _showPreview,
-            ),
-          ],
-        ),
-        body: Column(
-          children: [
-            Expanded(
-              // The auto formatter automatically applies attributes to text
-              // matching regular expressions. Some patterns are provided
-              // in CommonPatterns for convenience.
-              child: AutoFormatter(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Boustro'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.check),
+            onPressed: () => _showPreview(),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            // The auto formatter automatically applies attributes to text
+            // matching regular expressions. Some patterns are provided
+            // in CommonPatterns for convenience.
+            child: AutoFormatter(
+              controller: controller,
+              rules: [
+                FormatRule(CommonPatterns.hashtag, (_) => boldAttribute),
+                FormatRule(CommonPatterns.mention, (_) => italicAttribute),
+                FormatRule(CommonPatterns.httpUrl, (_) => boldAttribute),
+              ],
+              // DocumentEditor is the main editor class. It manages the
+              // paragraphs that are either embeds (custom widgets) or
+              // TextFields with custom TextEditingControllers that manage
+              // spans for formatting.
+              child: DocumentEditor(
                 controller: controller,
-                rules: [
-                  FormatRule(CommonPatterns.hashtag, (_) => boldAttribute),
-                  FormatRule(CommonPatterns.mention, (_) => italicAttribute),
-                  FormatRule(CommonPatterns.httpUrl, (_) => boldAttribute),
-                ],
-                // DocumentEditor is the main editor class. It manages the
-                // paragraphs that are either embeds (custom widgets) or
-                // TextFields with custom TextEditingControllers that manage
-                // spans for formatting.
-                child: DocumentEditor(
-                  controller: controller,
-                ),
               ),
             ),
-            // The Toolbar contains buttons that can modify the document using
-            // the DocumentController. There are built-in ToolbarItems for the
-            // boustro_starter components. Toolbar has support for nested menus
-            // (try the image button).
-            Toolbar(
-              documentController: controller,
-              defaultItemBuilder: _defaultToolbarItemBuilder,
-              items: [
-                toolbar_items.bold,
-                toolbar_items.italic,
-                toolbar_items.underline,
-                toolbar_items.link(),
-                toolbar_items.title,
-                toolbar_items.image(
-                  pickImage: (_) async => const NetworkImage(
-                      'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
-                  snapImage: (_) async => const NetworkImage(
-                      'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
-                ),
-                toolbar_items.bulletList,
-                ToolbarItem(
-                  title: const Icon(Icons.wb_sunny),
-                  onPressed: (context, __) =>
-                      ThemeModeScope.of(context).toggle(context),
-                ),
-              ],
-            ),
-          ],
-        ),
+          ),
+          // The Toolbar contains buttons that can modify the document using
+          // the DocumentController. There are built-in ToolbarItems for the
+          // boustro_starter components. Toolbar has support for nested menus
+          // (try the image button).
+          Toolbar(
+            documentController: controller,
+            defaultItemBuilder: _defaultToolbarItemBuilder,
+            items: [
+              toolbar_items.bold,
+              toolbar_items.italic,
+              toolbar_items.underline,
+              toolbar_items.link(),
+              toolbar_items.title,
+              toolbar_items.image(
+                pickImage: (_) async => const NetworkImage(
+                    'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
+                snapImage: (_) async => const NetworkImage(
+                    'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
+              ),
+              toolbar_items.bulletList,
+              ToolbarItem(
+                title: const Icon(Icons.wb_sunny),
+                onPressed: (context, __) =>
+                    ThemeModeScope.of(context).toggle(context),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

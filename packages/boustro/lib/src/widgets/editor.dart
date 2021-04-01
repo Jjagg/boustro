@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
@@ -48,46 +47,11 @@ class DocumentView extends StatefulWidget {
 }
 
 class _DocumentViewState extends State<DocumentView> {
-  late final Map<TextAttribute, GestureRecognizer> _recognizers =
-      _createRecognizers();
-
-  Map<TextAttribute, GestureRecognizer> _createRecognizers() {
-    final attributes = widget.document.paragraphs.expand<TextAttribute>((p) {
-      return p.match<Iterable<TextAttribute>>(
-          embed: (e) => [], line: (l) => l.spans.iter.map((s) => s.attribute));
-    }).toSet();
-
-    final recognizers = <TextAttribute, GestureRecognizer>{};
-    for (final attr in attributes) {
-      final value = attr.resolve(context);
-      if (value.hasGestures) {
-        GestureRecognizer? recognizer;
-        if (value.onTap != null) {
-          recognizer = TapGestureRecognizer()..onTap = value.onTap;
-        } else if (value.onSecondaryTap != null) {
-          recognizer = TapGestureRecognizer()
-            ..onSecondaryTap = value.onSecondaryTap;
-        } else if (value.onDoubleTap != null) {
-          recognizer = DoubleTapGestureRecognizer()
-            ..onDoubleTap = value.onDoubleTap;
-        } else if (value.onLongPress != null) {
-          recognizer = LongPressGestureRecognizer()
-            ..onLongPress = value.onLongPress;
-        }
-
-        if (recognizer != null) {
-          recognizers[attr] = recognizer;
-        }
-      }
-    }
-    return recognizers;
-  }
+  final AttributeGestureMapper _gestureMapper = AttributeGestureMapper();
 
   @override
   void dispose() {
-    for (final r in _recognizers.values) {
-      r.dispose();
-    }
+    _gestureMapper.dispose();
     super.dispose();
   }
 
@@ -115,9 +79,9 @@ class _DocumentViewState extends State<DocumentView> {
 
   Widget _buildParagraph(BuildContext context, Paragraph value) {
     return value.match(line: (line) {
-      final spans = line.spannedText.buildTextSpans(
+      final spans = line.spannedText.buildTextSpan(
         context: context,
-        recognizers: _recognizers,
+        gestureMapper: _gestureMapper,
       );
 
       final btheme = BoustroTheme.of(context);

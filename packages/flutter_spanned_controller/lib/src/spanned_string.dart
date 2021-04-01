@@ -112,20 +112,20 @@ class SpannedString extends Equatable {
   /// Apply the attributes to [text] and return the resulting [TextSpan].
   ///
   /// See [AttributeSegmentsExtensions].
-  TextSpan buildTextSpans({
+  TextSpan buildTextSpan({
     required BuildContext context,
     TextStyle? style,
-    Map<TextAttribute, GestureRecognizer>? recognizers,
+    AttributeGestureMapper? gestureMapper,
   }) {
     if (spans.iter.isEmpty) {
       return TextSpan(text: text.string, style: style);
     }
 
     final segments = spans.getSegments(text);
-    return segments.buildTextSpans(
+    return segments.buildTextSpan(
       context: context,
       style: style,
-      recognizers: recognizers,
+      gestureMapper: gestureMapper,
     );
   }
 

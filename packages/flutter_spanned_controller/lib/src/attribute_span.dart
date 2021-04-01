@@ -37,8 +37,6 @@ abstract class TextAttribute {
   /// happend at their boundaries.
   SpanExpandRules get expandRules;
 
-  // FIXME resolve should take a BuildContext instead
-
   /// Returns a text attribute value that can depend on [context].
   TextAttributeValue resolve(BuildContext context);
 }
@@ -130,6 +128,44 @@ class TextAttributeValue extends Equatable {
       onSecondaryTap != null ||
       onDoubleTap != null ||
       onLongPress != null;
+
+  /// Creates a [GestureRecognizer] for the gesture callbacks of this object.
+  ///
+  /// This object must have at least one gesture callback set, i.e.
+  /// [hasGestures] must return true.
+  ///
+  /// The gesture callbacks will be checked in the following order, and a
+  /// recognizer handling the first non-null callback will be returned (non-null
+  /// callbacks after the first are ignored):
+  ///
+  /// - [onTap]
+  /// - [onSecondaryTap]
+  /// - [onDoubleTap]
+  /// - [onLongPress]
+  ///
+  /// Because [GestureRecognizer]s only handle one gesture type, and we can only
+  /// apply one GestureRecognizer to a [TextSpan], text spans cannot handle
+  /// multiple gestures. This limitation is tracked
+  /// [here](https://github.com/Jjagg/boustro/issues/21).
+  GestureRecognizer createGestureRecognizer() {
+    GestureRecognizer? recognizer;
+    if (onTap != null) {
+      recognizer = TapGestureRecognizer()..onTap = onTap;
+    } else if (onSecondaryTap != null) {
+      recognizer = TapGestureRecognizer()..onSecondaryTap = onSecondaryTap;
+    } else if (onDoubleTap != null) {
+      recognizer = DoubleTapGestureRecognizer()..onDoubleTap = onDoubleTap;
+    } else if (onLongPress != null) {
+      recognizer = LongPressGestureRecognizer()..onLongPress = onLongPress;
+    }
+
+    if (recognizer == null) {
+      throw StateError(
+          'Value must have a gesture handler. Check first with TextAttributeValue.hasGestures.');
+    }
+
+    return recognizer;
+  }
 
   @override
   String toString() {
@@ -550,7 +586,7 @@ class SpanList extends Equatable {
   /// A segment is a part of the span with one set of attributes
   /// applied to it. A segment maps to a Flutter [TextSpan].
   ///
-  /// See [AttributeSegmentsExtensions].buildTextSpans.
+  /// See [AttributeSegmentsExtensions].buildTextSpan.
   ///
   /// Imagine spans like this:
   ///
@@ -792,23 +828,49 @@ class SpanList extends Equatable {
   List<Object?> get props => [_spans];
 }
 
-/// Implements [buildTextSpans] for attribute segments.
+/// An opaque object, used to manage the lifetimes of [GestureRecognizer]s.
+///
+/// Users should take care to call [dispose] when the managed gesture
+/// recognizers are no longer needed.
+class AttributeGestureMapper {
+  final Map<TextAttributeValue, GestureRecognizer> _recognizers = {};
+
+  GestureRecognizer _getRecognizer(TextAttributeValue value) {
+    var recognizer = _recognizers[value];
+    if (recognizer == null) {
+      recognizer = value.createGestureRecognizer();
+      _recognizers[value] = recognizer;
+    }
+    return recognizer;
+  }
+
+  /// Dispose and remove the managed gesture recognizers.
+  void dispose() {
+    for (final recognizer in _recognizers.values) {
+      recognizer.dispose();
+    }
+
+    _recognizers.clear();
+  }
+}
+
+/// Implements [buildTextSpan] for attribute segments.
 extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
   /// Apply the attributes to the text in the segments and return the resulting
   /// [TextSpan].
   ///
-  /// If [recognizers] is not null, it should contain a mapping
-  /// from each text attribute value that wants to apply a gesture to a
-  /// corresponding gesture recognizer. The caller is espected to
-  /// properly initialize this map and manage the lifetimes of the gesture
-  /// recognizers.
+  /// The [gestureMapper] argument serves to manage the lifetimes of the
+  /// [GestureRecognizer]s created to handle gesture callbacks of
+  /// [TextAttributeValue]s. The caller is expected to properly manage the
+  /// lifetime of this object by calling [AttributeGestureMapper.dispose] when
+  /// appropriate.
   ///
-  /// If [recognizers] is null, no gesture recognizers will be put on the
+  /// If [gestureMapper] is null, no gesture recognizers will be put on the
   /// spans.
-  TextSpan buildTextSpans({
+  TextSpan buildTextSpan({
     required BuildContext context,
     TextStyle? style,
-    Map<TextAttribute, GestureRecognizer>? recognizers,
+    AttributeGestureMapper? gestureMapper,
   }) {
     final span = TextSpan(
       style: style,
@@ -825,11 +887,15 @@ extension AttributeSegmentsExtensions on Iterable<AttributeSegment> {
           (style, v) => style.merge(v.style),
         );
 
-        if (recognizers != null) {
-          final spanRecognizers =
-              attrs.map((attr) => recognizers[attr]).whereNotNull().toList();
+        if (gestureMapper != null) {
+          final spanRecognizers = <GestureRecognizer>[];
+          for (final v in values.where((v) => v.hasGestures)) {
+            final recognizer = gestureMapper._getRecognizer(v);
+            spanRecognizers.add(recognizer);
+          }
+
           if (spanRecognizers.length > 1) {
-            throw Exception(
+            throw ArgumentError(
                 'Tried to have more than 1 gesture recognizers on a single span.');
           } else if (spanRecognizers.length == 1) {
             spanRecognizer = spanRecognizers.first;

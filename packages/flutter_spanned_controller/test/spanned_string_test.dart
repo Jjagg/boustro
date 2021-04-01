@@ -143,12 +143,12 @@ void main() {
     });
   });
 
-  group('buildTextSpans', () {
+  group('buildTextSpan', () {
     testWidgets('plain', (t) async {
       Builder(
         builder: (context) {
           final sp = SpannedString('Hello')
-              .buildTextSpans(context: context, style: TextStyle());
+              .buildTextSpan(context: context, style: TextStyle());
           expect(sp, TextSpan(text: 'Hello', style: TextStyle()));
 
           return Container();

@@ -31,9 +31,12 @@ class ImageEmbed extends ParagraphEmbed with EquatableMixin {
   List<Object?> get props => [image];
 }
 
-class _ImageWrapper extends StatelessWidget {
-  const _ImageWrapper({Key? key, required this.child}) : super(key: key);
+/// The widget that [ImageEmbed] uses to wrap its [Image] by default.
+class ImageWrapper extends StatelessWidget {
+  /// Create an image wrapper with a child.
+  const ImageWrapper({Key? key, required this.child}) : super(key: key);
 
+  /// The child this widget wraps.
   final Widget child;
 
   @override
@@ -76,7 +79,7 @@ class ImageEmbedView extends StatelessWidget {
         config.imagePadding ?? const EdgeInsets.symmetric(vertical: 10);
     return Padding(
       padding: padding.resolve(Directionality.of(context)),
-      child: _ImageWrapper(
+      child: ImageWrapper(
         child: Center(
           heightFactor: 1,
           child: Image(
@@ -143,7 +146,7 @@ class ImageEmbedEditor extends StatelessWidget {
                   focusNode.requestFocus();
                 }
               },
-              child: _ImageWrapper(
+              child: ImageWrapper(
                 child: _buildOverlay(
                   context,
                   ValueListenableBuilder<ImageData>(
