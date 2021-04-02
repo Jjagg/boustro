@@ -68,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
-            onPressed: () => _showPreview(),
+            onPressed: _showPreview,
           ),
         ],
       ),

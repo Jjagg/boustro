@@ -45,7 +45,7 @@ class LineParagraph with EquatableMixin implements Paragraph {
     List<LineModifier>? modifiers,
   }) : this.built(
           text: (text ?? '').characters,
-          spans: spans ?? SpanList(),
+          spans: spans ?? SpanList.empty,
           modifiers: modifiers?.build() ?? BuiltList<LineModifier>(),
         );
 
@@ -180,4 +180,12 @@ abstract class LineModifier {
     BuildContext context,
     Widget child,
   );
+}
+
+/// Extension method to apply line modifiers to a widget.
+extension LineModifierX on Iterable<LineModifier> {
+  /// Apply the modifiers to [child], wrapping it with other widgets.
+  Widget apply(BuildContext context, Widget child) {
+    return fold(child, (child, mod) => mod.modify(context, child));
+  }
 }

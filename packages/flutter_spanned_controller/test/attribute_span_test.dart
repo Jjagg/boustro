@@ -110,7 +110,7 @@ void main() {
       expect(l.merge(s1).merge(s2).iter, [sp(a, 1, 3)]);
     });
     test('merge bridge', () {
-      final l = SpanList.empty;
+      const l = SpanList.empty;
       final s1 = sp(a, 1, 3);
       final s2 = sp(a, 5, 8);
       final s3 = sp(a, 3, 5);

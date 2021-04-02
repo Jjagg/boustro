@@ -20,6 +20,7 @@ class DocumentView extends StatefulWidget {
     required this.document,
     this.physics,
     this.primaryScroll,
+    this.scrollController,
   }) : super(key: key);
 
   /// The contents this view will display.
@@ -33,6 +34,9 @@ class DocumentView extends StatefulWidget {
   /// See [ScrollView.primary].
   final bool? primaryScroll;
 
+  /// The scroll controller for the [ScrollView] containing the paragraphs.
+  final ScrollController? scrollController;
+
   @override
   _DocumentViewState createState() => _DocumentViewState();
 
@@ -43,6 +47,9 @@ class DocumentView extends StatefulWidget {
     properties.add(DiagnosticsProperty<ScrollPhysics?>('physics', physics,
         defaultValue: null));
     properties.add(DiagnosticsProperty<bool?>('primaryScroll', primaryScroll));
+    properties.add(DiagnosticsProperty<ScrollController?>(
+        'scrollController', scrollController,
+        defaultValue: null));
   }
 }
 
@@ -65,23 +72,45 @@ class _DocumentViewState extends State<DocumentView> {
         color: btheme.editorColor,
         child: ListView.builder(
           addAutomaticKeepAlives: false,
+          controller: widget.scrollController,
           physics: widget.physics,
           primary: widget.primaryScroll,
           shrinkWrap: true,
           itemCount: widget.document.paragraphs.length,
           itemBuilder: (context, index) {
-            return _buildParagraph(context, widget.document.paragraphs[index]);
+            return ParagraphView(
+              paragraph: widget.document.paragraphs[index],
+              gestureMapper: _gestureMapper,
+            );
           },
         ),
       ),
     );
   }
+}
 
-  Widget _buildParagraph(BuildContext context, Paragraph value) {
-    return value.match(line: (line) {
+/// Widget that displays a [Paragraph].
+class ParagraphView extends StatelessWidget {
+  /// Creates a widget that displays a [Paragraph].
+  const ParagraphView({
+    Key? key,
+    required this.paragraph,
+    this.gestureMapper,
+  }) : super(key: key);
+
+  /// Paragraph that is displayed.
+  final Paragraph paragraph;
+
+  /// GestureMapper to pass to [LineParagraphView] if [Paragraph] is a
+  /// [LineParagraph].
+  final AttributeGestureMapper? gestureMapper;
+
+  @override
+  Widget build(BuildContext context) {
+    return paragraph.match(line: (line) {
       final spans = line.spannedText.buildTextSpan(
         context: context,
-        gestureMapper: _gestureMapper,
+        gestureMapper: gestureMapper,
       );
 
       final btheme = BoustroTheme.of(context);
@@ -122,6 +151,134 @@ class _DocumentViewState extends State<DocumentView> {
       );
     });
   }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<Paragraph>('paragraph', paragraph));
+    properties.add(DiagnosticsProperty<AttributeGestureMapper?>(
+        'gestureMapper', gestureMapper));
+  }
+}
+
+/// A widget that displays a line [LineParagraph].
+class LineParagraphView extends StatefulWidget {
+  /// Creates a widget that displays a [LineParagraph].
+  const LineParagraphView({
+    Key? key,
+    required this.line,
+    this.gestureMapper,
+  }) : super(key: key);
+
+  /// Paragraph that is displayed.
+  final LineParagraph line;
+
+  /// Gesture mapper that manages the lifetimes of the gesture recognizers (if
+  /// there are any) created by attributes on [line].
+  ///
+  /// If null, this widget will create its own [AttributeGestureMapper].
+  final AttributeGestureMapper? gestureMapper;
+
+  @override
+  _LineParagraphViewState createState() => _LineParagraphViewState();
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<LineParagraph>('line', line));
+    properties.add(DiagnosticsProperty<AttributeGestureMapper?>(
+        'gestureMapper', gestureMapper));
+  }
+}
+
+class _LineParagraphViewState extends State<LineParagraphView> {
+  late final AttributeGestureMapper? _ownedGestureMapper;
+
+  AttributeGestureMapper get _effectiveGestureMapper =>
+      widget.gestureMapper ?? _ownedGestureMapper!;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.gestureMapper == null) {
+      _ownedGestureMapper = AttributeGestureMapper();
+    }
+  }
+
+  @override
+  void dispose() {
+    _ownedGestureMapper?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final spans = widget.line.spannedText.buildTextSpan(
+      context: context,
+      gestureMapper: _effectiveGestureMapper,
+    );
+
+    final btheme = BoustroTheme.of(context);
+    final linePadding = (btheme.linePadding ??
+            BoustroThemeData.fallbackForContext(context).linePadding!)
+        .resolve(Directionality.of(context));
+    return Padding(
+      padding: EdgeInsets.only(
+        left: linePadding.left,
+        right: linePadding.right,
+      ),
+      child: widget.line.modifiers.apply(
+        context,
+        Builder(
+          builder: (context) {
+            final style = Theme.of(context).textTheme.subtitle1;
+            return Padding(
+              padding: EdgeInsets.only(
+                top: linePadding.top,
+                bottom: linePadding.bottom,
+              ),
+              child: Text.rich(
+                spans,
+                style: style,
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// A widget that displays an embed.
+///
+/// Turns the embed into a widget using [ParagraphEmbed.createView] and wraps
+/// it with padding of [BoustroThemeData.embedPadding] of the [BoustroTheme].
+class ParagraphEmbedView extends StatelessWidget {
+  /// Creates a widget that displays a [ParagraphEmbed].
+  const ParagraphEmbedView({
+    Key? key,
+    required this.embed,
+  }) : super(key: key);
+
+  /// The embed to display.
+  final ParagraphEmbed embed;
+
+  @override
+  Widget build(BuildContext context) {
+    final btheme = BoustroTheme.of(context);
+    final padding = btheme.embedPadding ??
+        BoustroThemeData.fallbackForContext(context).embedPadding!;
+    return Padding(
+      padding: padding,
+      child: embed.createView(context),
+    );
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<ParagraphEmbed>('embed', embed));
+  }
 }
 
 /// An editor for a [Document]. Uses a [DocumentController] to manage its state.
@@ -130,10 +287,14 @@ class DocumentEditor extends StatelessWidget {
   const DocumentEditor({
     Key? key,
     required this.controller,
+    this.scrollController,
   }) : super(key: key);
 
   /// Controller that manages the state of the editor.
   final DocumentController controller;
+
+  /// The scroll controller for the [ScrollView] containing the paragraphs.
+  final ScrollController? scrollController;
 
   @override
   Widget build(BuildContext context) {
@@ -173,7 +334,7 @@ class DocumentEditor extends StatelessWidget {
 
     return CustomScrollView(
       shrinkWrap: true,
-      controller: controller.scrollController,
+      controller: scrollController,
       slivers: [
         SliverPadding(
           padding: editorPadding.copyWith(bottom: 0),
@@ -257,5 +418,7 @@ class DocumentEditor extends StatelessWidget {
     super.debugFillProperties(properties);
     properties
         .add(DiagnosticsProperty<DocumentController>('controller', controller));
+    properties.add(DiagnosticsProperty<ScrollController?>(
+        'scrollController', scrollController));
   }
 }

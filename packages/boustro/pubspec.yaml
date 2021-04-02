@@ -1,6 +1,7 @@
 name: boustro
 description: >
   A rich text editor for Flutter.
+publish_to: none
 
 version: 0.1.0
 homepage: https://jjagg.dev/boustro
@@ -17,7 +18,8 @@ dependencies:
   equatable: ^2.0.0
   flutter:
     sdk: flutter
-  flutter_spanned_controller: ^0.6.0
+  flutter_spanned_controller:
+    path: ../flutter_spanned_controller
   meta: ^1.2.4
 
 dev_dependencies:

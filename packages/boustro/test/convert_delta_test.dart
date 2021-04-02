@@ -111,7 +111,7 @@ void main() {
           ));
       expect(
         doc.paragraphs[1],
-        LineParagraph(text: '', spans: SpanList()),
+        LineParagraph(text: '', spans: SpanList.empty),
       );
     });
 
