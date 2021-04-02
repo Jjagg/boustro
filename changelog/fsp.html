@@ -168,20 +168,16 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#flutter_spanned_controller--changelog" id="flutter_spanned_controller--changelog"><code>flutter_spanned_controller</code> — Changelog</a></h1>
+<h2><a class="header" href="#0601" id="0601">0.6.0+1</a></h2>
+<ul>
+<li>Edited the changelog for better formatting again.</li>
+</ul>
 <h2><a class="header" href="#060" id="060">0.6.0</a></h2>
 <ul>
-<li>
-<p><strong>Added</strong> <code>SpanList.empty</code>.</p>
-</li>
-<li>
-<p><strong>Changed</strong>: Renamed <code>buildTextSpans</code> to <code>buildTextSpan</code> for consistency.</p>
-</li>
-<li>
-<p><strong>Changed</strong>: Introduced <code>AttributeGestureMapper</code> for easier <code>GestureRecognizer</code> lifecycle management.</p>
-</li>
-<li>
-<p><strong>Changed</strong>: <code>SpannedString.empty</code> to a static <code>const</code> field (was a constructor).</p>
-</li>
+<li><strong>Added</strong> <code>SpanList.empty</code>.</li>
+<li><strong>Changed</strong>: Renamed <code>buildTextSpans</code> to <code>buildTextSpan</code> for consistency.</li>
+<li><strong>Changed</strong>: Introduced <code>AttributeGestureMapper</code> for easier <code>GestureRecognizer</code> lifecycle management.</li>
+<li><strong>Changed</strong>: <code>SpannedString.empty</code> to a static <code>const</code> field (was a constructor).</li>
 </ul>
 <h2><a class="header" href="#0502" id="0502">0.5.0+2</a></h2>
 <ul>
@@ -193,76 +189,38 @@
 </ul>
 <h2><a class="header" href="#050" id="050">0.5.0</a></h2>
 <ul>
-<li>
-<p><strong>Added</strong> <code>StringDiff.isEmpty</code> and <code>StringDiff.isNotEmpty</code>.</p>
-</li>
-<li>
-<p><strong>Added</strong> <code>getSpans</code> and <code>getTypedSpans</code> to <code>SpanList</code>.</p>
-</li>
-<li>
-<p><strong>Added</strong> <code>SpanController.getAppliedSpansWithUnsafeType</code>.</p>
-</li>
-<li>
-<p><strong>Fixed</strong>: <code>GestureRecognizers</code> on spans are now indexed with their attribute instead of the resolved attribute value,
-because function object equality does not work with inline lambdas.</p>
-</li>
-<li>
-<p><strong>Fixed</strong>: <code>SpannedTextEditingController.buildTextSpan</code> did not translate composition indices, causing an exception in
-some cases with characters that take up multiple code units in UTF-16 (like most emoji).</p>
-</li>
-<li>
-<p><strong>Changed</strong>: <code>TextAttribute.resolve</code> now takes a <code>BuildContext</code> instead of taking an <code>AttributeTheme</code> directly.</p>
-</li>
-<li>
-<p><strong>Changed</strong>: made <code>TextStyle</code> in <code>buildTextSpans</code> optional.</p>
-</li>
+<li><strong>Added</strong> <code>StringDiff.isEmpty</code> and <code>StringDiff.isNotEmpty</code>.</li>
+<li><strong>Added</strong> <code>getSpans</code> and <code>getTypedSpans</code> to <code>SpanList</code>.</li>
+<li><strong>Added</strong> <code>SpanController.getAppliedSpansWithUnsafeType</code>.</li>
+<li><strong>Fixed</strong>: <code>GestureRecognizers</code> on spans are now indexed with their attribute instead of the resolved attribute value,
+because function object equality does not work with inline lambdas.</li>
+<li><strong>Fixed</strong>: <code>SpannedTextEditingController.buildTextSpan</code> did not translate composition indices, causing an exception in
+some cases with characters that take up multiple code units in UTF-16 (like most emoji).</li>
+<li><strong>Changed</strong>: <code>TextAttribute.resolve</code> now takes a <code>BuildContext</code> instead of taking an <code>AttributeTheme</code> directly.</li>
+<li><strong>Changed</strong>: made <code>TextStyle</code> in <code>buildTextSpans</code> optional.</li>
 </ul>
 <h2><a class="header" href="#040-0" id="040-0">0.4.0-0</a></h2>
 <ul>
-<li>
-<p><strong>Removed</strong> <code>TextAttribute.simple</code>. In favor of custom classes, so each attribute has its own type and
-serialization can use the type to determine which encoder to use.</p>
-</li>
-<li>
-<p><strong>Changed</strong>: moved <code>ExpandRules</code> to be a part of attributes themselves.</p>
-</li>
+<li><strong>Removed</strong> <code>TextAttribute.simple</code>. In favor of custom classes, so each attribute has its own type and
+serialization can use the type to determine which encoder to use.</li>
+<li><strong>Changed</strong>: moved <code>ExpandRules</code> to be a part of attributes themselves.</li>
 </ul>
 <h2><a class="header" href="#030-0" id="030-0">0.3.0-0</a></h2>
 <ul>
-<li>
-<p><strong>Added</strong> system to theme <code>TextAttributes</code> with <code>AttributeTheme</code>.</p>
-</li>
-<li>
-<p><strong>Added</strong> <code>Range</code> to avoid confusion with <code>TextRange</code>.
-<code>TextRange</code> is designed to be for indexing into <code>String</code> by UTF-16 code units.</p>
-</li>
-<li>
-<p><strong>Changed</strong>: <code>TextAttribute</code> now has a resolve method that returns the actual information for
-applying the attribute in the form of <code>TextAttributeValue</code>.</p>
-</li>
-<li>
-<p><strong>Changed</strong>: the <code>characters</code> library is used to index with grapheme clusters instead of UTF-16 code units.
-This changes most <code>String</code>-based API to use <code>Characters</code> instead.</p>
-</li>
-<li>
-<p><strong>Changed</strong>: use <code>Range</code> in <code>AttributeSpan</code> and related classes to avoid confusion with UTF-16 indices used by <code>TextRange</code>.</p>
-</li>
-<li>
-<p><strong>Changed</strong>: renamed <code>SpanList.spans</code> to <code>iter</code> to prevent confusing <code>spans.spans</code>.</p>
-</li>
-<li>
-<p><strong>Changed</strong>: <code>SpannedTextEditingController</code> takes a <code>SpanList</code> now instead of <code>Iterable&lt;AttributeSpan&gt;</code>.</p>
-</li>
-<li>
-<p><strong>Changed</strong>: renamed <code>InsertBehavior</code> to <code>ExpandRule</code> and <code>FullInsertBehavior</code> to <code>SpanExpandRules</code>.
-Finally, I've come up with the right name for this concept :)</p>
-</li>
-<li>
-<p><strong>Changed</strong>: rename <code>SpannedString()</code> to <code>SpannedString.chars()</code> and let unnamed constructor take <code>String</code>.</p>
-</li>
-<li>
-<p><strong>Fixed</strong>: Changed library name from flutter_span_controller to flutter_spann<strong>ed</strong>_controller.</p>
-</li>
+<li><strong>Added</strong> system to theme <code>TextAttributes</code> with <code>AttributeTheme</code>.</li>
+<li><strong>Added</strong> <code>Range</code> to avoid confusion with <code>TextRange</code>.
+<code>TextRange</code> is designed to be for indexing into <code>String</code> by UTF-16 code units.</li>
+<li><strong>Changed</strong>: <code>TextAttribute</code> now has a resolve method that returns the actual information for
+applying the attribute in the form of <code>TextAttributeValue</code>.</li>
+<li><strong>Changed</strong>: the <code>characters</code> library is used to index with grapheme clusters instead of UTF-16 code units.
+This changes most <code>String</code>-based API to use <code>Characters</code> instead.</li>
+<li><strong>Changed</strong>: use <code>Range</code> in <code>AttributeSpan</code> and related classes to avoid confusion with UTF-16 indices used by <code>TextRange</code>.</li>
+<li><strong>Changed</strong>: renamed <code>SpanList.spans</code> to <code>iter</code> to prevent confusing <code>spans.spans</code>.</li>
+<li><strong>Changed</strong>: <code>SpannedTextEditingController</code> takes a <code>SpanList</code> now instead of <code>Iterable&lt;AttributeSpan&gt;</code>.</li>
+<li><strong>Changed</strong>: renamed <code>InsertBehavior</code> to <code>ExpandRule</code> and <code>FullInsertBehavior</code> to <code>SpanExpandRules</code>.
+Finally, I've come up with the right name for this concept :)</li>
+<li><strong>Changed</strong>: rename <code>SpannedString()</code> to <code>SpannedString.chars()</code> and let unnamed constructor take <code>String</code>.</li>
+<li><strong>Fixed</strong>: Changed library name from flutter_span_controller to flutter_spann<strong>ed</strong>_controller.</li>
 </ul>
 <h2><a class="header" href="#020-0" id="020-0">0.2.0-0</a></h2>
 <ul>
@@ -273,7 +231,9 @@ Finally, I've come up with the right name for this concept :)</p>
 <li><strong>Changed</strong>: Replaced template README with short explanation.</li>
 </ul>
 <h2><a class="header" href="#010-0" id="010-0">0.1.0-0</a></h2>
-<p><strong>Initial release</strong>.</p>
+<ul>
+<li><strong>Initial release</strong>.</li>
+</ul>
 
                     </main>
 
