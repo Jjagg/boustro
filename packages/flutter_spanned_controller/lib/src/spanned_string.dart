@@ -1,6 +1,7 @@
+// ignore: implementation_imports
+import 'package:characters/src/characters_impl.dart' as characters_impl;
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:meta/meta.dart';
 
@@ -12,13 +13,20 @@ import 'spanned_text_controller.dart';
 class SpannedString extends Equatable {
   /// Create a spanned string.
   SpannedString(String text, [SpanList? spans])
-      : this.chars(text.characters, spans ?? SpanList());
-
-  /// Create an empty spanned string.
-  SpannedString.empty() : this('', SpanList());
+      : this.chars(text.characters, spans ?? SpanList.empty);
 
   /// Create a spanned string.
-  SpannedString.chars(this.text, this.spans);
+  // The analyzer lets this be const (it shouldn't), but running it as const throws.
+  // ignore: prefer_const_constructors_in_immutables
+  SpannedString.chars(this.text, this.spans) : length = text.length;
+
+  const SpannedString._empty()
+      : text = const characters_impl.StringCharacters(''),
+        spans = SpanList.empty,
+        length = 0;
+
+  /// An empty spanned string.
+  static const SpannedString empty = SpannedString._empty();
 
   /// Plain text of this spanned string.
   final Characters text;
@@ -27,7 +35,7 @@ class SpannedString extends Equatable {
   final SpanList spans;
 
   /// Length of this spanned string. This is equal to the length of [text].
-  late final int length = text.length;
+  final int length;
 
   /// Creates a copy of this spanned string, but with the given fields replaced
   /// with the new values.
@@ -141,7 +149,7 @@ class SpannedString extends Equatable {
 /// Builds a [SpannedString]. Can be used fluently with cascades.
 class SpannedStringBuilder {
   final StringBuffer _buffer = StringBuffer();
-  SpanList _spans = SpanList();
+  SpanList _spans = SpanList.empty;
   final Set<AttributeSpan> _activeSpans = {};
 
   int _length = 0;

@@ -207,7 +207,7 @@ class SpannedTextEditingController implements TextEditingController {
   })  : compositionAttribute =
             compositionAttribute ?? _defaultCompositionAttribute,
         _textController = TextEditingController(text: text),
-        _spans = spans ?? SpanList();
+        _spans = spans ?? SpanList.empty;
 
   /// Create a new spanned text editing controller with the same state as this
   /// one.
@@ -386,7 +386,7 @@ class SpannedTextEditingController implements TextEditingController {
   void clear() {
     _ignoreSetValue = true;
     _textController.clear();
-    _spans = SpanList();
+    _spans = SpanList.empty;
     _ignoreSetValue = false;
   }
 

@@ -9,6 +9,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:meta/meta.dart';
 
+import 'empty_built_list.dart';
 import 'theme.dart';
 
 /// Maximum length of a span.
@@ -541,22 +542,20 @@ class SpanList extends Equatable {
   /// Create a SpanList.
   ///
   /// All spans are merged and sorted.
-  factory SpanList([
+  factory SpanList(
     Iterable<AttributeSpan>? spans,
-  ]) {
+  ) {
     return spans == null
-        ? SpanList._()
-        : spans.fold(SpanList._(), (l, s) => l.merge(s));
+        ? SpanList.empty
+        : spans.fold(SpanList.empty, (l, s) => l.merge(s));
   }
-
-  SpanList._() : _spans = BuiltList();
 
   /// Create a SpanList from segments.
   ///
   /// Segments will be merged to create the spans.
   factory SpanList.fromSegments(Iterable<AttributeSegment> segments) {
     var pos = 0;
-    return segments.fold<SpanList>(SpanList(), (list, segment) {
+    return segments.fold<SpanList>(SpanList.empty, (list, segment) {
       final length = segment.text.length;
       final result = segment.attributes.fold<SpanList>(list, (list, attr) {
         final span = AttributeSpan(
@@ -575,6 +574,11 @@ class SpanList extends Equatable {
       : this._sortedList(spans.toBuiltList());
 
   const SpanList._sortedList(this._spans);
+
+  const SpanList._() : _spans = const EmptyBuiltList();
+
+  /// A SpanList without any spans.
+  static const SpanList empty = SpanList._();
 
   final BuiltList<AttributeSpan> _spans;
 

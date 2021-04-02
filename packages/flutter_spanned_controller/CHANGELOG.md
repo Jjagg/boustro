@@ -1,7 +1,10 @@
 ## 0.6.0
 
+- **Added** `SpanList.empty`.
+
 - **Changed**: Renamed `buildTextSpans` to `buildTextSpan` for consistency.
 - **Changed**: Introduced `AttributeGestureMapper` for easier `GestureRecognizer` lifecycle management.
+- **Changed**: `SpannedString.empty` to a static `const` field (was a constructor).
 
 ## 0.5.0+2
 

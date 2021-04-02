@@ -96,7 +96,7 @@ void main() {
   group('shift', () {
     test('insertion before', () {
       expect(
-        SpanList().shift(0, 5).merge(sp(a, 3, 4)).shift(1, 3).iter,
+        SpanList.empty.shift(0, 5).merge(sp(a, 3, 4)).shift(1, 3).iter,
         [sp(a, 6, 7)],
       );
     });
@@ -104,13 +104,13 @@ void main() {
 
   group('merge', () {
     test('merge touching', () {
-      final l = SpanList().shift(0, 5);
+      final l = SpanList.empty.shift(0, 5);
       final s1 = sp(a, 1, 2);
       final s2 = sp(a, 2, 3);
       expect(l.merge(s1).merge(s2).iter, [sp(a, 1, 3)]);
     });
     test('merge bridge', () {
-      final l = SpanList();
+      final l = SpanList.empty;
       final s1 = sp(a, 1, 3);
       final s2 = sp(a, 5, 8);
       final s3 = sp(a, 3, 5);
@@ -125,7 +125,7 @@ void main() {
     });
 
     test('merge containing', () {
-      final l = SpanList().shift(0, 10);
+      final l = SpanList.empty.shift(0, 10);
       final s1 = sp(a, 1, 3);
       final s2 = sp(a, 5, 8);
       final s3 = sp(a, 0, 9);
@@ -135,11 +135,11 @@ void main() {
 
   group('segments', () {
     test('empty', () {
-      expect(SpanList().getSegments(''.characters), isEmpty);
+      expect(SpanList.empty.getSegments(''.characters), isEmpty);
     });
 
     test('plain', () {
-      expect(SpanList().getSegments('hey'.characters),
+      expect(SpanList.empty.getSegments('hey'.characters),
           [AttributeSegment.from('hey'.characters, [])]);
     });
 

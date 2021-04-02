@@ -54,7 +54,7 @@ void main() {
     test('everything', () {
       expect(
         s.collapse(start: 0, end: str.characters.length),
-        SpannedString.empty(),
+        SpannedString.empty,
       );
     });
     test('start oob', () {
@@ -80,7 +80,7 @@ void main() {
     });
     test('into empty', () {
       expect(
-        SpannedString.empty().insert(0, 'Hello'.characters),
+        SpannedString.empty.insert(0, 'Hello'.characters),
         SpannedString('Hello'),
       );
     });
