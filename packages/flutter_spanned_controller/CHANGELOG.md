@@ -1,7 +1,11 @@
+
+## 0.6.0+1
+
+- Edited the changelog for better formatting again.
+
 ## 0.6.0
 
 - **Added** `SpanList.empty`.
-
 - **Changed**: Renamed `buildTextSpans` to `buildTextSpan` for consistency.
 - **Changed**: Introduced `AttributeGestureMapper` for easier `GestureRecognizer` lifecycle management.
 - **Changed**: `SpannedString.empty` to a static `const` field (was a constructor).
@@ -19,12 +23,10 @@
 - **Added** `StringDiff.isEmpty` and `StringDiff.isNotEmpty`.
 - **Added** `getSpans` and `getTypedSpans` to `SpanList`.
 - **Added** `SpanController.getAppliedSpansWithUnsafeType`.
-
 - **Fixed**: `GestureRecognizers` on spans are now indexed with their attribute instead of the resolved attribute value,
   because function object equality does not work with inline lambdas.
 - **Fixed**: `SpannedTextEditingController.buildTextSpan` did not translate composition indices, causing an exception in
   some cases with characters that take up multiple code units in UTF-16 (like most emoji).
-
 - **Changed**: `TextAttribute.resolve` now takes a `BuildContext` instead of taking an `AttributeTheme` directly.
 - **Changed**: made `TextStyle` in `buildTextSpans` optional.
 
@@ -32,7 +34,6 @@
 
 - **Removed** `TextAttribute.simple`. In favor of custom classes, so each attribute has its own type and
   serialization can use the type to determine which encoder to use.
-
 - **Changed**: moved `ExpandRules` to be a part of attributes themselves.
 
 ## 0.3.0-0
@@ -40,7 +41,6 @@
 - **Added** system to theme `TextAttributes` with `AttributeTheme`.
 - **Added** `Range` to avoid confusion with `TextRange`.
   `TextRange` is designed to be for indexing into `String` by UTF-16 code units.
-
 - **Changed**: `TextAttribute` now has a resolve method that returns the actual information for
   applying the attribute in the form of `TextAttributeValue`.
 - **Changed**: the `characters` library is used to index with grapheme clusters instead of UTF-16 code units.
@@ -51,7 +51,6 @@
 - **Changed**: renamed `InsertBehavior` to `ExpandRule` and `FullInsertBehavior` to `SpanExpandRules`.
   Finally, I've come up with the right name for this concept :)
 - **Changed**: rename `SpannedString()` to `SpannedString.chars()` and let unnamed constructor take `String`.
-
 - **Fixed**: Changed library name from flutter\_span\_controller to flutter\_spann**ed**\_controller.
 
 ## 0.2.0-0
@@ -64,4 +63,4 @@
 
 ## 0.1.0-0
 
-**Initial release**.
+- **Initial release**.
