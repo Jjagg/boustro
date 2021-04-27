@@ -64,13 +64,9 @@ class _DocumentViewState extends State<DocumentView> {
 
   @override
   Widget build(BuildContext context) {
-    final btheme = BoustroTheme.of(context);
-
     return BoustroScope.readonly(
       document: widget.document,
-      child: Container(
-        color: btheme.editorColor,
-        child: ListView.builder(
+      child: ListView.builder(
           addAutomaticKeepAlives: false,
           controller: widget.scrollController,
           physics: widget.physics,
@@ -83,7 +79,6 @@ class _DocumentViewState extends State<DocumentView> {
               gestureMapper: _gestureMapper,
             );
           },
-        ),
       ),
     );
   }
