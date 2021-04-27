@@ -1,3 +1,4 @@
+**The packages maintained in this repository depend on a prerelease version of Flutter. I'm waiting for the required change to land in the stable Flutter SDK before publishing the packages to pub.dev.**
 
 <p align="center">
   <a href="https://github.com/Jjagg/boustro/actions"><img src="https://github.com/Jjagg/boustro/workflows/Build/badge.svg" alt="Build Status"></a>
