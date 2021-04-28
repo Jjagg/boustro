@@ -168,18 +168,19 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#model" id="model">Model</a></h1>
-<p>This chapter describes how rich text content is represented in boustro.</p>
+<p>This chapter describes how rich text content is represented in boustro.
+The terminology from this chapter is used throughout the book.</p>
 <h2><a class="header" href="#document" id="document">Document</a></h2>
 <p>A document in boustro is a list of lines of formatted text and embeddable content (called embeds).
 An immutable document is represented by a <a href="https://pub.dev/documentation/boustro/latest/boustro/Document-class.html"><code>Document</code></a>.
 While editing a document, its state is maintained by a <a href="https://pub.dev/documentation/boustro/latest/boustro/Document-class.html"><code>DocumentController</code></a>.</p>
 <p>A document holds a collection of <a href="https://pub.dev/documentation/boustro/latest/boustro/Paragraph-class.html"><code>Paragraphs</code></a>.
-Paragraphs are either a <a href="https://pub.dev/documentation/boustro/latest/boustro/TextLine-class.html"><code>TextLine</code></a> —
-for rich text content — or an <a href="https://pub.dev/documentation/boustro/latest/boustro/ParagraphEmbed-class.html">embed</a>,
+Paragraphs are either a <a href="https://pub.dev/documentation/boustro/latest/boustro/TextLine-class.html">line of rich text</a> —
+or an <a href="https://pub.dev/documentation/boustro/latest/boustro/ParagraphEmbed-class.html">embed</a> —
 which can be any custom content, for example an image or a code block.</p>
 <h2><a class="header" href="#text" id="text">Text</a></h2>
-<p>A text line represents rich text using a <a href="https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/SpannedString-class.html"><code>SpannedString</code></a>.
-Text lines can be modified with <a href="https://pub.dev/documentation/boustro/latest/boustro/LineModifier-class.html"><code>LineModifiers</code></a>.
+<p>A text line represents rich text using a <a href="https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/SpannedString-class.html">spanned string</a>.
+Text lines can be modified with <a href="https://pub.dev/documentation/boustro/latest/boustro/LineModifier-class.html">line modifiers</a>.
 These modifiers wrap a line of text and can modify how they are displayed or override their style.
 For example, <code>boustro_starter</code> has modifiers for block quotes or list items (bullet or numbered).</p>
 <p>Spanned strings hold text, along with a list of spans that apply formatting or attach gestures to
@@ -194,7 +195,8 @@ that manages formatting of its text.</p>
 range in the source text to which the attribute is applied. The boundaries of the range are
 indices into the source text, using <a href="https://unicode.org/reports/tr29/">Unicode (Extended) Grapheme Clusters</a>
 (EGC) as the unit. EGC map to user-perceived characters. EGC indices are used to prevent indices
-in the middle of user-perceived characters.</li>
+in the middle of user-perceived characters. If you use a <code>Range</code> directly, you likely want to use
+the <a href="https://pub.dev/packages/characters"><code>characters</code></a> package.</li>
 <li><a href="https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/TextAttribute-class.html"><code>TextAttribute</code></a>:
 The attribute can be resolved to a <code>TextStyle</code> (to apply formatting) and gestures (for example tap handler that opens a
 hyperlink) with its <code>resolve</code> method, which can optionally use an <a href="https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/AttributeTheme-class.html"><code>AttributeTheme</code></a>
@@ -202,8 +204,9 @@ to resolve to a style and gestures. The attribute also defines <a href="https://
 which determine how the span responds to insertions in the source text.</li>
 </ul>
 <h2><a class="header" href="#embeds" id="embeds">Embeds</a></h2>
-<p>Embeds in boustro can be pretty much anything as long as it extends <code>ParagraphEmbed</code>.
-Users should override the <code>build</code> method to create a <code>Widget</code> for the embed.</p>
+<p>An embed, in boustro, is a custom piece of content that can be embedded in rich text.</p>
+<p>Visually, an embed can be any widget, and users can define different widgets for the editable and view-only version of the embed.</p>
+<p>See <a href="customization/embeds.html">Embeds</a> to learn how embeds work and how to create custom embeds.</p>
 <h2><a class="header" href="#component" id="component">Component</a></h2>
 <p>A component is any implementation of <code>TextAttribute</code>, <code>LineModifier</code> or <code>ParagraphEmbed</code>. This
 concept is not used within boustro itself, but it's useful to define it for talking about
