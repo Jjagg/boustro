@@ -127,7 +127,9 @@ abstract class ParagraphEmbed implements Paragraph {
   ParagraphEmbedController createController();
 }
 
-/// Controller for a [ParagraphEmbed].
+/// Interface for controller of a [ParagraphEmbed].
+///
+/// Represents the editable version of the embed.
 abstract class ParagraphEmbedController {
   /// Convert the current state of the controller to a [ParagraphEmbed].
   ParagraphEmbed? toEmbed();
@@ -137,6 +139,25 @@ abstract class ParagraphEmbedController {
     BuildContext context,
     FocusNode focusNode,
   );
+}
+
+/// Base class for embeds that cannot be edited.
+///
+/// The widget displayed for embeds extending this class will be the same as
+/// their view.
+///
+/// Subclasses only need to override [ParagraphEmbed.createView].
+abstract class UneditableEmbed extends ParagraphEmbed
+    implements ParagraphEmbedController {
+  @override
+  ParagraphEmbedController createController() => this;
+
+  @override
+  Widget createEditor(BuildContext context, FocusNode focusNode) =>
+      createView(context);
+
+  @override
+  ParagraphEmbed? toEmbed() => this;
 }
 
 /// Builds a [Document]. Can be used fluently with cascades.

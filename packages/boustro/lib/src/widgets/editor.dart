@@ -67,18 +67,18 @@ class _DocumentViewState extends State<DocumentView> {
     return BoustroScope.readonly(
       document: widget.document,
       child: ListView.builder(
-          addAutomaticKeepAlives: false,
-          controller: widget.scrollController,
-          physics: widget.physics,
-          primary: widget.primaryScroll,
-          shrinkWrap: true,
-          itemCount: widget.document.paragraphs.length,
-          itemBuilder: (context, index) {
-            return ParagraphView(
-              paragraph: widget.document.paragraphs[index],
-              gestureMapper: _gestureMapper,
-            );
-          },
+        addAutomaticKeepAlives: false,
+        controller: widget.scrollController,
+        physics: widget.physics,
+        primary: widget.primaryScroll,
+        shrinkWrap: true,
+        itemCount: widget.document.paragraphs.length,
+        itemBuilder: (context, index) {
+          return ParagraphView(
+            paragraph: widget.document.paragraphs[index],
+            gestureMapper: _gestureMapper,
+          );
+        },
       ),
     );
   }
