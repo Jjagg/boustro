@@ -1,6 +1,7 @@
 # Model
 
 This chapter describes how rich text content is represented in boustro.
+The terminology from this chapter is used throughout the book.
 
 ## Document
 
@@ -9,14 +10,14 @@ An immutable document is represented by a [`Document`](https://pub.dev/documenta
 While editing a document, its state is maintained by a [`DocumentController`](https://pub.dev/documentation/boustro/latest/boustro/Document-class.html).
 
 A document holds a collection of [`Paragraphs`](https://pub.dev/documentation/boustro/latest/boustro/Paragraph-class.html).
-Paragraphs are either a [`TextLine`](https://pub.dev/documentation/boustro/latest/boustro/TextLine-class.html) —
-for rich text content — or an [embed](https://pub.dev/documentation/boustro/latest/boustro/ParagraphEmbed-class.html),
+Paragraphs are either a [line of rich text](https://pub.dev/documentation/boustro/latest/boustro/TextLine-class.html) —
+or an [embed](https://pub.dev/documentation/boustro/latest/boustro/ParagraphEmbed-class.html) —
 which can be any custom content, for example an image or a code block.
 
 ## Text
 
-A text line represents rich text using a [`SpannedString`](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/SpannedString-class.html).
-Text lines can be modified with [`LineModifiers`](https://pub.dev/documentation/boustro/latest/boustro/LineModifier-class.html).
+A text line represents rich text using a [spanned string](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/SpannedString-class.html).
+Text lines can be modified with [line modifiers](https://pub.dev/documentation/boustro/latest/boustro/LineModifier-class.html).
 These modifiers wrap a line of text and can modify how they are displayed or override their style.
 For example, `boustro_starter` has modifiers for block quotes or list items (bullet or numbered).
 
@@ -34,7 +35,8 @@ Attribute spans hold an attribute and a range:
   range in the source text to which the attribute is applied. The boundaries of the range are
   indices into the source text, using [Unicode (Extended) Grapheme Clusters](https://unicode.org/reports/tr29/)
   (EGC) as the unit. EGC map to user-perceived characters. EGC indices are used to prevent indices
-  in the middle of user-perceived characters.
+  in the middle of user-perceived characters. If you use a `Range` directly, you likely want to use
+  the [`characters`](https://pub.dev/packages/characters) package.
 - [`TextAttribute`](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/TextAttribute-class.html):
   The attribute can be resolved to a `TextStyle` (to apply formatting) and gestures (for example tap handler that opens a
   hyperlink) with its `resolve` method, which can optionally use an [`AttributeTheme`](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/AttributeTheme-class.html)
@@ -43,8 +45,11 @@ Attribute spans hold an attribute and a range:
 
 ## Embeds
 
-Embeds in boustro can be pretty much anything as long as it extends `ParagraphEmbed`.
-Users should override the `build` method to create a `Widget` for the embed.
+An embed, in boustro, is a custom piece of content that can be embedded in rich text.
+
+Visually, an embed can be any widget, and users can define different widgets for the editable and view-only version of the embed.
+
+See [Embeds](customization/embeds.md) to learn how embeds work and how to create custom embeds.
 
 ## Component
 

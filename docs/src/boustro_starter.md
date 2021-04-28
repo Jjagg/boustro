@@ -14,15 +14,18 @@ a list of components provided.
 - Italic
 - Underline
 - Strikethrough
+- Link (with user-defined callback)
 
 ## Line Modifiers
 
 - Bullet list
-- Numbered list
+- **Numbered list (TODO)**
+- **Blockquote (TODO)**
 
 ## Embeds
 
 - Image
+- **Code block (TODO)**
 
 If you're missing a component that is generally useful, please [open an issue](https://github.com/Jjagg/boustro/issues)
 to request it.
