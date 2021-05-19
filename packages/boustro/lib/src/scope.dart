@@ -13,7 +13,7 @@ class BoustroScope extends InheritedWidget {
     Key? key,
     required DocumentController this.controller,
     required Widget child,
-  })   : document = null,
+  })  : document = null,
         super(key: key, child: child);
 
   /// Create a scope for a read-only document with a [Document].
@@ -21,7 +21,7 @@ class BoustroScope extends InheritedWidget {
     Key? key,
     required Document this.document,
     required Widget child,
-  })   : controller = null,
+  })  : controller = null,
         super(key: key, child: child);
 
   /// Document controller of the editor. Null if [BoustroScope.readonly] was

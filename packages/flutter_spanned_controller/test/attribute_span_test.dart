@@ -4,6 +4,7 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables
 // ignore_for_file: prefer_function_declarations_over_variables
 // ignore_for_file: avoid_types_on_closure_parameters
+// ignore_for_file: directives_ordering
 
 import 'package:flutter_spanned_controller/src/attribute_span.dart';
 import 'package:flutter/widgets.dart';

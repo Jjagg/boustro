@@ -36,7 +36,7 @@ abstract class ComponentCodec<T> {
     required this.typeStr,
     required T Function(Object?) decode,
     required Object? Function(T) encode,
-  })   : _decode = decode,
+  })  : _decode = decode,
         _encode = encode,
         _create = null;
 
@@ -44,7 +44,7 @@ abstract class ComponentCodec<T> {
   const ComponentCodec.stateless({
     required this.typeStr,
     required T Function() create,
-  })   : _create = create,
+  })  : _create = create,
         _decode = null,
         _encode = null;
 

@@ -50,7 +50,7 @@ class TextAlignedLeadingMarginModifier extends StatelessWidget {
     double? paddingRight,
     required this.leading,
     required this.child,
-  })   : paddingLeft = paddingLeft ?? padding ?? 0,
+  })  : paddingLeft = paddingLeft ?? padding ?? 0,
         paddingRight = paddingRight ?? padding ?? 0,
         super(key: key);
 
@@ -109,7 +109,7 @@ class LeadingTextModifier extends StatelessWidget {
     double? paddingRight,
     required this.text,
     required this.child,
-  })   : paddingLeft = paddingLeft ?? padding ?? 0,
+  })  : paddingLeft = paddingLeft ?? padding ?? 0,
         paddingRight = paddingRight ?? padding ?? 0,
         super(key: key);
 

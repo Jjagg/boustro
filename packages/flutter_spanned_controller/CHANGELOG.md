@@ -1,4 +1,8 @@
 
+## 0.7.0
+
+- Update Flutter SDK version requirement to minimum 2.2.0
+
 ## 0.6.0+1
 
 - Edited the changelog for better formatting again.

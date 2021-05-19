@@ -140,7 +140,7 @@ class AutoFormatter extends StatefulWidget {
     required this.controller,
     required List<FormatRule> rules,
     required this.child,
-  })   : ruleset = FormatRuleset(rules),
+  })  : ruleset = FormatRuleset(rules),
         super(key: key);
 
   /// Create an auto formatter.

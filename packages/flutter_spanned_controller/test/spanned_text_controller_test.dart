@@ -5,6 +5,7 @@
 // ignore_for_file: prefer_function_declarations_over_variables
 // ignore_for_file: avoid_types_on_closure_parameters
 // ignore_for_file: unused_import
+// ignore_for_file: directives_ordering
 
 import 'package:flutter_spanned_controller/src/attribute_span.dart';
 import 'package:flutter_spanned_controller/src/spanned_string.dart';
