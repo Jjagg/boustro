@@ -177,7 +177,6 @@ final darkTheme = ThemeData(
   primarySwatch: Colors.grey,
   primaryColor: Colors.grey.shade800,
   brightness: Brightness.dark,
-  accentColor: Colors.grey.shade100,
   dividerColor: Colors.black12,
 );
 
@@ -185,6 +184,5 @@ final lightTheme = ThemeData(
   primarySwatch: Colors.grey,
   primaryColor: Colors.grey.shade200,
   brightness: Brightness.light,
-  accentColor: Colors.grey.shade50,
   dividerColor: Colors.white54,
 );

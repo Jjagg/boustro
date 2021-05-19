@@ -640,8 +640,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     // a line or delete at the end of a line.
     if (selection.isCollapsed &&
         selection.baseOffset == 0 &&
-        (ev.logicalKey == LogicalKeyboardKey.backspace ||
-            ev.logicalKey == LogicalKeyboardKey.numpadBackspace)) {
+        (ev.logicalKey == LogicalKeyboardKey.backspace)) {
       final index = paragraphs.indexWhere(
           (ctrl) => ctrl is LineState && ctrl.controller == controller);
       assert(index >= 0, 'onKey callback from missing controller');
