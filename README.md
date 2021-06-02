@@ -1,5 +1,3 @@
-**The packages maintained in this repository depend on a prerelease version of Flutter. I'm waiting for the required change to land in the stable Flutter SDK before publishing the packages to pub.dev.**
-
 <p align="center">
   <a href="https://github.com/Jjagg/boustro/actions"><img src="https://github.com/Jjagg/boustro/workflows/Build/badge.svg" alt="Build Status"></a>
 <a href="https://codecov.io/gh/Jjagg/boustro"><img src="https://codecov.io/gh/Jjagg/boustro/branch/main/graph/badge.svg" alt="codecov"></a>
@@ -11,8 +9,8 @@ Boustro is a rich text editor for Flutter.
 
 | **flutter_spanned_controller** | [![pub package](https://img.shields.io/pub/v/flutter_spanned_controller.svg?color=blue)](https://pub.dev/packages/flutter_spanned_controller) |
 | ------------------------------ | ----------- |
-| **boustro**                    | Unpublished |
-| **boustro_starter**            | Unpublished |
+| **boustro**                    | [![pub package](https://img.shields.io/pub/v/boustro.svg?color=blue)](https://pub.dev/packages/boustro) |
+| **boustro_starter**            | [![pub package](https://img.shields.io/pub/v/boustro_starter.svg?color=blue)](https://pub.dev/packages/boustro_starter) |
 
 ## Features
 
@@ -90,3 +88,4 @@ Changelogs for the packages document all notable changes.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
