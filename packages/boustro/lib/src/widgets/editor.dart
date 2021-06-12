@@ -19,6 +19,7 @@ class DocumentView extends StatefulWidget {
     this.physics,
     this.primaryScroll,
     this.scrollController,
+    this.textSelectable = false,
   }) : super(key: key);
 
   /// The contents this view will display.
@@ -34,6 +35,9 @@ class DocumentView extends StatefulWidget {
 
   /// The scroll controller for the [ScrollView] containing the paragraphs.
   final ScrollController? scrollController;
+
+  /// Makes text in line paragraphs selectable.
+  final bool textSelectable;
 
   @override
   _DocumentViewState createState() => _DocumentViewState();
@@ -75,6 +79,7 @@ class _DocumentViewState extends State<DocumentView> {
           return ParagraphView(
             paragraph: widget.document.paragraphs[index],
             gestureMapper: _gestureMapper,
+            textSelectable: widget.textSelectable,
           );
         },
       ),
@@ -89,10 +94,14 @@ class ParagraphView extends StatelessWidget {
     Key? key,
     required this.paragraph,
     this.gestureMapper,
+    this.textSelectable = false,
   }) : super(key: key);
 
   /// Paragraph that is displayed.
   final Paragraph paragraph;
+
+  /// Makes text in line paragraphs selectable.
+  final bool textSelectable;
 
   /// GestureMapper to pass to [LineParagraphView] if [Paragraph] is a
   /// [LineParagraph].
@@ -100,49 +109,16 @@ class ParagraphView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return paragraph.match(line: (line) {
-      final spans = line.spannedText.buildTextSpan(
-        context: context,
+    return paragraph.match(
+      line: (line) => LineParagraphView(
+        line: line,
         gestureMapper: gestureMapper,
-      );
-
-      final btheme = BoustroTheme.of(context);
-      final linePadding = (btheme.linePadding ??
-              BoustroThemeData.fallbackForContext(context).linePadding!)
-          .resolve(Directionality.of(context));
-      return Padding(
-        padding: EdgeInsets.only(
-          left: linePadding.left,
-          right: linePadding.right,
-        ),
-        child: line.modifiers.fold<Widget>(
-          Builder(
-            builder: (context) {
-              final style = Theme.of(context).textTheme.subtitle1;
-              return Padding(
-                padding: EdgeInsets.only(
-                  top: linePadding.top,
-                  bottom: linePadding.bottom,
-                ),
-                child: Text.rich(
-                  spans,
-                  style: style,
-                ),
-              );
-            },
-          ),
-          (line, h) => h.modify(context, line),
-        ),
-      );
-    }, embed: (embed) {
-      final btheme = BoustroTheme.of(context);
-      final padding = btheme.embedPadding ??
-          BoustroThemeData.fallbackForContext(context).embedPadding!;
-      return Padding(
-        padding: padding,
-        child: embed.createView(context),
-      );
-    });
+        selectable: textSelectable,
+      ),
+      embed: (embed) => ParagraphEmbedView(
+        embed: embed,
+      ),
+    );
   }
 
   @override
@@ -161,10 +137,14 @@ class LineParagraphView extends StatefulWidget {
     Key? key,
     required this.line,
     this.gestureMapper,
+    this.selectable = false,
   }) : super(key: key);
 
   /// Paragraph that is displayed.
   final LineParagraph line;
+
+  /// Makes text selectable.
+  final bool selectable;
 
   /// Gesture mapper that manages the lifetimes of the gesture recognizers (if
   /// there are any) created by attributes on [line].
@@ -181,22 +161,17 @@ class LineParagraphView extends StatefulWidget {
     properties.add(DiagnosticsProperty<LineParagraph>('line', line));
     properties.add(DiagnosticsProperty<AttributeGestureMapper?>(
         'gestureMapper', gestureMapper));
+    properties.add(
+        FlagProperty('selectable', value: selectable, ifTrue: 'selectable'));
   }
 }
 
 class _LineParagraphViewState extends State<LineParagraphView> {
-  late final AttributeGestureMapper? _ownedGestureMapper;
+  late final AttributeGestureMapper? _ownedGestureMapper =
+      widget.gestureMapper == null ? AttributeGestureMapper() : null;
 
   AttributeGestureMapper get _effectiveGestureMapper =>
       widget.gestureMapper ?? _ownedGestureMapper!;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.gestureMapper == null) {
-      _ownedGestureMapper = AttributeGestureMapper();
-    }
-  }
 
   @override
   void dispose() {
@@ -230,10 +205,15 @@ class _LineParagraphViewState extends State<LineParagraphView> {
                 top: linePadding.top,
                 bottom: linePadding.bottom,
               ),
-              child: Text.rich(
-                spans,
-                style: style,
-              ),
+              child: widget.selectable
+                  ? SelectableText.rich(
+                      spans,
+                      style: style,
+                    )
+                  : Text.rich(
+                      spans,
+                      style: style,
+                    ),
             );
           },
         ),
