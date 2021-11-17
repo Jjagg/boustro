@@ -174,15 +174,16 @@ Future<void> _handleLinkTap(BuildContext context, String url) async {
 }
 
 final darkTheme = ThemeData(
-  primarySwatch: Colors.grey,
-  primaryColor: Colors.grey.shade800,
-  brightness: Brightness.dark,
+  colorScheme: ColorScheme.dark(
+    surface: Colors.grey.shade800,
+  ),
   dividerColor: Colors.black12,
 );
 
 final lightTheme = ThemeData(
-  primarySwatch: Colors.grey,
-  primaryColor: Colors.grey.shade200,
-  brightness: Brightness.light,
-  dividerColor: Colors.white54,
+  colorScheme: ColorScheme.light(
+    primary: Colors.grey.shade200,
+    onPrimary: Colors.black,
+  ),
+  dividerColor: Colors.grey.shade300,
 );
