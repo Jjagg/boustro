@@ -182,8 +182,9 @@ final darkTheme = ThemeData(
 
 final lightTheme = ThemeData(
   colorScheme: ColorScheme.light(
-    primary: Colors.grey.shade200,
-    onPrimary: Colors.black,
+    primary: Colors.blue,
+    onPrimary: Colors.grey.shade800,
   ),
+  appBarTheme: AppBarTheme(backgroundColor: Colors.grey.shade200),
   dividerColor: Colors.grey.shade300,
 );

@@ -17,6 +17,12 @@ dependencies:
   media_gallery: ^0.1.5
   url_launcher: ^6.0.2
 
+dependency_overrides:
+  boustro:
+    path: ../../boustro
+  flutter_spanned_controller:
+    path: ../../flutter_spanned_controller
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

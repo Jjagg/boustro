@@ -303,6 +303,10 @@ class SpannedTextEditingController implements TextEditingController {
 
   @override
   set value(TextEditingValue value) {
+    if (value == this.value) {
+      return;
+    }
+
     if (_ignoreSetValue) {
       _textController.value = value;
     } else {

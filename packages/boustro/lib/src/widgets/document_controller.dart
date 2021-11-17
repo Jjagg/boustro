@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:built_collection/built_collection.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
@@ -301,6 +300,27 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     SpannedTextEditingController controller,
     TextEditingValue newValue,
   ) {
+    if (!_hasStartLineMarker(newValue)) {
+      final index = paragraphs.indexWhere(
+        (ctrl) => ctrl is LineState && identical(ctrl.controller, controller),
+      );
+
+      if (_tryMergeNext(index - 1)) {
+        return TextEditingValue.empty;
+      }
+    }
+
+    if (!_hasEndLineMarker(newValue)) {
+      final index = paragraphs.indexWhere(
+        (ctrl) => ctrl is LineState && identical(ctrl.controller, controller),
+      );
+      if (_tryMergeNext(index)) {
+        return TextEditingValue.empty;
+      }
+    }
+
+    newValue = _ensureValidLineMarkers(newValue);
+
     if (!newValue.text.contains('\n')) {
       return newValue;
     }
@@ -333,7 +353,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
         lineIndex + 1,
         LineParagraph.built(
           text: nextLine.text,
-          spans: nextLine.spans,
+          spans: nextLine.spans.shift(0, 1),
           modifiers: currentLine.modifiers,
         ),
       );
@@ -348,11 +368,13 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
         extentOffset: 0,
       );
     }
-    return TextEditingValue(
-      text: t.text.toString(),
-      selection: newValue.selection.copyWith(
-        baseOffset: t.length,
-        extentOffset: t.length,
+    return _ensureValidLineMarkers(
+      TextEditingValue(
+        text: t.text.toString(),
+        selection: newValue.selection.copyWith(
+          baseOffset: t.length,
+          extentOffset: t.length,
+        ),
       ),
     );
   }
@@ -383,13 +405,11 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   LineState insertLine(int index, [LineParagraph? line]) {
     final spanController = SpannedTextEditingController(
       processTextValue: _processTextValue,
-      text: line?.text.string,
+      text: _ensureLineMarkers(line?.text.string),
       spans: line?.spans,
     );
 
-    final focusNode = FocusNode(
-      onKey: (n, ev) => _onKey(spanController, ev),
-    );
+    final focusNode = FocusNode();
 
     final newLine = LineState(
       controller: spanController,
@@ -630,54 +650,24 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     return state;
   }
 
-  // Key handler for handling backspace and delete in line paragraphs.
-  KeyEventResult _onKey(
-    SpannedTextEditingController controller,
-    RawKeyEvent ev,
-  ) {
-    final selection = controller.value.selection;
-    // Try to merge lines when backspace is pressed at the start of
-    // a line or delete at the end of a line.
-    if (selection.isCollapsed &&
-        selection.baseOffset == 0 &&
-        (ev.logicalKey == LogicalKeyboardKey.backspace)) {
-      final index = paragraphs.indexWhere(
-          (ctrl) => ctrl is LineState && ctrl.controller == controller);
-      assert(index >= 0, 'onKey callback from missing controller');
-
-      final line = paragraphs[index] as LineState;
-      if (line.modifiers.isNotEmpty) {
-        line.modifierController.update((b) => b.clear());
-        return KeyEventResult.handled;
-      } else {
-        return _tryMergeNext(index - 1);
-      }
-    } else if (selection.isCollapsed &&
-        selection.baseOffset == controller.value.text.length &&
-        ev.logicalKey == LogicalKeyboardKey.delete) {
-      final index = paragraphs.indexWhere(
-          (ctrl) => ctrl is LineState && ctrl.controller == controller);
-      assert(index >= 0, 'onKey callback from missing controller');
-      return _tryMergeNext(index);
-    }
-
-    return KeyEventResult.ignored;
-  }
-
-  KeyEventResult _tryMergeNext(int index) {
+  bool _tryMergeNext(int index) {
     if (index < 0 || index + 1 >= paragraphs.length) {
-      return KeyEventResult.ignored;
+      return false;
     }
     if (paragraphs[index] is! LineState ||
         paragraphs[index + 1] is! LineState) {
-      return KeyEventResult.ignored;
+      return false;
     }
     final c1 = paragraphs[index] as LineState;
     final c2 = paragraphs[index + 1] as LineState;
 
-    final insertionIndex = c1.controller.text.length;
-    final concat =
-        c1.controller.spannedString.concat(c2.controller.spannedString);
+    // Remove the line markers.
+    final s1 = c1.controller.spannedString
+        .collapse(start: c1.controller.spannedString.length - 1);
+    final s2 = c2.controller.spannedString.collapse(end: 1);
+
+    final insertionIndex = s1.length;
+    final concat = s1.concat(s2);
 
     c1.controller.spannedString = concat;
     removeParagraphAt(index + 1);
@@ -689,7 +679,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
       extentOffset: insertionIndex,
     );
 
-    return KeyEventResult.handled;
+    return true;
   }
 
   final _ToggleStateListener<TextAttribute> _attributeListener =
@@ -734,5 +724,87 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     _modifierListener.dispose();
     _ownedFocusNode?.dispose();
     super.dispose();
+  }
+
+  static const _lineMarker = '\u200b';
+
+  bool _hasStartLineMarker(TextEditingValue value) {
+    final text = value.text;
+
+    if (text.isEmpty) {
+      return false;
+    }
+
+    if (text[0] != _lineMarker) {
+      return false;
+    }
+
+    if (text.length == 1 &&
+        value.selection.isCollapsed &&
+        value.selection.baseOffset == 0) {
+      return false;
+    }
+
+    return true;
+  }
+
+  bool _hasEndLineMarker(TextEditingValue value) {
+    final text = value.text;
+
+    if (text.isEmpty) {
+      return false;
+    }
+
+    if (text[text.length - 1] != _lineMarker) {
+      return false;
+    }
+
+    if (text.length == 1 &&
+        value.selection.isCollapsed &&
+        value.selection.baseOffset == 1) {
+      return false;
+    }
+
+    return true;
+  }
+
+  TextEditingValue _ensureValidLineMarkers(TextEditingValue value) {
+    value = value.copyWith(
+      text: _ensureLineMarkers(value.text),
+    );
+
+    return value.copyWith(
+      selection: _clampSelectionToIgnoreMarkers(value.selection, value.text),
+    );
+  }
+
+  String _ensureLineMarkers(String? string) {
+    if (string == null || string.isEmpty) {
+      return _lineMarker + _lineMarker;
+    }
+
+    if (string[0] != _lineMarker) {
+      string = _lineMarker + string;
+    }
+    if (string.length == 1 || string[string.length - 1] != _lineMarker) {
+      string = string + _lineMarker;
+    }
+
+    return string;
+  }
+
+  TextSelection _clampSelectionToIgnoreMarkers(
+    TextSelection selection,
+    String text,
+  ) {
+    assert(
+      text[0] == _lineMarker && text[text.length - 1] == _lineMarker,
+      'Cannot call _clampSelectionToIgnoreMarkers for text without line markers.',
+    );
+
+    return selection.copyWith(
+      baseOffset: selection.baseOffset.clamp(1, text.length - 1),
+      extentOffset: selection.extentOffset.clamp(1, text.length - 1),
+    );
   }
 }
