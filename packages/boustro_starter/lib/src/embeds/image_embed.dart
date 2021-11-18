@@ -180,13 +180,9 @@ class ImageEmbedEditor extends StatelessWidget {
         children: [
           child,
           Positioned.fill(
-            child: AnimatedCrossFade(
-              crossFadeState: hasFocus
-                  ? CrossFadeState.showSecond
-                  : CrossFadeState.showFirst,
-              duration: const Duration(milliseconds: 800),
-              firstChild: const SizedBox(),
-              secondChild: Stack(
+            child: Visibility(
+              visible: hasFocus,
+              child: Stack(
                 children: [
                   if (enableImageEdit && pickImg != null)
                     Align(
