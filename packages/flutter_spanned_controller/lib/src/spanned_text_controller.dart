@@ -136,7 +136,10 @@ extension SpannedTextEditingControllerExtension
         (ov) => ov.attribute == attribute && ov.type == OverrideType.remove)) {
       return false;
     }
-    return spans.isApplied(attribute, _convertRange(selection));
+    final textRange = _convertRange(selection);
+    return textRange.isCollapsed
+        ? spans.willApply(attribute, textRange.start)
+        : spans.isApplied(attribute, textRange);
   }
 
   /// Toggle an attribute for the current selection.

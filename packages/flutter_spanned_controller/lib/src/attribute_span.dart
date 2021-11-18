@@ -658,20 +658,15 @@ class SpanList extends Equatable {
     }
   }
 
-  /// If range is not collapsed, returns true if [attribute] is applied to the
-  /// full range of text.
-  ///
-  /// If range is collapsed, returns the result of [willApply] for [attribute].
+  /// Returns true if [attribute] is applied to the full range of text.
   bool isApplied(TextAttribute attribute, Range range) {
     return getSpansIn(range, attribute).any(
       (s) => s.isApplied(range),
     );
   }
 
-  /// If range is not collapsed, returns true if an attribute of type [T] is
-  /// applied to the full range of text.
-  ///
-  /// If range is collapsed, returns the result of [willApplyType] for [T].
+  /// Returns true if an attribute of type [T] is applied to the full range of
+  /// text.
   bool isTypeApplied<T extends TextAttribute>(Range range) {
     assert(T != dynamic, 'Attribute type must be specified.');
     return getTypedSpansIn<T>(range).any(
