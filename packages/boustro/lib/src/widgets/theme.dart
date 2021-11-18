@@ -78,7 +78,7 @@ class BoustroThemeData extends Equatable {
   }) {
     final light = brightness == Brightness.light;
     return BoustroThemeData.raw(
-      editorColor: light ? Colors.grey.shade100 : Colors.grey.shade700,
+      editorColor: null,
       editorPadding: const EdgeInsets.only(top: 8, bottom: 150),
       toolbarDecoration: BoxDecoration(
         color: light ? Colors.grey.shade200 : Colors.grey.shade800,
