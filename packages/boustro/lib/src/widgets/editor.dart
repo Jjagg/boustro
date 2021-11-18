@@ -277,19 +277,26 @@ class DocumentEditor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final btheme = BoustroTheme.of(context);
+
+    Widget widget = ValueListenableBuilder<BuiltList<ParagraphState>>(
+      valueListenable: controller,
+      builder: (context, paragraphs, __) {
+        return _buildParagraphs(context, paragraphs);
+      },
+    );
+
+    if (btheme.editorColor != null && btheme.editorColor!.alpha > 0) {
+      widget = ColoredBox(
+          color: btheme.editorColor!,
+          child: widget,
+      );
+    }
+
     return BoustroScope.editable(
       controller: controller,
       child: FocusScope(
         node: controller.focusNode,
-        child: Container(
-          color: btheme.editorColor,
-          child: ValueListenableBuilder<BuiltList<ParagraphState>>(
-            valueListenable: controller,
-            builder: (context, paragraphs, __) {
-              return _buildParagraphs(context, paragraphs);
-            },
-          ),
-        ),
+        child: widget,
       ),
     );
   }
