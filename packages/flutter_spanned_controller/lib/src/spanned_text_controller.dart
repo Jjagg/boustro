@@ -270,6 +270,9 @@ class SpannedTextEditingController implements TextEditingController {
   /// characters the implementer needs to manage the [selection] value of this
   /// controller (so it does not contain the characters) and ensure the marker
   /// characters are always at the start and end of a line after any changes.
+  ///
+  /// The marker characters are assumed to fit in 1 UTF-16 code unit. Using
+  /// characters over U+FFFF will result in incorrect behavior.
   final bool hasMarkerCharacters;
 
   final TextEditingController _textController;
