@@ -1,3 +1,8 @@
+## Unreleased
+
+- **Added** `SpannedTextEditingController.hasMarkerCharacters`, a flag to replace
+  the first and last character of the text with a zero-width space so marker characters can
+  be used to detect backspace at the start of the line or delete at the end.
 
 ## 0.7.0
 

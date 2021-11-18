@@ -204,6 +204,7 @@ class SpannedTextEditingController implements TextEditingController {
     this.processTextValue = _defaultProcessTextValue,
     String? text,
     SpanList? spans,
+    this.hasMarkerCharacters = false,
   })  : compositionAttribute =
             compositionAttribute ?? _defaultCompositionAttribute,
         _textController = TextEditingController(text: text),
@@ -212,10 +213,12 @@ class SpannedTextEditingController implements TextEditingController {
   /// Create a new spanned text editing controller with the same state as this
   /// one.
   SpannedTextEditingController copy() => SpannedTextEditingController(
-      compositionAttribute: compositionAttribute,
-      processTextValue: processTextValue,
-      text: text,
-      spans: spans);
+        compositionAttribute: compositionAttribute,
+        processTextValue: processTextValue,
+        text: text,
+        spans: spans,
+        hasMarkerCharacters: hasMarkerCharacters,
+      );
 
   /// Create a new spanned text editing controller with the same state as this
   /// one, but with the given fields replaced with the new values.
@@ -224,12 +227,14 @@ class SpannedTextEditingController implements TextEditingController {
     ProcessTextValue? processTextValue,
     String? text,
     SpanList? spans,
+    bool? hasMarkerCharacters,
   }) {
     return SpannedTextEditingController(
       compositionAttribute: compositionAttribute ?? this.compositionAttribute,
       processTextValue: processTextValue ?? this.processTextValue,
       text: text ?? this.text,
       spans: spans ?? this.spans,
+      hasMarkerCharacters: hasMarkerCharacters ?? this.hasMarkerCharacters,
     );
   }
 
@@ -240,6 +245,30 @@ class SpannedTextEditingController implements TextEditingController {
 
   /// Used to process [value] whenever it changes.
   final ProcessTextValue processTextValue;
+
+  /// Whether the content of this controller uses marker characters.
+  ///
+  /// Setting this flag to true will make [buildTextSpan] replace the first and
+  /// last characters of the text with a zero-width space (U+200B) so they are
+  /// invisible. Note that to support proper capitalization on iOS, the used
+  /// marker character at the start should be a regular space (U+0020).
+  ///
+  /// Marker characters are used to detect backspace at the start of a line, or
+  /// delete at the end of a line. This input can otherwise not be detected on
+  /// software keyboards, since Flutter only receives the text update through
+  /// the IME and not the raw input and on an empty line, a backspace or delete
+  /// will result in no text update. To work around this limitation, a marker
+  /// character can be inserted at the start and end of a line. If the marker
+  /// character at the start is deleted, the user backspaced at the start of the
+  /// line. If the marker character at the end is deleted the user deleted at
+  /// the end of the line.
+  ///
+  /// The change this applies is purely visual: it hides the first and last
+  /// character of the content of this controller. To properly use marker
+  /// characters the implementer needs to manage the [selection] value of this
+  /// controller (so it does not contain the characters) and ensure the marker
+  /// characters are always at the start and end of a line after any changes.
+  final bool hasMarkerCharacters;
 
   final TextEditingController _textController;
 
@@ -353,7 +382,7 @@ class SpannedTextEditingController implements TextEditingController {
     TextStyle? style,
     required bool withComposing,
   }) {
-    if (spans.iter.isEmpty) {
+    if (!hasMarkerCharacters && spans.iter.isEmpty) {
       return _textController.buildTextSpan(
         context: context,
         style: style,
@@ -361,22 +390,30 @@ class SpannedTextEditingController implements TextEditingController {
       );
     }
 
-    final Iterable<AttributeSegment> segments;
+    final SpanList spansWithComposing;
 
     if (!value.isComposingRangeValid ||
         !withComposing ||
         value.composing.isCollapsed) {
-      segments = spans.getSegments(text.characters);
+      spansWithComposing = spans;
     } else {
       final composingRange = _convertRange(value.composing);
-      segments = (spans.merge(
+      spansWithComposing = spans.merge(
         AttributeSpan(
           compositionAttribute,
           composingRange.start,
           composingRange.end,
         ),
-      )).getSegments(text.characters);
+      );
     }
+
+    var segmentsText = text;
+    if (hasMarkerCharacters && text.isNotEmpty) {
+      segmentsText =
+          '\u200b${segmentsText.substring(1, segmentsText.length - 1)}\u200b';
+    }
+
+    final segments = spansWithComposing.getSegments(segmentsText.characters);
 
     // We don't pass gesture recognizers here, because we don't
     // want gestures on spans to be handled while editing.

@@ -296,84 +296,119 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   LineState? get focusedLine =>
       focusedParagraph is LineState ? focusedParagraph as LineState? : null;
 
+  /// This function is called anytime the [TextEditingValue] of a controller
+  /// changes.
+  ///
+  /// It's responsible for:
+  /// - Detecting backspace at the start of a line or delete at the end to join
+  ///   lines.
+  /// - Detecting newline insertions to split lines.
+  /// - Correcting the selection so it is always within the start/end line
+  ///   markers.
   TextEditingValue _processTextValue(
     SpannedTextEditingController controller,
     TextEditingValue newValue,
   ) {
-    if (!_hasStartLineMarker(newValue)) {
-      final index = paragraphs.indexWhere(
-        (ctrl) => ctrl is LineState && identical(ctrl.controller, controller),
-      );
-
-      if (_tryMergeNext(index - 1)) {
-        return TextEditingValue.empty;
-      }
-    }
-
-    if (!_hasEndLineMarker(newValue)) {
-      final index = paragraphs.indexWhere(
-        (ctrl) => ctrl is LineState && identical(ctrl.controller, controller),
-      );
-      if (_tryMergeNext(index)) {
-        return TextEditingValue.empty;
-      }
-    }
-
-    newValue = _ensureValidLineMarkers(newValue);
-
-    if (!newValue.text.contains('\n')) {
-      return newValue;
-    }
-
+    // Find the index of the line for merging or splitting.
     final lineIndex = paragraphs.indexWhere(
       (ctrl) => ctrl is LineState && identical(ctrl.controller, controller),
     );
     assert(lineIndex >= 0, 'processTextValue called with missing controller.');
 
-    final currentLine = paragraphs[lineIndex] as LineState;
     final cursor = newValue.selection.isValid
         ? newValue.selection.baseOffset
         : newValue.text.length;
+
+    // Diff the strings to detect marker deletion or newline insertion.
     final diff = SpannedTextEditingController.diffStrings(
       controller.text,
       newValue.text,
       cursor,
     );
 
-    LineState? toFocus;
+    if (diff.deletedRange.contains(const Range(0, 1))) {
+      if (_tryMergeNext(lineIndex - 1)) {
+        return TextEditingValue.empty;
+      } else {
+        newValue = newValue.copyWith(text: _lineMarker + newValue.text);
+      }
+    }
 
-    var t = controller.spannedString.applyDiff(diff);
+    if (diff.deletedRange
+        .contains(Range(controller.text.length - 1, controller.text.length))) {
+      final index = paragraphs.indexWhere(
+        (ctrl) => ctrl is LineState && identical(ctrl.controller, controller),
+      );
+      if (_tryMergeNext(index)) {
+        return TextEditingValue.empty;
+      } else {
+        newValue = newValue.copyWith(text: newValue.text + _lineMarker);
+      }
+    }
+
+    newValue = _ensureValidSelection(newValue);
+
+    if (!newValue.text.contains('\n')) {
+      return newValue;
+    }
+
+    final line = controller.spannedString.applyDiff(diff);
+    return _handleNewlines(lineIndex, line, newValue);
+  }
+
+  /// Split the given line on each newline character.
+  TextEditingValue _handleNewlines(
+    int lineIndex,
+    SpannedString string,
+    TextEditingValue newValue,
+  ) {
+    // Remove trailing line marker.
+    string = string.collapse(start: string.length - 1, end: string.length);
+
+    final line = paragraphs[lineIndex] as LineState;
+
+    // We loop through the string from the end to split of the last line, until
+    // we have no more newline characters.
+
     CharacterRange? newlineRange;
-    while ((newlineRange = t.text.findLast('\n'.characters)) != null) {
+    LineState? toFocus;
+    while ((newlineRange = string.text.findLast('\n'.characters)) != null) {
       newlineRange!;
-      final indexAfterNewline = newlineRange.charactersBefore.length +
-          newlineRange.currentCharacters.length;
-      final nextLine = t.collapse(end: indexAfterNewline);
+
+      final remainingLength = newlineRange.charactersBefore.length;
+      final indexAfterNewline = remainingLength + 1;
+      final nextLine = string.collapse(end: indexAfterNewline);
       insertLine(
         lineIndex + 1,
         LineParagraph.built(
           text: nextLine.text,
-          spans: nextLine.spans.shift(0, 1),
-          modifiers: currentLine.modifiers,
+          spans: nextLine.spans,
+          modifiers: line.modifiers,
         ),
       );
-      t = t.collapse(start: newlineRange.charactersBefore.length);
+
+      // Prune off the handled line and the newline character preceding it.
+      string = string.collapse(start: remainingLength);
+
+      // Focus the final line after the operation.
       toFocus ??= paragraphs[lineIndex + 1] as LineState;
     }
 
     if (toFocus != null) {
       toFocus.focusNode.requestFocus();
       toFocus.controller.selection = toFocus.controller.selection.copyWith(
-        baseOffset: 0,
-        extentOffset: 0,
+        baseOffset: 1,
+        extentOffset: 1,
       );
     }
-    return _ensureValidLineMarkers(
+
+    return _ensureValidSelection(
       TextEditingValue(
-        text: t.text.toString(),
+        // Re-add trailing line marker.
+        text: string.text.toString() + _lineMarker,
         selection: newValue.selection.copyWith(
-          baseOffset: t.length,
-          extentOffset: t.length,
+          baseOffset: string.length,
+          extentOffset: string.length,
         ),
       ),
     );
@@ -383,14 +418,24 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   Document toDocument() {
     final paragraphs = this
         .paragraphs
-        .map((p) => p.match<Paragraph?>(
-              line: (l) => LineParagraph.built(
-                spans: l.controller.spans,
-                text: l.controller.text.characters,
+        .map((p) {
+          return p.match<Paragraph?>(
+            line: (l) {
+              // Trim off the marker characters.
+              final spans = l.controller.spans.collapse(const Range(0, 1));
+              final text = l.controller.text
+                  .substring(1, l.controller.text.length - 1)
+                  .characters;
+
+              return LineParagraph.built(
+                spans: spans,
+                text: text,
                 modifiers: l.modifierController.modifiers,
-              ),
-              embed: (e) => e.controller.toEmbed(),
-            ))
+              );
+            },
+            embed: (e) => e.controller.toEmbed(),
+          );
+        })
         .whereNotNull()
         .toBuiltList();
     return Document(paragraphs);
@@ -405,8 +450,9 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
   LineState insertLine(int index, [LineParagraph? line]) {
     final spanController = SpannedTextEditingController(
       processTextValue: _processTextValue,
-      text: _ensureLineMarkers(line?.text.string),
-      spans: line?.spans,
+      text: _addLineMarkers(line?.text.string),
+      spans: line?.spans.shift(0, 1),
+      hasMarkerCharacters: true,
     );
 
     final focusNode = FocusNode();
@@ -726,7 +772,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     super.dispose();
   }
 
-  static const _lineMarker = '\u200b';
+  static const _lineMarker = ' ';
 
   bool _hasStartLineMarker(TextEditingValue value) {
     final text = value.text;
@@ -768,29 +814,21 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
     return true;
   }
 
-  TextEditingValue _ensureValidLineMarkers(TextEditingValue value) {
-    value = value.copyWith(
-      text: _ensureLineMarkers(value.text),
-    );
+  TextEditingValue _ensureValidSelection(TextEditingValue value) {
+    assert(_hasStartLineMarker(value) && _hasEndLineMarker(value),
+        'Text value did not have start and end line markers.');
 
     return value.copyWith(
       selection: _clampSelectionToIgnoreMarkers(value.selection, value.text),
     );
   }
 
-  String _ensureLineMarkers(String? string) {
+  String _addLineMarkers(String? string) {
     if (string == null || string.isEmpty) {
       return _lineMarker + _lineMarker;
     }
 
-    if (string[0] != _lineMarker) {
-      string = _lineMarker + string;
-    }
-    if (string.length == 1 || string[string.length - 1] != _lineMarker) {
-      string = string + _lineMarker;
-    }
-
-    return string;
+    return _lineMarker + string + _lineMarker;
   }
 
   TextSelection _clampSelectionToIgnoreMarkers(
