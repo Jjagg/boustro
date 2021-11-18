@@ -1,7 +1,6 @@
 import 'package:boustro/boustro.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:flutter/painting.dart';
 import 'package:flutter/material.dart';
 
 class _BoldAttribute extends ThemedTextAttribute {

@@ -1,5 +1,4 @@
 // ignore_for_file: diagnostic_describe_all_properties, use_key_in_widget_constructors, public_member_api_docs
-import 'package:boustro/boustro.dart';
 import 'package:boustro_starter/boustro_starter.dart';
 import 'package:boustro_starter/toolbar_items.dart' as toolbar_items;
 import 'package:flutter/material.dart';
@@ -43,6 +42,7 @@ class MyApp extends StatelessWidget {
             darkTheme: darkTheme,
             themeMode: themeMode,
             home: HomeScreen(),
+            debugShowCheckedModeBanner: false,
           ),
         );
       },

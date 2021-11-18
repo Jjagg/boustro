@@ -1,7 +1,5 @@
 import 'package:built_collection/built_collection.dart';
-import 'package:characters/characters.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 

@@ -3,7 +3,6 @@ import 'package:characters/src/characters_impl.dart' as characters_impl;
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/widgets.dart';
-import 'package:meta/meta.dart';
 
 import 'attribute_span.dart';
 import 'spanned_text_controller.dart';

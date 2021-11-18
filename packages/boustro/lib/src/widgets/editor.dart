@@ -48,10 +48,13 @@ class DocumentView extends StatefulWidget {
     properties.add(DiagnosticsProperty<Document>('document', document));
     properties.add(DiagnosticsProperty<ScrollPhysics?>('physics', physics,
         defaultValue: null));
-    properties.add(DiagnosticsProperty<bool?>('primaryScroll', primaryScroll));
+    properties.add(FlagProperty('primaryScroll',
+        value: primaryScroll, ifTrue: 'primaryScroll'));
     properties.add(DiagnosticsProperty<ScrollController?>(
         'scrollController', scrollController,
         defaultValue: null));
+    properties.add(FlagProperty('textSelectable',
+        value: textSelectable, ifTrue: 'selectable'));
   }
 }
 
@@ -127,6 +130,8 @@ class ParagraphView extends StatelessWidget {
     properties.add(DiagnosticsProperty<Paragraph>('paragraph', paragraph));
     properties.add(DiagnosticsProperty<AttributeGestureMapper?>(
         'gestureMapper', gestureMapper));
+    properties.add(FlagProperty('textSelectable',
+        value: textSelectable, ifTrue: 'selectable'));
   }
 }
 
