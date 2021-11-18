@@ -171,7 +171,8 @@
 <h2><a class="header" href="#unreleased" id="unreleased">[Unreleased]</a></h2>
 <ul>
 <li><strong>Changed</strong>: Boustro now uses marker characters to detect backspace on empty lines.
-See <a href="https://medium.com/super-declarative/why-you-cant-detect-a-delete-action-in-an-empty-flutter-text-field-3cf53e47b631">this blog post</a> for an explanation on why that's necessary.</li>
+See <a href="https://medium.com/super-declarative/why-you-cant-detect-a-delete-action-in-an-empty-flutter-text-field-3cf53e47b631">this blog post</a> for an explanation on why that's necessary. It uses space characters so capitalization on iOS works properly. They
+are replaced with zero-width spaces when rendered.</li>
 </ul>
 <h2><a class="header" href="#011" id="011">[0.1.1]</a></h2>
 <ul>

@@ -287,6 +287,14 @@ customized.</p>
 <li><a href="changelog/boustro_starter.html">boustro_starter</a></li>
 </ul>
 <h1><a class="header" href="#flutter_spanned_controller--changelog" id="flutter_spanned_controller--changelog"><code>flutter_spanned_controller</code> — Changelog</a></h1>
+<h2><a class="header" href="#unreleased" id="unreleased">Unreleased</a></h2>
+<ul>
+<li><strong>Added</strong> <code>SpannedTextEditingController.hasMarkerCharacters</code>, a flag to replace
+the first and last character of the text with a zero-width space so marker characters can
+be used to detect backspace at the start of the line or delete at the end.</li>
+<li><strong>Fixed</strong>: Attribute detection for collapsed selections takes the attribute's expand
+rules into account again.</li>
+</ul>
 <h2><a class="header" href="#070" id="070">0.7.0</a></h2>
 <ul>
 <li>Update Flutter SDK version requirement to minimum 2.2.0</li>
@@ -358,10 +366,11 @@ Finally, I've come up with the right name for this concept :)</li>
 <li><strong>Initial release</strong>.</li>
 </ul>
 <h1><a class="header" href="#boustro-changelog" id="boustro-changelog"><code>boustro</code> Changelog</a></h1>
-<h2><a class="header" href="#unreleased" id="unreleased">[Unreleased]</a></h2>
+<h2><a class="header" href="#unreleased-1" id="unreleased-1">[Unreleased]</a></h2>
 <ul>
 <li><strong>Changed</strong>: Boustro now uses marker characters to detect backspace on empty lines.
-See <a href="https://medium.com/super-declarative/why-you-cant-detect-a-delete-action-in-an-empty-flutter-text-field-3cf53e47b631">this blog post</a> for an explanation on why that's necessary.</li>
+See <a href="https://medium.com/super-declarative/why-you-cant-detect-a-delete-action-in-an-empty-flutter-text-field-3cf53e47b631">this blog post</a> for an explanation on why that's necessary. It uses space characters so capitalization on iOS works properly. They
+are replaced with zero-width spaces when rendered.</li>
 </ul>
 <h2><a class="header" href="#011" id="011">[0.1.1]</a></h2>
 <ul>
@@ -370,6 +379,10 @@ See <a href="https://medium.com/super-declarative/why-you-cant-detect-a-delete-a
 <h2><a class="header" href="#010" id="010">[0.1.0]</a></h2>
 <p>Initial publish.</p>
 <h1><a class="header" href="#boustro_starter-changelog" id="boustro_starter-changelog"><code>boustro_starter</code> Changelog</a></h1>
+<h2><a class="header" href="#unreleased-2" id="unreleased-2">Unreleased</a></h2>
+<ul>
+<li><strong>Changed</strong>: Image embed overlay buttons no longer have a fade effect.</li>
+</ul>
 <h2><a class="header" href="#010-1" id="010-1">[0.1.0]</a></h2>
 <p>Initial publish.</p>
 <h1><a class="header" href="#packages" id="packages">Packages</a></h1>

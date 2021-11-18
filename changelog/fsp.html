@@ -168,6 +168,14 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#flutter_spanned_controller--changelog" id="flutter_spanned_controller--changelog"><code>flutter_spanned_controller</code> — Changelog</a></h1>
+<h2><a class="header" href="#unreleased" id="unreleased">Unreleased</a></h2>
+<ul>
+<li><strong>Added</strong> <code>SpannedTextEditingController.hasMarkerCharacters</code>, a flag to replace
+the first and last character of the text with a zero-width space so marker characters can
+be used to detect backspace at the start of the line or delete at the end.</li>
+<li><strong>Fixed</strong>: Attribute detection for collapsed selections takes the attribute's expand
+rules into account again.</li>
+</ul>
 <h2><a class="header" href="#070" id="070">0.7.0</a></h2>
 <ul>
 <li>Update Flutter SDK version requirement to minimum 2.2.0</li>
