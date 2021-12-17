@@ -72,56 +72,59 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            // The auto formatter automatically applies attributes to text
-            // matching regular expressions. Some patterns are provided
-            // in CommonPatterns for convenience.
-            child: AutoFormatter(
-              controller: controller,
-              rules: [
-                FormatRule(CommonPatterns.hashtag, (_) => boldAttribute),
-                FormatRule(CommonPatterns.mention, (_) => italicAttribute),
-                FormatRule(CommonPatterns.httpUrl, (_) => boldAttribute),
-              ],
-              // DocumentEditor is the main editor class. It manages the
-              // paragraphs that are either embeds (custom widgets) or
-              // TextFields with custom TextEditingControllers that manage
-              // spans for formatting.
-              child: DocumentEditor(
-                controller: controller,
-              ),
+      // A BoustroScaffold lays out the editor and toolbar, and ensures
+      // toolbar clicks don't cause the editor to lose focus.
+
+      // To maintain focus without a scaffold, wrap the area that should keep
+      // the editor focused when clicked in a FocusTrapArea and pass it the
+      // focusNode of your DocumentController.
+      body: BoustroScaffold(
+        focusNode: controller.focusNode,
+        // The auto formatter automatically applies attributes to text
+        // matching regular expressions. Some patterns are provided
+        // in CommonPatterns for convenience.
+        editor: AutoFormatter(
+          controller: controller,
+          rules: [
+            FormatRule(CommonPatterns.hashtag, (_) => boldAttribute),
+            FormatRule(CommonPatterns.mention, (_) => italicAttribute),
+            FormatRule(CommonPatterns.httpUrl, (_) => boldAttribute),
+          ],
+          // DocumentEditor is the main editor class. It manages the
+          // paragraphs that are either embeds (custom widgets) or
+          // TextFields with custom TextEditingControllers that manage
+          // spans for formatting.
+          child: DocumentEditor(
+            controller: controller,
+          ),
+        ),
+        // The Toolbar contains buttons that can modify the document using
+        // the DocumentController. There are built-in ToolbarItems for the
+        // boustro_starter components. Toolbar has support for nested menus
+        // (try the image button).
+        toolbar: Toolbar(
+          documentController: controller,
+          defaultItemBuilder: _defaultToolbarItemBuilder,
+          items: [
+            toolbar_items.bold,
+            toolbar_items.italic,
+            toolbar_items.underline,
+            toolbar_items.link(),
+            toolbar_items.title,
+            toolbar_items.image(
+              pickImage: (_) async => const NetworkImage(
+                  'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
+              snapImage: (_) async => const NetworkImage(
+                  'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
             ),
-          ),
-          // The Toolbar contains buttons that can modify the document using
-          // the DocumentController. There are built-in ToolbarItems for the
-          // boustro_starter components. Toolbar has support for nested menus
-          // (try the image button).
-          Toolbar(
-            documentController: controller,
-            defaultItemBuilder: _defaultToolbarItemBuilder,
-            items: [
-              toolbar_items.bold,
-              toolbar_items.italic,
-              toolbar_items.underline,
-              toolbar_items.link(),
-              toolbar_items.title,
-              toolbar_items.image(
-                pickImage: (_) async => const NetworkImage(
-                    'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
-                snapImage: (_) async => const NetworkImage(
-                    'https://upload.wikimedia.org/wikipedia/commons/1/19/Billy_Joel_Shankbone_NYC_2009.jpg'),
-              ),
-              toolbar_items.bulletList,
-              ToolbarItem(
-                title: const Icon(Icons.wb_sunny),
-                onPressed: (context, __) =>
-                    ThemeModeScope.of(context).toggle(context),
-              ),
-            ],
-          ),
-        ],
+            toolbar_items.bulletList,
+            ToolbarItem(
+              title: const Icon(Icons.wb_sunny),
+              onPressed: (context, __) =>
+                  ThemeModeScope.of(context).toggle(context),
+            ),
+          ],
+        ),
       ),
     );
   }

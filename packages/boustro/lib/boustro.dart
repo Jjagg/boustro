@@ -13,9 +13,10 @@ export 'src/spans/spanned_text_controller.dart';
 
 export 'src/widgets/attribute_theme.dart';
 export 'src/widgets/auto_format.dart';
+export 'src/widgets/boustro_scaffold.dart';
+export 'src/widgets/boustro_theme.dart';
 export 'src/widgets/config.dart';
 export 'src/widgets/document_controller.dart';
 export 'src/widgets/editor.dart';
 export 'src/widgets/format_patterns.dart';
-export 'src/widgets/boustro_theme.dart';
 export 'src/widgets/toolbar.dart';
