@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'package:built_collection/built_collection.dart';
 import 'package:characters/characters.dart';
 import 'package:collection/collection.dart';
-import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 import 'package:meta/meta.dart';
 
 import '../document.dart';
+import '../spans/attribute_span.dart';
 import 'convert.dart';
 import 'ops.dart';
 
@@ -196,7 +196,7 @@ class DocumentDeltaDecoder extends Converter<List<Op>, Document> {
       }
     }
 
-    return Document(paragraphs.build());
+    return Document(paragraphs);
   }
 
   Iterable<_DeltaLine> _groupByLines(List<Op> ops) sync* {

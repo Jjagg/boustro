@@ -4,9 +4,11 @@ import 'package:built_collection/built_collection.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
 import '../document.dart';
+import '../spans/attribute_span.dart';
+import '../spans/spanned_string.dart';
+import '../spans/spanned_text_controller.dart';
 import 'editor.dart';
 
 /// Holds state for a paragraph of a document.
@@ -438,7 +440,7 @@ class DocumentController extends ValueNotifier<BuiltList<ParagraphState>> {
         })
         .whereNotNull()
         .toBuiltList();
-    return Document(paragraphs);
+    return Document.built(paragraphs);
   }
 
   /// Add a line after all existing paragraphs.

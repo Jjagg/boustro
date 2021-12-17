@@ -1,4 +1,3 @@
-include: all_lint_rules.yaml
 analyzer:
   enable-experiment:
     - non-nullable
@@ -19,20 +18,3 @@ analyzer:
 
 linter:
   rules:
-    always_put_required_named_parameters_first: false
-    always_specify_types: false
-    always_use_package_imports: false
-    avoid_annotating_with_dynamic: false
-    avoid_as: false
-    avoid_empty_else: false
-    avoid_returning_null: false
-    cascade_invocations: false
-    directives_ordering: false
-    flutter_style_todos: false
-    lines_longer_than_80_chars: false
-    one_member_abstracts: false
-    parameter_assignments: false
-    prefer_constructors_over_static_methods: false
-    prefer_double_quotes: false
-    prefer_expression_function_bodies: false
-    unnecessary_final: false

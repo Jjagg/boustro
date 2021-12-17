@@ -7,7 +7,6 @@
 import 'dart:convert';
 
 import 'package:boustro/convert_json.dart';
-import 'package:built_collection/built_collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,7 +22,7 @@ void main() {
     test('simple roundtrip', () {
       final doc = Document(<Paragraph>[
         LineParagraph(text: 'Hello, World!'),
-      ].build());
+      ]);
 
       final dynamic json = codec.encode(doc);
       final rawJson = jsonEncode(json);
@@ -40,7 +39,7 @@ void main() {
           text: 'Hello, World!',
           spans: SpanList([AttributeSpan(TestAttribute(), 3, 7)]),
         ),
-      ].build());
+      ]);
 
       final dynamic json = codec.encode(doc);
       final rawJson = jsonEncode(json);
@@ -56,7 +55,7 @@ void main() {
           text: 'Hello, World!',
           modifiers: [TestLineMod()],
         ),
-      ].build());
+      ]);
 
       final dynamic json = codec.encode(doc);
       final rawJson = jsonEncode(json);
@@ -69,7 +68,7 @@ void main() {
     test('embed roundtrip', () {
       final doc = Document(<Paragraph>[
         TestEmbed(),
-      ].build());
+      ]);
 
       final dynamic json = codec.encode(doc);
       final rawJson = jsonEncode(json);

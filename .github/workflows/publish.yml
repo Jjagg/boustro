@@ -18,16 +18,10 @@ jobs:
     strategy:
       matrix:
         package:
-          - packages/flutter_spanned_controller
-          #- packages/boustro
-          #- packages/boustro_starter
+          - packages/boustro
         include:
-         - package: packages/flutter_spanned_controller
-           tag: fsp
-         #- package: packages/boustro
-         #  tag: boustro
-         #- package: packages/boustro_starter
-         #  tag: starter
+         - package: packages/boustro
+           tag: boustro
 
     steps:
       - name: Checkout

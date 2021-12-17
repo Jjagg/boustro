@@ -17,17 +17,10 @@ jobs:
         channel:
           - stable
         package:
-          - packages/flutter_spanned_controller
           - packages/boustro
-          - packages/boustro_starter
-          - packages/flutter_spanned_controller/example
-          - packages/boustro_starter/example
+          - packages/boustro/example
         include:
-          - package: packages/boustro_starter
-            no-tests: true
-          - package: packages/flutter_spanned_controller/example
-            no-tests: true
-          - package: packages/boustro_starter/example
+          - package: packages/boustro/example
             no-tests: true
 
     steps:

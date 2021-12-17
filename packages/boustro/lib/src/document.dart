@@ -1,13 +1,19 @@
 import 'package:built_collection/built_collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
+
+import 'spans/attribute_span.dart';
+import 'spans/spanned_string.dart';
 
 /// Rich text represented as a list of [Paragraph]s.
 @immutable
 class Document extends Equatable {
-  /// Create a new document.
-  const Document(this.paragraphs);
+  /// Create a new document with a [List] of initial paragraphs.
+  Document([Iterable<Paragraph> paragraphs = const []])
+      : this.built(paragraphs.toBuiltList());
+
+  /// Create a new document with a [BuiltList] of initial paragraphs.
+  const Document.built(this.paragraphs);
 
   /// The list of paragraphs in this document.
   final BuiltList<Paragraph> paragraphs;
@@ -183,7 +189,7 @@ class DocumentBuilder {
   ///
   /// The builder will be reset and can be reused.
   Document build() {
-    final doc = Document(_paragraphs.build());
+    final doc = Document(_paragraphs);
     _paragraphs.clear();
     return doc;
   }

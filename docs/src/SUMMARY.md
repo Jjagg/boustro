@@ -12,15 +12,12 @@
   - [Attributes]()
   - [Embeds]()
   - [Line Modifiers]()
-- [boustro\_starter](boustro_starter.md)
+- [Built-in Components](builtin_components.md)
 - [Serialization]()
 - [Changelog](changelog.md)
-  - [`flutter_spanned_controller`](changelog/fsp.md)
-  - [`boustro`](changelog/boustro.md)
-  - [`boustro_starter`](changelog/boustro_starter.md)
 
 ---
 
-[Packages (pub.dev)](packages.md)
-[API reference](api_reference.md)
+[Package (pub.dev)](https://pub.dev/packages/boustro)
+[API reference](https://pub.dev/documentation/boustro/latest)
 [Contribute to boustro](contributing.md)

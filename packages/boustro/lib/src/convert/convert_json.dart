@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:built_collection/built_collection.dart';
-import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
+import '../spans/attribute_span.dart';
 import '../document.dart';
 
 // Document JSON:
@@ -234,7 +234,7 @@ class _JsonDecoder extends Converter<dynamic, Document> {
       }
     }
 
-    return Document(decodedParagraphs.build());
+    return Document(decodedParagraphs);
   }
 
   LineModifier _parseLineModifier(dynamic map) {

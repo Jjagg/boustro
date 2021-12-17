@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
-import 'theme.dart';
+import 'boustro_theme.dart';
+import 'attribute_theme.dart';
 
 /// Encapsulates boustro configuration.
 ///

@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_spanned_controller/flutter_spanned_controller.dart';
 
-import '../../document.dart';
+import '../document.dart';
+import '../spans/attribute_span.dart';
+import '../spans/spanned_string.dart';
+import '../spans/spanned_text_controller.dart';
 import 'document_controller.dart';
 
 /// Attribute used by [AutoFormatter].
@@ -107,17 +109,14 @@ class FormatRuleset {
   /// Apply this ruleset to the given document and return the result.
   Document applyToDocument(Document document, {bool clearPrevious = true}) {
     return Document(
-      document.paragraphs.rebuild(
-        (b) => b.map(
-          (p) => p.match(
-            line: (l) {
-              return l.copyWith(
-                spans:
-                    applyToString(l.spannedText, clearPrevious: clearPrevious),
-              );
-            },
-            embed: (e) => e,
-          ),
+      document.paragraphs.map(
+        (p) => p.match(
+          line: (l) {
+            return l.copyWith(
+              spans: applyToString(l.spannedText, clearPrevious: clearPrevious),
+            );
+          },
+          embed: (e) => e,
         ),
       ),
     );

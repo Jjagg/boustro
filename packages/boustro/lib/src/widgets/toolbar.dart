@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'document_controller.dart';
 import 'nested_list_controller.dart';
-import 'theme.dart';
+import 'boustro_theme.dart';
 
 /// Builds a toolbar item into a widget.
 typedef ToolbarItemBuilder = Widget Function(

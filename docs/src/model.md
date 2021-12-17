@@ -16,31 +16,31 @@ which can be any custom content, for example an image or a code block.
 
 ## Text
 
-A text line represents rich text using a [spanned string](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/SpannedString-class.html).
+A text line represents rich text using a [spanned string](https://pub.dev/documentation/boustro/latest/boustro/SpannedString-class.html).
 Text lines can be modified with [line modifiers](https://pub.dev/documentation/boustro/latest/boustro/LineModifier-class.html).
 These modifiers wrap a line of text and can modify how they are displayed or override their style.
-For example, `boustro_starter` has modifiers for block quotes or list items (bullet or numbered).
+Boustro has a modifier for bullet lists.
 
 Spanned strings hold text, along with a list of spans that apply formatting or attach gestures to
-the text. The mutable version of a `SpannedString` is a [`SpannedTextEditingController`](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/SpannedString-class.html) —
+the text. The mutable version of a `SpannedString` is a [`SpannedTextEditingController`](https://pub.dev/documentation/boustro/latest/boustro/SpannedString-class.html) —
 a subclass of Flutter's [`TextEditingController`](https://api.flutter.dev/flutter/widgets/TextEditingController-class.html)
 that manages formatting of its text.
 
-Both `SpannedString` and `SpannedTextEditingController` maintain a [`SpanList`](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/SpanList-class.html).
-`SpanList` is an immutable list of [`AttributeSpan`](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/AttributeSpan-class.html).
+Both `SpannedString` and `SpannedTextEditingController` maintain a [`SpanList`](https://pub.dev/documentation/boustro/latest/boustro/SpanList-class.html).
+`SpanList` is an immutable list of [`AttributeSpan`](https://pub.dev/documentation/boustro/latest/boustro/AttributeSpan-class.html).
 
 Attribute spans hold an attribute and a range:
 
-- [`Range`](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/Range-class.html):
+- [`Range`](https://pub.dev/documentation/boustro/latest/boustro/Range-class.html):
   range in the source text to which the attribute is applied. The boundaries of the range are
   indices into the source text, using [Unicode (Extended) Grapheme Clusters](https://unicode.org/reports/tr29/)
   (EGC) as the unit. EGC map to user-perceived characters. EGC indices are used to prevent indices
   in the middle of user-perceived characters. If you use a `Range` directly, you likely want to use
   the [`characters`](https://pub.dev/packages/characters) package.
-- [`TextAttribute`](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/TextAttribute-class.html):
+- [`TextAttribute`](https://pub.dev/documentation/boustro/latest/boustro/TextAttribute-class.html):
   The attribute can be resolved to a `TextStyle` (to apply formatting) and gestures (for example tap handler that opens a
-  hyperlink) with its `resolve` method, which can optionally use an [`AttributeTheme`](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/AttributeTheme-class.html)
-  to resolve to a style and gestures. The attribute also defines [`SpanExpandRules`](https://pub.dev/documentation/flutter_spanned_controller/latest/flutter_spanned_controller/SpanExpandRules-class.html)
+  hyperlink) with its `resolve` method, which can optionally use an [`AttributeTheme`](https://pub.dev/documentation/boustro/latest/boustro/AttributeTheme-class.html)
+  to resolve to a style and gestures. The attribute also defines [`SpanExpandRules`](https://pub.dev/documentation/boustro/latest/boustro/SpanExpandRules-class.html)
   which determine how the span responds to insertions in the source text.
 
 ## Embeds
