@@ -55,8 +55,8 @@ jobs:
 
       - name: Set Credentials
         run: |
-          mkdir -p $FLUTTER_ROOT/.pub-cache
-          echo '${{secrets.PUB_CREDENTIALS}}' > $FLUTTER_ROOT/.pub-cache/credentials.json
+          mkdir -p ~/.config/dart
+          echo '${{secrets.PUB_CREDENTIALS}}' > ~/.config/dart/pub-credentials.json
         if: steps.pubspec.outputs.version != env.CURRENT_VERSION
 
       # Publish to pub.dev
