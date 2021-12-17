@@ -13,7 +13,7 @@ import 'empty_built_list.dart';
 ///
 /// This is a pretty arbitrary large number.
 /// Use this for virtually infinite size spans.
-const maxSpanLength = (2 << 32) - 1;
+const maxSpanLength = 2 << 16;
 
 /// An attribute to apply to a span of text.
 ///
