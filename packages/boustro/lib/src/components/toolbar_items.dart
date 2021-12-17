@@ -145,13 +145,19 @@ ToolbarItem title = ToolbarItem(
 );
 
 class _LinkDialog extends StatefulWidget {
-  const _LinkDialog({this.text = '', this.hintText = ''});
+  const _LinkDialog({
+    this.text = '',
+    this.hintText = '',
+    this.validator,
+  });
 
   /// Initial text for the link text field.
   final String text;
 
   /// Hint text for the link text field when [text] is empty.
   final String hintText;
+
+  final FormFieldValidator<String>? validator;
 
   @override
   _LinkDialogState createState() => _LinkDialogState();
@@ -190,14 +196,12 @@ class _LinkDialogState extends State<_LinkDialog> {
             hintText: widget.hintText,
           ),
           validator: (text) {
-            if (text == null || text == '') {
+            if (text == null || text.isEmpty) {
               return null;
             }
 
-            final match = CommonPatterns.httpUrl.firstMatch(text);
-            final isValid =
-                match != null && match.end - match.start == text.length;
-            return isValid ? null : 'Please enter a valid URL.';
+            final isValid = Uri.tryParse(text) != null;
+            return isValid ? null : 'Please enter a valid URI.';
           },
         ),
       ),
@@ -241,7 +245,17 @@ class _LinkDialogState extends State<_LinkDialog> {
 
 /// Toolbar item that applies a [LinkAttribute]. Shows a dialog with a text
 /// field for the url.
-ToolbarItem link({String uriHintText = 'google.com'}) {
+///
+/// You can provide a custom processor to fix user input and a custom validator
+/// to control accepted (processed) user input.
+///
+/// The default processInput prepends http:// to the input if a protocol is
+/// missing. The default validator validates that the input is a valid URI.
+ToolbarItem link({
+  String uriHintText = 'google.com',
+  String Function(String)? processInput,
+  FormFieldValidator<String>? validator,
+}) {
   return ToolbarItem(
     title: const Icon(Icons.link),
     tooltip: 'Link',
@@ -263,18 +277,25 @@ ToolbarItem link({String uriHintText = 'google.com'}) {
             var link = await showDialog<String>(
               context: context,
               builder: (context) {
-                return _LinkDialog(text: initialUri, hintText: uriHintText);
+                return _LinkDialog(
+                  text: initialUri,
+                  hintText: uriHintText,
+                  validator: validator,
+                );
               },
             );
+
             if (link != null) {
+              if (processInput != null) {
+                link = processInput(link);
+              } else if (!link.contains('://')) {
+                link = 'http://$link';
+              }
+
               var spans = c.spans;
 
               spans = spans.removeTypeFrom<LinkAttribute>(range);
               if (link.isNotEmpty) {
-                if (!link.startsWith('https://')) {
-                  link = 'https://$link';
-                }
-
                 final uri = Uri.parse(link);
                 final attr = LinkAttribute(uri.toString());
                 final span = AttributeSpan(attr, range.start, range.end);
