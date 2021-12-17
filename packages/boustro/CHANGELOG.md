@@ -1,4 +1,4 @@
-## Unreleased
+## 0.2.0
 
 - **Changed**: Merged `boustro_starter` and `flutter_spanned_controller` into `boustro` for easier consumption
   and development. You can find the old changelogs for those packages in the history of the Git repository.
