@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">1.</strong> Quickstart</div></li><li class="chapter-item expanded "><a href="goals.html"><strong aria-hidden="true">2.</strong> Goals</a></li><li class="chapter-item expanded "><a href="model.html"><strong aria-hidden="true">3.</strong> Model</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.</strong> Usage</div></li><li class="chapter-item expanded "><a href="customization.html"><strong aria-hidden="true">5.</strong> Customization</a></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">5.1.</strong> Theming boustro</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.2.</strong> Toolbar</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.3.</strong> Attributes</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.4.</strong> Embeds</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.5.</strong> Line Modifiers</div></li></ol></li><li class="chapter-item expanded "><a href="boustro_starter.html"><strong aria-hidden="true">6.</strong> boustro_starter</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">7.</strong> Serialization</div></li><li class="chapter-item expanded "><a href="changelog.html" class="active"><strong aria-hidden="true">8.</strong> Changelog</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="changelog/fsp.html"><strong aria-hidden="true">8.1.</strong> flutter_spanned_controller</a></li><li class="chapter-item expanded "><a href="changelog/boustro.html"><strong aria-hidden="true">8.2.</strong> boustro</a></li><li class="chapter-item expanded "><a href="changelog/boustro_starter.html"><strong aria-hidden="true">8.3.</strong> boustro_starter</a></li><li class="spacer"></li></ol></li><li class="chapter-item expanded "><a href="packages.html">Packages (pub.dev)</a></li><li class="chapter-item expanded affix "><a href="api_reference.html">API reference</a></li><li class="chapter-item expanded affix "><a href="contributing.html">Contribute to boustro</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">1.</strong> Quickstart</div></li><li class="chapter-item expanded "><a href="goals.html"><strong aria-hidden="true">2.</strong> Goals</a></li><li class="chapter-item expanded "><a href="model.html"><strong aria-hidden="true">3.</strong> Model</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.</strong> Usage</div></li><li class="chapter-item expanded "><a href="customization.html"><strong aria-hidden="true">5.</strong> Customization</a></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">5.1.</strong> Theming boustro</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.2.</strong> Toolbar</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.3.</strong> Attributes</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.4.</strong> Embeds</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.5.</strong> Line Modifiers</div></li></ol></li><li class="chapter-item expanded "><a href="builtin_components.html"><strong aria-hidden="true">6.</strong> Built-in Components</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">7.</strong> Serialization</div></li><li class="chapter-item expanded "><a href="changelog.html" class="active"><strong aria-hidden="true">8.</strong> Changelog</a></li><li class="spacer"></li><li class="chapter-item expanded affix "><a href="https://pub.dev/packages/boustro.html">Package (pub.dev)</a></li><li class="chapter-item expanded affix "><a href="https://pub.dev/documentation/boustro/latest.html">API reference</a></li><li class="chapter-item expanded affix "><a href="contributing.html">Contribute to boustro</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -167,25 +167,37 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#changelog" id="changelog">Changelog</a></h1>
+                        <h1><a class="header" href="#boustro-changelog" id="boustro-changelog"><code>boustro</code> Changelog</a></h1>
+<h2><a class="header" href="#020" id="020">0.2.0</a></h2>
 <ul>
-<li><a href="changelog/fsp.html">flutter_spanned_controller</a></li>
-<li><a href="changelog/boustro.html">boustro</a></li>
-<li><a href="changelog/boustro_starter.html">boustro_starter</a></li>
+<li><strong>Changed</strong>: Merged <code>boustro_starter</code> and <code>flutter_spanned_controller</code> into <code>boustro</code> for easier consumption
+and development. You can find the old changelogs for those packages in the history of the Git repository.</li>
+<li><strong>Changed</strong>: Boustro now uses marker characters to detect backspace on empty lines.
+See <a href="https://medium.com/super-declarative/why-you-cant-detect-a-delete-action-in-an-empty-flutter-text-field-3cf53e47b631">this blog post</a> for an explanation on why that's necessary. It uses space characters so capitalization on iOS works properly. They
+are replaced with zero-width spaces when rendered.</li>
+<li><strong>Added</strong>: <code>BoustroScaffold</code> widget that provies a default layout and maintains editor focus when clicking the toolbar.</li>
+<li><strong>Added</strong>: Link toolbar item support for custom validator and input processor.</li>
+<li><strong>Fixed</strong>: Link toolbar item URI's does not prepend <code>https://</code> for URI's that contain a protocol.</li>
 </ul>
+<h2><a class="header" href="#011" id="011">0.1.1</a></h2>
+<ul>
+<li><strong>Added</strong> textSelectable flag to DocumentView.</li>
+</ul>
+<h2><a class="header" href="#010" id="010">0.1.0</a></h2>
+<p>Initial publish.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="boustro_starter.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="builtin_components.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
 
                         
-                            <a rel="next" href="changelog/fsp.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="https://pub.dev/packages/boustro.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -197,13 +209,13 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a rel="prev" href="boustro_starter.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="builtin_components.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 
 
                 
-                    <a rel="next" href="changelog/fsp.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="https://pub.dev/packages/boustro.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 
