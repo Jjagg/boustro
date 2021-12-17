@@ -287,8 +287,8 @@ class DocumentEditor extends StatelessWidget {
 
     if (btheme.editorColor != null && btheme.editorColor!.alpha > 0) {
       widget = ColoredBox(
-          color: btheme.editorColor!,
-          child: widget,
+        color: btheme.editorColor!,
+        child: widget,
       );
     }
 

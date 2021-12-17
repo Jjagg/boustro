@@ -218,12 +218,18 @@ void main() {
     });
     test('segment style', () {
       expect(
-          (SpannedStringBuilder()..write('Hi', [a])..write(':)', [b])).build(),
+          (SpannedStringBuilder()
+                ..write('Hi', [a])
+                ..write(':)', [b]))
+              .build(),
           SpannedString('Hi:)', SpanList([sp(a, 0, 2), sp(b, 2, 4)])));
     });
     test('segment style merge', () {
       expect(
-          (SpannedStringBuilder()..write('Hi', [a])..write(':)', [a])).build(),
+          (SpannedStringBuilder()
+                ..write('Hi', [a])
+                ..write(':)', [a]))
+              .build(),
           SpannedString('Hi:)', SpanList([sp(a, 0, 4)])));
     });
   });
