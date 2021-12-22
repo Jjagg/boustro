@@ -37,7 +37,7 @@ void main() {
       final doc = Document(<Paragraph>[
         LineParagraph(
           text: 'Hello, World!',
-          spans: SpanList([AttributeSpan(TestAttribute(), 3, 7)]),
+          spans: AttributeSpanList([AttributeSpan(TestAttribute(), 3, 7)]),
         ),
       ]);
 

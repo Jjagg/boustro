@@ -218,7 +218,7 @@ class _JsonDecoder extends Converter<dynamic, Document> {
 
         final line = LineParagraph(
           text: text ?? '',
-          spans: SpanList(spans),
+          spans: AttributeSpanList(spans),
           modifiers: modifiers,
         );
         decodedParagraphs.add(line);

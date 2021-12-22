@@ -75,7 +75,7 @@ void main() {
         doc.paragraphs[0],
         LineParagraph(
           text: 'Hello, World!',
-          spans: SpanList([createBold(0, 5)]),
+          spans: AttributeSpanList([createBold(0, 5)]),
         ),
       );
     });
@@ -91,7 +91,7 @@ void main() {
         doc.paragraphs[0],
         LineParagraph(
           text: 'Hello, World!',
-          spans: SpanList([createBold(0, 5)]),
+          spans: AttributeSpanList([createBold(0, 5)]),
         ),
       );
     });
@@ -107,11 +107,11 @@ void main() {
           doc.paragraphs[0],
           LineParagraph(
             text: 'Hello, World!',
-            spans: SpanList([createBold(0, 5)]),
+            spans: AttributeSpanList([createBold(0, 5)]),
           ));
       expect(
         doc.paragraphs[1],
-        LineParagraph(text: '', spans: SpanList.empty),
+        LineParagraph(text: '', spans: AttributeSpanList.empty),
       );
     });
 
@@ -129,13 +129,13 @@ void main() {
           doc.paragraphs[0],
           LineParagraph(
             text: 'Hello, World!',
-            spans: SpanList([createBold(0, 5)]),
+            spans: AttributeSpanList([createBold(0, 5)]),
           ));
       expect(
         doc.paragraphs[1],
         LineParagraph(
           text: 'Hello, World!',
-          spans: SpanList([createBold(5, 13)]),
+          spans: AttributeSpanList([createBold(5, 13)]),
         ),
       );
     });

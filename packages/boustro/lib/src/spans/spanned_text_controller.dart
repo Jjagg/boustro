@@ -99,7 +99,7 @@ extension SpannedTextEditingControllerExtension
     return spans.getTypedSpansIn<T>(_convertRange(selection));
   }
 
-  /// Get all attribute spans of type [type] applied to the current selection.
+  /// Get all attribute spans of [type] applied to the current selection.
   ///
   /// This method is meant to be used for stateful attributes and does not
   /// currently take overrides into account.
@@ -156,9 +156,7 @@ extension SpannedTextEditingControllerExtension
   ///
   /// This method uses [setOverride] to temporarily override what attributes
   /// will be applied for collapsed selections.
-  bool toggleAttribute(
-    TextAttribute attribute,
-  ) {
+  bool toggleAttribute(TextAttribute attribute) {
     final applied = isApplied(attribute);
     if (selection.isCollapsed &&
         attribute.expandRules.end == ExpandRule.inclusive) {
@@ -205,12 +203,12 @@ class SpannedTextEditingController implements TextEditingController {
     TextAttribute? compositionAttribute,
     this.processTextValue = _defaultProcessTextValue,
     String? text,
-    SpanList? spans,
+    AttributeSpanList? spans,
     this.hasMarkerCharacters = false,
   })  : compositionAttribute =
             compositionAttribute ?? _defaultCompositionAttribute,
         _textController = TextEditingController(text: text),
-        _spans = spans ?? SpanList.empty;
+        _spans = spans ?? AttributeSpanList.empty;
 
   /// Create a new spanned text editing controller with the same state as this
   /// one.
@@ -228,7 +226,7 @@ class SpannedTextEditingController implements TextEditingController {
     TextAttribute? compositionAttribute,
     ProcessTextValue? processTextValue,
     String? text,
-    SpanList? spans,
+    AttributeSpanList? spans,
     bool? hasMarkerCharacters,
   }) {
     return SpannedTextEditingController(
@@ -277,11 +275,11 @@ class SpannedTextEditingController implements TextEditingController {
 
   final TextEditingController _textController;
 
-  SpanList _spans;
+  AttributeSpanList _spans;
 
   /// Get the list of spans that determine the formatting of the text.
-  SpanList get spans => _spans;
-  set spans(SpanList spans) {
+  AttributeSpanList get spans => _spans;
+  set spans(AttributeSpanList spans) {
     if (_spans != spans) {
       _spans = spans;
       notifyListeners();
@@ -395,7 +393,7 @@ class SpannedTextEditingController implements TextEditingController {
       );
     }
 
-    final SpanList spansWithComposing;
+    final AttributeSpanList spansWithComposing;
 
     if (!value.isComposingRangeValid ||
         !withComposing ||
@@ -432,7 +430,7 @@ class SpannedTextEditingController implements TextEditingController {
   void clear() {
     _ignoreSetValue = true;
     _textController.clear();
-    _spans = SpanList.empty;
+    _spans = AttributeSpanList.empty;
     _ignoreSetValue = false;
   }
 

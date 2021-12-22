@@ -273,7 +273,7 @@ class DocumentDeltaDecoder extends Converter<List<Op>, Document> {
       buffer.write(insert.text);
     }
 
-    final spans = SpanList.fromSegments(segments);
+    final spans = AttributeSpanList.fromSegments(segments);
 
     final text =
         segments.fold<String>('', (str, segment) => str + segment.text.string);

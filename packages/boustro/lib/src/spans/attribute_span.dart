@@ -22,8 +22,8 @@ const maxSpanLength = 2 << 16;
 ///
 /// If you extend this class it is very strongly recommended you override
 /// the equality operator or use a singleton for the attribute, because
-/// the span system uses equality tests for operations like [SpanList.merge]
-/// and [SpanList.isApplied]/[SpanList.willApply].
+/// the span system uses equality tests for operations like [AttributeSpanList.merge]
+/// and [AttributeSpanList.isApplied]/[AttributeSpanList.willApply].
 ///
 /// Attributes contain [expandRules] to indicate how spans with the attribute
 /// should behave when an insertion happens at its boundaries.
@@ -271,9 +271,11 @@ extension ExpandRuleExtension on ExpandRule {
   }
 }
 
-/// A range with a [start] and [end] index.
+/// A range with a [start] and [end] index. Ranges are normalized, so
+/// `0 <= start <= end` always holds.
 class Range extends Equatable {
-  /// Create a range.
+  /// Create a range. Start and end must satisfy `0 <= start <= end`, otherwise
+  /// an [AssertionError] is thrown.
   const Range(this.start, this.end)
       : assert(start >= 0 && end >= 0, 'Start and end may not be negative.'),
         assert(start <= end, 'End must be larger than or equal to start.');
@@ -335,18 +337,6 @@ class Range extends Equatable {
       math.max(end, other.end),
     );
   }
-
-  // Normalize this range. If [isNormalized] is false this returns a range
-  // with [start] and [end] flipped.
-  //
-  // If this range is invalid this returns an identical range.
-  //TextRange normalize() {
-  //  if (isNormalized) {
-  //    return this;
-  //  }
-
-  //  return TextRange(start: end, end: start);
-  //}
 
   /// Get the result after deleting a range from this range.
   Range? splice(Range removedSegment) {
@@ -535,26 +525,28 @@ class _AttributeTransition {
 /// Note that SpanList is immutable. Any mutation operation will return a new
 /// SpanList.
 @immutable
-class SpanList extends Equatable {
+class AttributeSpanList extends Equatable {
   /// Create a SpanList.
   ///
   /// All spans are merged and sorted.
-  factory SpanList(
+  factory AttributeSpanList(
     Iterable<AttributeSpan>? spans,
   ) {
     return spans == null
-        ? SpanList.empty
-        : spans.fold(SpanList.empty, (l, s) => l.merge(s));
+        ? AttributeSpanList.empty
+        : spans.fold(AttributeSpanList.empty, (l, s) => l.merge(s));
   }
 
   /// Create a SpanList from segments.
   ///
   /// Segments will be merged to create the spans.
-  factory SpanList.fromSegments(Iterable<AttributeSegment> segments) {
+  factory AttributeSpanList.fromSegments(Iterable<AttributeSegment> segments) {
     var pos = 0;
-    return segments.fold<SpanList>(SpanList.empty, (list, segment) {
+    return segments.fold<AttributeSpanList>(AttributeSpanList.empty,
+        (list, segment) {
       final length = segment.text.length;
-      final result = segment.attributes.fold<SpanList>(list, (list, attr) {
+      final result =
+          segment.attributes.fold<AttributeSpanList>(list, (list, attr) {
         final span = AttributeSpan(
           attr,
           pos,
@@ -567,15 +559,15 @@ class SpanList extends Equatable {
     });
   }
 
-  SpanList._sorted(Iterable<AttributeSpan> spans)
+  AttributeSpanList._sorted(Iterable<AttributeSpan> spans)
       : this._sortedList(spans.toBuiltList());
 
-  const SpanList._sortedList(this._spans);
+  const AttributeSpanList._sortedList(this._spans);
 
-  const SpanList._() : _spans = const EmptyBuiltList();
+  const AttributeSpanList._() : _spans = const EmptyBuiltList();
 
   /// A SpanList without any spans.
-  static const SpanList empty = SpanList._();
+  static const AttributeSpanList empty = AttributeSpanList._();
 
   final BuiltList<AttributeSpan> _spans;
 
@@ -715,14 +707,15 @@ class SpanList extends Equatable {
   ///
   /// Spans touching [span] with an equal [AttributeSpan.attribute] will be
   /// merged.
-  SpanList merge(AttributeSpan span) {
+  AttributeSpanList merge(AttributeSpan span) {
     final touching = _spans.where(
         (s) => s.range.touches(span.range) && s.attribute == span.attribute);
     final toMerge = touching.followedBy([span]);
     return _mergeSpans(span, toMerge);
   }
 
-  SpanList _mergeSpans(AttributeSpan span, Iterable<AttributeSpan> toMerge) {
+  AttributeSpanList _mergeSpans(
+      AttributeSpan span, Iterable<AttributeSpan> toMerge) {
     final start =
         toMerge.fold<int>(maxSpanLength, (m, s) => math.min(m, s.start));
     final end = toMerge.fold<int>(-1, (m, s) => math.max(m, s.end));
@@ -730,7 +723,7 @@ class SpanList extends Equatable {
       start: start,
       end: end,
     );
-    return SpanList._sorted(
+    return AttributeSpanList._sorted(
       _spans
           .whereNot(toMerge.contains)
           .followedBy([merged]).sorted((a, b) => a.start - b.start),
@@ -738,26 +731,27 @@ class SpanList extends Equatable {
   }
 
   /// Remove [span].
-  SpanList remove(AttributeSpan span) {
-    return SpanList._sorted(_spans.where((s) => s != span));
+  AttributeSpanList remove(AttributeSpan span) {
+    return AttributeSpanList._sorted(_spans.where((s) => s != span));
   }
 
   /// Remove all spans with the given attribute.
-  SpanList removeAll(TextAttribute attribute) {
-    return SpanList._sorted(_spans.where((s) => s.attribute != attribute));
+  AttributeSpanList removeAll(TextAttribute attribute) {
+    return AttributeSpanList._sorted(
+        _spans.where((s) => s.attribute != attribute));
   }
 
   /// Remove all spans of type [T].
-  SpanList removeType<T extends TextAttribute>() {
+  AttributeSpanList removeType<T extends TextAttribute>() {
     assert(T != dynamic, 'Attribute type must be specified.');
-    return SpanList._sorted(_spans.where((s) => s.attribute is! T));
+    return AttributeSpanList._sorted(_spans.where((s) => s.attribute is! T));
   }
 
   /// Remove all spans with the given attribute from [range].
   ///
   /// This method can remove parts of spans if [range] does not cover
   /// the full range of matching spans.
-  SpanList removeFrom(Range range, TextAttribute attribute) {
+  AttributeSpanList removeFrom(Range range, TextAttribute attribute) {
     return _removeFrom(range, (attr) => attr == attribute);
   }
 
@@ -765,13 +759,14 @@ class SpanList extends Equatable {
   ///
   /// This method can remove parts of spans if [range] does not cover
   /// the full range of matching spans.
-  SpanList removeTypeFrom<T extends TextAttribute>(Range range) {
+  AttributeSpanList removeTypeFrom<T extends TextAttribute>(Range range) {
     assert(T != dynamic, 'Attribute type must be specified.');
     return _removeFrom(range, (attr) => attr is T);
   }
 
-  SpanList _removeFrom(Range range, bool Function(TextAttribute) predicate) {
-    return SpanList(
+  AttributeSpanList _removeFrom(
+      Range range, bool Function(TextAttribute) predicate) {
+    return AttributeSpanList(
       _spans.rebuild(
         (b) => b.expand(
           (s) sync* {
@@ -792,22 +787,22 @@ class SpanList extends Equatable {
   }
 
   /// Shift spans with an insertion at [index] with the given [length].
-  SpanList shift(int index, int length) {
+  AttributeSpanList shift(int index, int length) {
     if (index < 0) {
       throw ArgumentError.value(index, 'index', 'Index must be non-negative.');
     }
     if (length == 0) {
       return this;
     }
-    return SpanList(_spans.map((s) => s.shift(index, length)));
+    return AttributeSpanList(_spans.map((s) => s.shift(index, length)));
   }
 
   /// Collapse span with a deletion at [range].
-  SpanList collapse(Range range) {
+  AttributeSpanList collapse(Range range) {
     if (range.isCollapsed) {
       return this;
     }
-    return SpanList(_spans.expand((s) sync* {
+    return AttributeSpanList(_spans.expand((s) sync* {
       final collapsedSpan = s.collapse(range);
       if (collapsedSpan != null) {
         yield collapsedSpan;

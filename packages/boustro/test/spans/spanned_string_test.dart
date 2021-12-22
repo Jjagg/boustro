@@ -17,23 +17,23 @@ import 'util.dart';
 
 void main() {
   group('copyWith', () {
-    final s = SpannedString('Test1', SpanList([sp(a, 0, 1)]));
+    final s = SpannedString('Test1', AttributeSpanList([sp(a, 0, 1)]));
     test('none', () {
       expect(s.copyWith(), s);
     });
     test('text', () {
-      expect(SpannedString('Changed', SpanList([sp(a, 0, 1)])),
+      expect(SpannedString('Changed', AttributeSpanList([sp(a, 0, 1)])),
           s.copyWith(text: 'Changed'.characters));
     });
     test('spans', () {
-      expect(SpannedString('Test1', SpanList([sp(b, 0, 1)])),
-          s.copyWith(spans: SpanList([sp(b, 0, 1)])));
+      expect(SpannedString('Test1', AttributeSpanList([sp(b, 0, 1)])),
+          s.copyWith(spans: AttributeSpanList([sp(b, 0, 1)])));
     });
   });
 
   group('collapse', () {
     const str = 'This is a test';
-    final s = SpannedString(str, SpanList([sp(a, 0, 4), sp(b, 3, 7)]));
+    final s = SpannedString(str, AttributeSpanList([sp(a, 0, 4), sp(b, 3, 7)]));
     test('collapsed range', () {
       expect(s.collapse(start: 1, end: 1), s);
       expect(s.collapse(start: 5, end: 5), s);
@@ -43,13 +43,14 @@ void main() {
     test('text only', () {
       expect(
         s.collapse(start: 7, end: str.length),
-        SpannedString('This is', SpanList([sp(a, 0, 4), sp(b, 3, 7)])),
+        SpannedString('This is', AttributeSpanList([sp(a, 0, 4), sp(b, 3, 7)])),
       );
     });
     test('span', () {
       expect(
         s.collapse(start: 3, end: 5),
-        SpannedString('Thiis a test', SpanList([sp(a, 0, 3), sp(b, 3, 5)])),
+        SpannedString(
+            'Thiis a test', AttributeSpanList([sp(a, 0, 3), sp(b, 3, 5)])),
       );
     });
     test('everything', () {
@@ -74,7 +75,7 @@ void main() {
 
   group('insert', () {
     const str = 'This is a test';
-    final s = SpannedString(str, SpanList([sp(a, 0, 4), sp(b, 3, 7)]));
+    final s = SpannedString(str, AttributeSpanList([sp(a, 0, 4), sp(b, 3, 7)]));
     test('empty', () {
       expect(s.insert(1, ''.characters), s);
       expect(s.insert(5, ''.characters), s);
@@ -86,13 +87,13 @@ void main() {
       );
     });
     test('concat', () {
-      final concat =
-          s.concat(SpannedString(', or is it?', SpanList([sp(a, 0, 5)])));
+      final concat = s.concat(
+          SpannedString(', or is it?', AttributeSpanList([sp(a, 0, 5)])));
       expect(
         concat,
         SpannedString(
           'This is a test, or is it?',
-          SpanList(
+          AttributeSpanList(
             [
               sp(a, 0, 4),
               sp(b, 3, 7),
@@ -103,17 +104,19 @@ void main() {
       );
     });
     test('concat merge', () {
-      final s1 = SpannedString('bird', SpanList([sp(a, 1, 4)]));
-      final s2 = SpannedString('word', SpanList([sp(a, 0, 2)]));
-      expect(s1.concat(s2), SpannedString('birdword', SpanList([sp(a, 1, 6)])));
+      final s1 = SpannedString('bird', AttributeSpanList([sp(a, 1, 4)]));
+      final s2 = SpannedString('word', AttributeSpanList([sp(a, 0, 2)]));
+      expect(s1.concat(s2),
+          SpannedString('birdword', AttributeSpanList([sp(a, 1, 6)])));
     });
     test('concat does not expand', () {
-      final s1 = SpannedString('bird', SpanList([sp(RuleAttr.exInc, 1, 4)]));
-      final s2 = SpannedString('word', SpanList([sp(b, 0, 2)]));
+      final s1 =
+          SpannedString('bird', AttributeSpanList([sp(RuleAttr.exInc, 1, 4)]));
+      final s2 = SpannedString('word', AttributeSpanList([sp(b, 0, 2)]));
       expect(
         s1.concat(s2),
-        SpannedString(
-            'birdword', SpanList([sp(RuleAttr.exInc, 1, 4), sp(b, 4, 6)])),
+        SpannedString('birdword',
+            AttributeSpanList([sp(RuleAttr.exInc, 1, 4), sp(b, 4, 6)])),
       );
     });
     test('index oob', () {
@@ -123,23 +126,25 @@ void main() {
 
   group('applyDiff', () {
     const str = 'This is a test';
-    final s = SpannedString(str, SpanList([sp(a, 0, 4), sp(b, 3, 7)]));
+    final s = SpannedString(str, AttributeSpanList([sp(a, 0, 4), sp(b, 3, 7)]));
     test('insert', () {
       expect(
         s.applyDiff(StringDiff(0, ''.characters, 'OK'.characters)),
-        SpannedString('OK$str', SpanList([sp(a, 2, 6), sp(b, 5, 9)])),
+        SpannedString('OK$str', AttributeSpanList([sp(a, 2, 6), sp(b, 5, 9)])),
       );
     });
     test('delete', () {
       expect(
         s.applyDiff(StringDiff(2, 'is'.characters, ''.characters)),
-        SpannedString('Th is a test', SpanList([sp(a, 0, 2), sp(b, 2, 5)])),
+        SpannedString(
+            'Th is a test', AttributeSpanList([sp(a, 0, 2), sp(b, 2, 5)])),
       );
     });
     test('insert delete', () {
       expect(
         s.applyDiff(StringDiff(2, 'is'.characters, 'OK'.characters)),
-        SpannedString('ThOK is a test', SpanList([sp(a, 0, 2), sp(b, 4, 7)])),
+        SpannedString(
+            'ThOK is a test', AttributeSpanList([sp(a, 0, 2), sp(b, 4, 7)])),
       );
     });
   });
@@ -176,7 +181,7 @@ void main() {
               ..write('Test')
               ..end(a))
             .build(),
-        SpannedString('Test', SpanList([sp(a, 0, 4)])),
+        SpannedString('Test', AttributeSpanList([sp(a, 0, 4)])),
       );
     });
     test('unfinished span', () {
@@ -185,7 +190,7 @@ void main() {
               ..start(a)
               ..write('Test'))
             .build(),
-        SpannedString('Test', SpanList([sp(a, 0, 4)])),
+        SpannedString('Test', AttributeSpanList([sp(a, 0, 4)])),
       );
     });
     test('multiple spans', () {
@@ -199,7 +204,7 @@ void main() {
                 ..write('t')
                 ..end(b))
               .build(),
-          SpannedString('Test', SpanList([sp(a, 0, 3), sp(b, 1, 4)])));
+          SpannedString('Test', AttributeSpanList([sp(a, 0, 3), sp(b, 1, 4)])));
     });
     test('end unstarted span throws', () {
       expect(() => SpannedStringBuilder().end(a), throwsStateError);
@@ -212,7 +217,7 @@ void main() {
             .build(),
         SpannedString(
           'Test',
-          SpanList([sp(a, 0, maxSpanLength)]),
+          AttributeSpanList([sp(a, 0, maxSpanLength)]),
         ),
       );
     });
@@ -222,7 +227,7 @@ void main() {
                 ..write('Hi', [a])
                 ..write(':)', [b]))
               .build(),
-          SpannedString('Hi:)', SpanList([sp(a, 0, 2), sp(b, 2, 4)])));
+          SpannedString('Hi:)', AttributeSpanList([sp(a, 0, 2), sp(b, 2, 4)])));
     });
     test('segment style merge', () {
       expect(
@@ -230,7 +235,7 @@ void main() {
                 ..write('Hi', [a])
                 ..write(':)', [a]))
               .build(),
-          SpannedString('Hi:)', SpanList([sp(a, 0, 4)])));
+          SpannedString('Hi:)', AttributeSpanList([sp(a, 0, 4)])));
     });
   });
 }

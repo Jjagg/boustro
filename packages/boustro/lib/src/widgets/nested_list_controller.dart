@@ -150,6 +150,12 @@ class _DefaultNestedListControllerState<T extends NestedListItem<T>>
     ..addListener(update);
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return _NestedListControllerScope<T>(
       controller: _controller,
@@ -159,14 +165,6 @@ class _DefaultNestedListControllerState<T extends NestedListItem<T>>
 
   void update() {
     setState(() {});
-  }
-
-  @override
-  void dispose() {
-    _controller
-      ..removeListener(update)
-      ..dispose();
-    super.dispose();
   }
 }
 

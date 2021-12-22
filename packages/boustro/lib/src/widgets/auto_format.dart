@@ -73,8 +73,9 @@ class FormatRuleset {
   final List<FormatRule> rules;
 
   /// Apply the formatting rules to [source] and return the resulting
-  /// [SpanList].
-  SpanList applyToString(SpannedString source, {bool clearPrevious = true}) {
+  /// [AttributeSpanList].
+  AttributeSpanList applyToString(SpannedString source,
+      {bool clearPrevious = true}) {
     final text = source.text.string;
     var spans = source.spans;
     if (clearPrevious) {

@@ -67,28 +67,32 @@ void main() {
   group('collapse', () {
     test('''remove collapsed span at the end''', () {
       expect(
-        SpanList([sp(RuleAttr.exInc, 1, 2)]).collapse(Range(1, 3)).iter,
+        AttributeSpanList([sp(RuleAttr.exInc, 1, 2)])
+            .collapse(Range(1, 3))
+            .iter,
         <dynamic>[],
       );
     });
 
     test('''remove useless span at the start''', () {
       expect(
-        SpanList([sp(RuleAttr.incEx, 1, 2)]).collapse(Range(0, 2)).iter,
+        AttributeSpanList([sp(RuleAttr.incEx, 1, 2)])
+            .collapse(Range(0, 2))
+            .iter,
         <dynamic>[],
       );
     });
 
     test('''remove useless span collapsed''', () {
       expect(
-        SpanList([sp(RuleAttr.exEx, 1, 2)]).collapse(Range(1, 2)).iter,
+        AttributeSpanList([sp(RuleAttr.exEx, 1, 2)]).collapse(Range(1, 2)).iter,
         <dynamic>[],
       );
     });
 
     test('''do not remove unexpandable span not collapsed''', () {
       expect(
-        SpanList([sp(RuleAttr.exEx, 1, 3)]).collapse(Range(1, 2)).iter,
+        AttributeSpanList([sp(RuleAttr.exEx, 1, 3)]).collapse(Range(1, 2)).iter,
         [sp(RuleAttr.exEx, 1, 2)],
       );
     });
@@ -97,7 +101,7 @@ void main() {
   group('shift', () {
     test('insertion before', () {
       expect(
-        SpanList.empty.shift(0, 5).merge(sp(a, 3, 4)).shift(1, 3).iter,
+        AttributeSpanList.empty.shift(0, 5).merge(sp(a, 3, 4)).shift(1, 3).iter,
         [sp(a, 6, 7)],
       );
     });
@@ -105,28 +109,28 @@ void main() {
 
   group('merge', () {
     test('merge touching', () {
-      final l = SpanList.empty.shift(0, 5);
+      final l = AttributeSpanList.empty.shift(0, 5);
       final s1 = sp(a, 1, 2);
       final s2 = sp(a, 2, 3);
       expect(l.merge(s1).merge(s2).iter, [sp(a, 1, 3)]);
     });
     test('merge bridge', () {
-      const l = SpanList.empty;
+      const l = AttributeSpanList.empty;
       final s1 = sp(a, 1, 3);
       final s2 = sp(a, 5, 8);
       final s3 = sp(a, 3, 5);
       expect(l.merge(s1).merge(s2).merge(s3).iter, [sp(a, 1, 8)]);
-      expect(SpanList([s1, s2, s3]).iter, [sp(a, 1, 8)]);
+      expect(AttributeSpanList([s1, s2, s3]).iter, [sp(a, 1, 8)]);
     });
     test('constructor merges all', () {
       final s1 = sp(a, 1, 3);
       final s2 = sp(a, 5, 8);
       final s3 = sp(a, 3, 5);
-      expect(SpanList([s1, s2, s3]).iter, [sp(a, 1, 8)]);
+      expect(AttributeSpanList([s1, s2, s3]).iter, [sp(a, 1, 8)]);
     });
 
     test('merge containing', () {
-      final l = SpanList.empty.shift(0, 10);
+      final l = AttributeSpanList.empty.shift(0, 10);
       final s1 = sp(a, 1, 3);
       final s2 = sp(a, 5, 8);
       final s3 = sp(a, 0, 9);
@@ -136,23 +140,23 @@ void main() {
 
   group('segments', () {
     test('empty', () {
-      expect(SpanList.empty.getSegments(''.characters), isEmpty);
+      expect(AttributeSpanList.empty.getSegments(''.characters), isEmpty);
     });
 
     test('plain', () {
-      expect(SpanList.empty.getSegments('hey'.characters),
+      expect(AttributeSpanList.empty.getSegments('hey'.characters),
           [AttributeSegment.from('hey'.characters, [])]);
     });
 
     test('spans can go past end', () {
-      expect(SpanList([sp(a, 0, 10)]).getSegments('hey'.characters), [
+      expect(AttributeSpanList([sp(a, 0, 10)]).getSegments('hey'.characters), [
         AttributeSegment.from('hey'.characters, [a])
       ]);
     });
 
     test('complex', () {
       expect(
-          (SpanList([
+          (AttributeSpanList([
             sp(a, 1, 7),
             sp(b, 1, 8),
             sp(c, 2, 5),
@@ -175,7 +179,8 @@ void main() {
 
     test('emoji', () {
       expect(
-          SpanList([sp(a, 1, 3)]).getSegments('👨‍👩‍👧‍👦a🥙'.characters),
+          AttributeSpanList([sp(a, 1, 3)])
+              .getSegments('👨‍👩‍👧‍👦a🥙'.characters),
           <AttributeSegment>[
             AttributeSegment.from('👨‍👩‍👧‍👦'.characters, []),
             AttributeSegment.from('a🥙'.characters, [a]),

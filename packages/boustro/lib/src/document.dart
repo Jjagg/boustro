@@ -45,11 +45,11 @@ class LineParagraph with EquatableMixin implements Paragraph {
   /// Create a line of rich text.
   LineParagraph({
     String? text,
-    SpanList? spans,
+    AttributeSpanList? spans,
     List<LineModifier>? modifiers,
   }) : this.built(
           text: (text ?? '').characters,
-          spans: spans ?? SpanList.empty,
+          spans: spans ?? AttributeSpanList.empty,
           modifiers: modifiers?.build() ?? BuiltList<LineModifier>(),
         );
 
@@ -74,7 +74,7 @@ class LineParagraph with EquatableMixin implements Paragraph {
   final Characters text;
 
   /// The formatting for this line.
-  final SpanList spans;
+  final AttributeSpanList spans;
 
   /// Properties that can affect how this paragraph is displayed.
   final BuiltList<LineModifier> modifiers;
@@ -92,7 +92,7 @@ class LineParagraph with EquatableMixin implements Paragraph {
   /// Create a copy of this line paragraph with the given field values replaced.
   LineParagraph copyWith({
     Characters? text,
-    SpanList? spans,
+    AttributeSpanList? spans,
     BuiltList<LineModifier>? modifiers,
   }) {
     return LineParagraph.built(
@@ -133,7 +133,7 @@ abstract class ParagraphEmbed implements Paragraph {
 
 /// Interface for controller of a [ParagraphEmbed].
 ///
-/// Represents the editable version of the embed.
+/// Holds the state of the editable version of the embed.
 abstract class ParagraphEmbedController {
   /// Convert the current state of the controller to a [ParagraphEmbed].
   ParagraphEmbed? toEmbed();

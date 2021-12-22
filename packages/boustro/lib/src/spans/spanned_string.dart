@@ -7,12 +7,12 @@ import 'package:flutter/widgets.dart';
 import 'attribute_span.dart';
 import 'spanned_text_controller.dart';
 
-/// Rich text represented with a [String] and a [SpanList].
+/// Rich text represented with a [String] and a [AttributeSpanList].
 @immutable
 class SpannedString extends Equatable {
   /// Create a spanned string.
-  SpannedString(String text, [SpanList? spans])
-      : this.chars(text.characters, spans ?? SpanList.empty);
+  SpannedString(String text, [AttributeSpanList? spans])
+      : this.chars(text.characters, spans ?? AttributeSpanList.empty);
 
   /// Create a spanned string.
   // The analyzer lets this be const (it shouldn't), but running it as const throws.
@@ -21,7 +21,7 @@ class SpannedString extends Equatable {
 
   const SpannedString._empty()
       : text = const characters_impl.StringCharacters(''),
-        spans = SpanList.empty,
+        spans = AttributeSpanList.empty,
         length = 0;
 
   /// An empty spanned string.
@@ -31,14 +31,14 @@ class SpannedString extends Equatable {
   final Characters text;
 
   /// Formatting of this spanned string.
-  final SpanList spans;
+  final AttributeSpanList spans;
 
   /// Length of this spanned string. This is equal to the length of [text].
   final int length;
 
   /// Creates a copy of this spanned string, but with the given fields replaced
   /// with the new values.
-  SpannedString copyWith({Characters? text, SpanList? spans}) =>
+  SpannedString copyWith({Characters? text, AttributeSpanList? spans}) =>
       SpannedString.chars(
         text ?? this.text,
         spans ?? this.spans,
@@ -148,7 +148,7 @@ class SpannedString extends Equatable {
 /// Builds a [SpannedString]. Can be used fluently with cascades.
 class SpannedStringBuilder {
   final StringBuffer _buffer = StringBuffer();
-  SpanList _spans = SpanList.empty;
+  AttributeSpanList _spans = AttributeSpanList.empty;
   final Set<AttributeSpan> _activeSpans = {};
 
   int _length = 0;
