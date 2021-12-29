@@ -8,14 +8,14 @@
 // ignore_for_file: directives_ordering
 
 import 'package:boustro/src/spans/attribute_span.dart';
-import 'package:boustro/src/spans/spanned_string.dart';
-import 'package:boustro/src/spans/spanned_text_controller.dart';
+import 'package:boustro/src/spans/attributed_text.dart';
+import 'package:boustro/src/spans/attributed_text_editing_controller.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('diff', () {
-    const diffStrings = SpannedTextEditingController.diffStrings;
+    const diffStrings = AttributedTextEditingController.diffStrings;
     test('empty', () {
       expect(
           diffStrings('', '', 0), StringDiff(0, ''.characters, ''.characters));
@@ -50,7 +50,7 @@ void main() {
     });
 
     test('Replace all', () {
-      final diff = SpannedTextEditingController.diffStrings(
+      final diff = AttributedTextEditingController.diffStrings(
         'Hey',
         'Okay',
         4,
@@ -59,24 +59,24 @@ void main() {
     });
 
     test('Repeated', () {
-      final diff = SpannedTextEditingController.diffStrings('aaaaaa', 'aaa', 1);
+      final diff = AttributedTextEditingController.diffStrings('aaaaaa', 'aaa', 1);
       expect(diff, StringDiff(1, 'aaa'.characters, ''.characters));
     });
 
     test('delete insert', () {
-      final diff = SpannedTextEditingController.diffStrings('Heyo', 'Helo', 3);
+      final diff = AttributedTextEditingController.diffStrings('Heyo', 'Helo', 3);
       expect(diff, StringDiff(2, 'y'.characters, 'l'.characters));
     });
 
     test('Emoji', () {
-      final diff = SpannedTextEditingController.diffStrings(
+      final diff = AttributedTextEditingController.diffStrings(
           '🍕🍔', '🍕🍟', '🍕🍟'.length);
       expect(diff, StringDiff(1, '🍔'.characters, '🍟'.characters));
     });
 
     test('Emoji overlap', () {
       final diff =
-          SpannedTextEditingController.diffStrings('😀', '😃', '😃'.length);
+          AttributedTextEditingController.diffStrings('😀', '😃', '😃'.length);
       expect(diff, StringDiff(0, '😀'.characters, '😃'.characters));
     });
   });

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'document_controller.dart';
+import '../core/document_controller.dart';
 import 'nested_list_controller.dart';
 import 'boustro_theme.dart';
 
@@ -53,7 +53,8 @@ class ToolbarItem extends StatelessWidget with NestedListItem<ToolbarItem> {
   /// Create a toolbar item that builds any widget.
   factory ToolbarItem.custom({required CustomToolbarItemBuilder builder}) {
     return ToolbarItem._(
-        builder: (context, controller, _) => builder(context, controller));
+      builder: (context, controller, _) => builder(context, controller),
+    );
   }
 
   /// Create a toolbar item that - when clicked - shows a submenu of other

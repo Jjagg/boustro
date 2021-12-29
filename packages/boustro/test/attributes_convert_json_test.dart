@@ -17,7 +17,7 @@ void main() {
 
   test('bold', () {
     final doc = (DocumentBuilder()
-          ..line((b) => b
+          ..text((b) => b
             ..start(boldAttribute)
             ..write('Hello, World!')))
         .build();
@@ -30,7 +30,7 @@ void main() {
 
   test('italic', () {
     final doc = (DocumentBuilder()
-          ..line((b) => b
+          ..text((b) => b
             ..start(italicAttribute)
             ..write('Hello, World!')))
         .build();
@@ -43,7 +43,7 @@ void main() {
 
   test('underline', () {
     final doc = (DocumentBuilder()
-          ..line((b) => b
+          ..text((b) => b
             ..start(underlineAttribute)
             ..write('Hello, World!')))
         .build();
@@ -56,7 +56,7 @@ void main() {
 
   test('strikethrough', () {
     final doc = (DocumentBuilder()
-          ..line((b) => b
+          ..text((b) => b
             ..start(strikethroughAttribute)
             ..write('Hello, World!')))
         .build();

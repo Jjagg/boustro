@@ -14,14 +14,13 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   final codec = DocumentJsonCodec(
     attributes: [testAttributeCodec],
-    lineModifiers: [testLineModCodec],
-    embeds: [testEmbedCodec],
+    paragraphs: [testParagraphCodec],
   );
 
   group('json encoder', () {
     test('simple roundtrip', () {
       final doc = Document(<Paragraph>[
-        LineParagraph(text: 'Hello, World!'),
+        TextParagraph('Hello, World!'),
       ]);
 
       final dynamic json = codec.encode(doc);
@@ -35,9 +34,9 @@ void main() {
 
     test('spans roundtrip', () {
       final doc = Document(<Paragraph>[
-        LineParagraph(
-          text: 'Hello, World!',
-          spans: AttributeSpanList([AttributeSpan(TestAttribute(), 3, 7)]),
+        TextParagraph(
+          'Hello, World!',
+          [AttributeSpan(TestAttribute(), 3, 7)],
         ),
       ]);
 
@@ -49,25 +48,9 @@ void main() {
       expect(decoded, doc);
     });
 
-    test('linemod roundtrip', () {
+    test('paragraph roundtrip', () {
       final doc = Document(<Paragraph>[
-        LineParagraph(
-          text: 'Hello, World!',
-          modifiers: [TestLineMod()],
-        ),
-      ]);
-
-      final dynamic json = codec.encode(doc);
-      final rawJson = jsonEncode(json);
-      expect(rawJson,
-          '{"paragraphs":[{"type":"text","text":"Hello, World!","modifiers":[{"type":"test"}]}]}');
-      final decoded = codec.decode(json);
-      expect(decoded, doc);
-    });
-
-    test('embed roundtrip', () {
-      final doc = Document(<Paragraph>[
-        TestEmbed(),
+        TestParagraph(),
       ]);
 
       final dynamic json = codec.encode(doc);
@@ -84,14 +67,9 @@ final testAttributeCodec = TextAttributeCodec<TestAttribute>.stateless(
   create: () => TestAttribute(),
 );
 
-final testLineModCodec = LineModifierCodec<TestLineMod>.stateless(
+final testParagraphCodec = ParagraphCodec<TestParagraph>.stateless(
   typeStr: 'test',
-  create: () => TestLineMod(),
-);
-
-final testEmbedCodec = ParagraphEmbedCodec<TestEmbed>.stateless(
-  typeStr: 'test',
-  create: () => TestEmbed(),
+  create: () => TestParagraph(),
 );
 
 class TestAttribute extends TextAttribute with EquatableMixin {
@@ -107,27 +85,17 @@ class TestAttribute extends TextAttribute with EquatableMixin {
   List<Object?> get props => [];
 }
 
-class TestLineMod extends LineModifier with EquatableMixin {
-  @override
-  Widget modify(BuildContext context, Widget child) {
-    throw UnimplementedError();
-  }
-
-  @override
-  List<Object?> get props => [];
-}
-
-class TestEmbed extends ParagraphEmbed with EquatableMixin {
+class TestParagraph extends Paragraph with EquatableMixin {
   @override
   List<Object?> get props => [];
 
   @override
-  ParagraphEmbedController createController() {
+  Widget buildView(BuildContext context) {
     throw UnimplementedError();
   }
 
   @override
-  Widget createView(BuildContext context) {
+  ParagraphController createController() {
     throw UnimplementedError();
   }
 }

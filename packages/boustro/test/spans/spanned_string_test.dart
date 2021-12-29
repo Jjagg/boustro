@@ -8,8 +8,8 @@
 // ignore_for_file: directives_ordering
 
 import 'package:boustro/src/spans/attribute_span.dart';
-import 'package:boustro/src/spans/spanned_string.dart';
-import 'package:boustro/src/spans/spanned_text_controller.dart';
+import 'package:boustro/src/spans/attributed_text.dart';
+import 'package:boustro/src/spans/attributed_text_editing_controller.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -17,23 +17,23 @@ import 'util.dart';
 
 void main() {
   group('copyWith', () {
-    final s = SpannedString('Test1', AttributeSpanList([sp(a, 0, 1)]));
+    final s = AttributedText('Test1', AttributeSpanList([sp(a, 0, 1)]));
     test('none', () {
       expect(s.copyWith(), s);
     });
     test('text', () {
-      expect(SpannedString('Changed', AttributeSpanList([sp(a, 0, 1)])),
+      expect(AttributedText('Changed', AttributeSpanList([sp(a, 0, 1)])),
           s.copyWith(text: 'Changed'.characters));
     });
     test('spans', () {
-      expect(SpannedString('Test1', AttributeSpanList([sp(b, 0, 1)])),
+      expect(AttributedText('Test1', AttributeSpanList([sp(b, 0, 1)])),
           s.copyWith(spans: AttributeSpanList([sp(b, 0, 1)])));
     });
   });
 
   group('collapse', () {
     const str = 'This is a test';
-    final s = SpannedString(str, AttributeSpanList([sp(a, 0, 4), sp(b, 3, 7)]));
+    final s = AttributedText(str, AttributeSpanList([sp(a, 0, 4), sp(b, 3, 7)]));
     test('collapsed range', () {
       expect(s.collapse(start: 1, end: 1), s);
       expect(s.collapse(start: 5, end: 5), s);
@@ -43,20 +43,20 @@ void main() {
     test('text only', () {
       expect(
         s.collapse(start: 7, end: str.length),
-        SpannedString('This is', AttributeSpanList([sp(a, 0, 4), sp(b, 3, 7)])),
+        AttributedText('This is', AttributeSpanList([sp(a, 0, 4), sp(b, 3, 7)])),
       );
     });
     test('span', () {
       expect(
         s.collapse(start: 3, end: 5),
-        SpannedString(
+        AttributedText(
             'Thiis a test', AttributeSpanList([sp(a, 0, 3), sp(b, 3, 5)])),
       );
     });
     test('everything', () {
       expect(
         s.collapse(start: 0, end: str.characters.length),
-        SpannedString.empty,
+        AttributedText.empty,
       );
     });
     test('start oob', () {
@@ -75,23 +75,23 @@ void main() {
 
   group('insert', () {
     const str = 'This is a test';
-    final s = SpannedString(str, AttributeSpanList([sp(a, 0, 4), sp(b, 3, 7)]));
+    final s = AttributedText(str, AttributeSpanList([sp(a, 0, 4), sp(b, 3, 7)]));
     test('empty', () {
       expect(s.insert(1, ''.characters), s);
       expect(s.insert(5, ''.characters), s);
     });
     test('into empty', () {
       expect(
-        SpannedString.empty.insert(0, 'Hello'.characters),
-        SpannedString('Hello'),
+        AttributedText.empty.insert(0, 'Hello'.characters),
+        AttributedText('Hello'),
       );
     });
     test('concat', () {
       final concat = s.concat(
-          SpannedString(', or is it?', AttributeSpanList([sp(a, 0, 5)])));
+          AttributedText(', or is it?', AttributeSpanList([sp(a, 0, 5)])));
       expect(
         concat,
-        SpannedString(
+        AttributedText(
           'This is a test, or is it?',
           AttributeSpanList(
             [
@@ -104,18 +104,18 @@ void main() {
       );
     });
     test('concat merge', () {
-      final s1 = SpannedString('bird', AttributeSpanList([sp(a, 1, 4)]));
-      final s2 = SpannedString('word', AttributeSpanList([sp(a, 0, 2)]));
+      final s1 = AttributedText('bird', AttributeSpanList([sp(a, 1, 4)]));
+      final s2 = AttributedText('word', AttributeSpanList([sp(a, 0, 2)]));
       expect(s1.concat(s2),
-          SpannedString('birdword', AttributeSpanList([sp(a, 1, 6)])));
+          AttributedText('birdword', AttributeSpanList([sp(a, 1, 6)])));
     });
     test('concat does not expand', () {
       final s1 =
-          SpannedString('bird', AttributeSpanList([sp(RuleAttr.exInc, 1, 4)]));
-      final s2 = SpannedString('word', AttributeSpanList([sp(b, 0, 2)]));
+          AttributedText('bird', AttributeSpanList([sp(RuleAttr.exInc, 1, 4)]));
+      final s2 = AttributedText('word', AttributeSpanList([sp(b, 0, 2)]));
       expect(
         s1.concat(s2),
-        SpannedString('birdword',
+        AttributedText('birdword',
             AttributeSpanList([sp(RuleAttr.exInc, 1, 4), sp(b, 4, 6)])),
       );
     });
@@ -126,24 +126,24 @@ void main() {
 
   group('applyDiff', () {
     const str = 'This is a test';
-    final s = SpannedString(str, AttributeSpanList([sp(a, 0, 4), sp(b, 3, 7)]));
+    final s = AttributedText(str, AttributeSpanList([sp(a, 0, 4), sp(b, 3, 7)]));
     test('insert', () {
       expect(
         s.applyDiff(StringDiff(0, ''.characters, 'OK'.characters)),
-        SpannedString('OK$str', AttributeSpanList([sp(a, 2, 6), sp(b, 5, 9)])),
+        AttributedText('OK$str', AttributeSpanList([sp(a, 2, 6), sp(b, 5, 9)])),
       );
     });
     test('delete', () {
       expect(
         s.applyDiff(StringDiff(2, 'is'.characters, ''.characters)),
-        SpannedString(
+        AttributedText(
             'Th is a test', AttributeSpanList([sp(a, 0, 2), sp(b, 2, 5)])),
       );
     });
     test('insert delete', () {
       expect(
         s.applyDiff(StringDiff(2, 'is'.characters, 'OK'.characters)),
-        SpannedString(
+        AttributedText(
             'ThOK is a test', AttributeSpanList([sp(a, 0, 2), sp(b, 4, 7)])),
       );
     });
@@ -153,7 +153,7 @@ void main() {
     testWidgets('plain', (t) async {
       Builder(
         builder: (context) {
-          final sp = SpannedString('Hello')
+          final sp = AttributedText('Hello')
               .buildTextSpan(context: context, style: TextStyle());
           expect(sp, TextSpan(text: 'Hello', style: TextStyle()));
 
@@ -166,36 +166,36 @@ void main() {
   group('builder', () {
     test('text only', () {
       expect(
-        (SpannedStringBuilder()
+        (AttributedTextBuilder()
               ..write('Testing')
               ..writeln()
               ..writeln('😴'))
             .build(),
-        SpannedString('Testing\n😴\n'),
+        AttributedText('Testing\n😴\n'),
       );
     });
     test('single span', () {
       expect(
-        (SpannedStringBuilder()
+        (AttributedTextBuilder()
               ..start(a)
               ..write('Test')
               ..end(a))
             .build(),
-        SpannedString('Test', AttributeSpanList([sp(a, 0, 4)])),
+        AttributedText('Test', AttributeSpanList([sp(a, 0, 4)])),
       );
     });
     test('unfinished span', () {
       expect(
-        (SpannedStringBuilder()
+        (AttributedTextBuilder()
               ..start(a)
               ..write('Test'))
             .build(),
-        SpannedString('Test', AttributeSpanList([sp(a, 0, 4)])),
+        AttributedText('Test', AttributeSpanList([sp(a, 0, 4)])),
       );
     });
     test('multiple spans', () {
       expect(
-          (SpannedStringBuilder()
+          (AttributedTextBuilder()
                 ..start(a)
                 ..write('T')
                 ..start(b)
@@ -204,18 +204,18 @@ void main() {
                 ..write('t')
                 ..end(b))
               .build(),
-          SpannedString('Test', AttributeSpanList([sp(a, 0, 3), sp(b, 1, 4)])));
+          AttributedText('Test', AttributeSpanList([sp(a, 0, 3), sp(b, 1, 4)])));
     });
     test('end unstarted span throws', () {
-      expect(() => SpannedStringBuilder().end(a), throwsStateError);
+      expect(() => AttributedTextBuilder().end(a), throwsStateError);
     });
     test('line style', () {
       expect(
-        (SpannedStringBuilder()
+        (AttributedTextBuilder()
               ..lineStyle(a)
               ..write('Test'))
             .build(),
-        SpannedString(
+        AttributedText(
           'Test',
           AttributeSpanList([sp(a, 0, maxSpanLength)]),
         ),
@@ -223,19 +223,19 @@ void main() {
     });
     test('segment style', () {
       expect(
-          (SpannedStringBuilder()
+          (AttributedTextBuilder()
                 ..write('Hi', [a])
                 ..write(':)', [b]))
               .build(),
-          SpannedString('Hi:)', AttributeSpanList([sp(a, 0, 2), sp(b, 2, 4)])));
+          AttributedText('Hi:)', AttributeSpanList([sp(a, 0, 2), sp(b, 2, 4)])));
     });
     test('segment style merge', () {
       expect(
-          (SpannedStringBuilder()
+          (AttributedTextBuilder()
                 ..write('Hi', [a])
                 ..write(':)', [a]))
               .build(),
-          SpannedString('Hi:)', AttributeSpanList([sp(a, 0, 4)])));
+          AttributedText('Hi:)', AttributeSpanList([sp(a, 0, 4)])));
     });
   });
 }

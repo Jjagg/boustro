@@ -5,8 +5,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../document.dart';
-import 'editor.dart';
+import '../core/document.dart';
+import 'document_editor.dart';
 import 'toolbar.dart';
 
 /// Provides theming for boustro widgets.

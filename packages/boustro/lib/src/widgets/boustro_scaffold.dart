@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-import 'document_controller.dart';
+import '../core/document_controller.dart';
 
 /// Lays out an editor and toolbar, and ensures the editor keeps focus when
 /// toolbar items are clicked.

@@ -73,9 +73,9 @@ void main() {
       expect(doc.paragraphs.length, 1);
       expect(
         doc.paragraphs[0],
-        LineParagraph(
-          text: 'Hello, World!',
-          spans: AttributeSpanList([createBold(0, 5)]),
+        TextParagraph(
+          'Hello, World!',
+          [createBold(0, 5)],
         ),
       );
     });
@@ -89,9 +89,9 @@ void main() {
       expect(doc.paragraphs.length, 1);
       expect(
         doc.paragraphs[0],
-        LineParagraph(
-          text: 'Hello, World!',
-          spans: AttributeSpanList([createBold(0, 5)]),
+        TextParagraph(
+          'Hello, World!',
+          [createBold(0, 5)],
         ),
       );
     });
@@ -105,13 +105,13 @@ void main() {
       expect(doc.paragraphs.length, 2);
       expect(
           doc.paragraphs[0],
-          LineParagraph(
-            text: 'Hello, World!',
-            spans: AttributeSpanList([createBold(0, 5)]),
+          TextParagraph(
+            'Hello, World!',
+            [createBold(0, 5)],
           ));
       expect(
         doc.paragraphs[1],
-        LineParagraph(text: '', spans: AttributeSpanList.empty),
+        TextParagraph(),
       );
     });
 
@@ -126,16 +126,17 @@ void main() {
       final doc = deltaConverter.decode(ops);
       expect(doc.paragraphs.length, 2);
       expect(
-          doc.paragraphs[0],
-          LineParagraph(
-            text: 'Hello, World!',
-            spans: AttributeSpanList([createBold(0, 5)]),
-          ));
+        doc.paragraphs[0],
+        TextParagraph(
+          'Hello, World!',
+          [createBold(0, 5)],
+        ),
+      );
       expect(
         doc.paragraphs[1],
-        LineParagraph(
-          text: 'Hello, World!',
-          spans: AttributeSpanList([createBold(5, 13)]),
+        TextParagraph(
+          'Hello, World!',
+          [createBold(5, 13)],
         ),
       );
     });
