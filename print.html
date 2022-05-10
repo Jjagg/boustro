@@ -179,12 +179,14 @@ been written.</p>
 <p>If you want to try out boustro, for now, the best way to get started is to check out the <a href="https://github.com/Jjagg/boustro/tree/main/packages/boustro/example">example</a>.</p>
 <p>This documentation is built with <a href="https://rust-lang.github.io/mdBook/index.html">mdBook</a>.</p>
 <h1><a class="header" href="#goals" id="goals">Goals</a></h1>
+<p>Boustro aims to be an easy to use, fully-featured, but extremely flexible rich text editor.</p>
+<p>The following are goals for Boustro:</p>
 <ul>
 <li>Pick and choose formatting and embed options.</li>
 <li>Fully customizable without touching the source code.</li>
-<li>Built-in formatting options and embeds for most common use cases.</li>
+<li>Built-in formatting options and paragraph types for common use cases.</li>
 <li>Beautiful default dark and light theme.</li>
-<li>Built-in serialization.</li>
+<li>Built-in serialization that's easily extendable for custom paragraphs.</li>
 </ul>
 <h1><a class="header" href="#model" id="model">Model</a></h1>
 <p>This chapter describes how rich text content is represented in boustro.
@@ -236,13 +238,12 @@ concept is not used within boustro itself, but it's useful to define it for talk
 <ul>
 <li>Theme <code>boustro</code> widgets such as the editor and the toolbar, see <a href="customization/theming_boustro.html">Theming boustro</a>.</li>
 <li>Create and theme attributes, see <a href="customization/attributes.html">Attributes</a>.</li>
-<li>Create and theme line modifiers, see <a href="customization/line_modifiers.html">Line Modifiers</a>.</li>
-<li>Create and theme embeds, see <a href="customization/embeds.html">Embeds</a>.</li>
+<li>Create and theme paragraphs, see <a href="customization/paragraphs.html">Paragraphs</a>.</li>
 </ul>
 <h1><a class="header" href="#built-in-components" id="built-in-components">Built-in components</a></h1>
 <p>Boustro — the rich text editor itself — does not know how to apply .</p>
 <p>Boustro uses abstractions to make it as extensible<sup class="footnote-reference"><a href="#extensible">1</a></sup> as possible.
-Any text attributes, line modifiers and embeds<sup class="footnote-reference"><a href="#components">2</a></sup> can be defined in user code.</p>
+Any text attributes and paragraphs<sup class="footnote-reference"><a href="#components">2</a></sup> can be defined in user code.</p>
 <p>Boustro provides a range of built-in components that are commonly required in a rich
 text editor. Here, you'll find a list of components provided.</p>
 <h2><a class="header" href="#attributes" id="attributes">Attributes</a></h2>
@@ -253,14 +254,11 @@ text editor. Here, you'll find a list of components provided.</p>
 <li>Strikethrough</li>
 <li>Link (with user-defined callback)</li>
 </ul>
-<h2><a class="header" href="#line-modifiers" id="line-modifiers">Line Modifiers</a></h2>
+<h2><a class="header" href="#paragraphs" id="paragraphs">Paragraphs</a></h2>
 <ul>
-<li>Bullet list</li>
+<li><strong>Bullet list (TODO)</strong></li>
 <li><strong>Numbered list (TODO)</strong></li>
 <li><strong>Blockquote (TODO)</strong></li>
-</ul>
-<h2><a class="header" href="#embeds-1" id="embeds-1">Embeds</a></h2>
-<ul>
 <li>Image</li>
 <li><strong>Code block (TODO)</strong></li>
 </ul>
