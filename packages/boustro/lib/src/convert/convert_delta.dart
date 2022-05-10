@@ -5,8 +5,9 @@ import 'package:characters/characters.dart';
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 
-import '../document.dart';
+import '../core/document.dart';
 import '../spans/attribute_span.dart';
+import '../spans/attributed_text.dart';
 import 'convert.dart';
 import 'ops.dart';
 
@@ -37,31 +38,31 @@ class TextAttributeDeltaCodec {
   final Converter<TextAttribute, Object> encoder;
 }
 
-/// Function that decodes an embed.
-typedef EmbedDecoder<T extends ParagraphEmbed> = T Function(
+/// Function that decodes a paragraph.
+typedef ParagraphDecoder<T extends Paragraph> = T Function(
     Map<String, dynamic>);
 
-/// Function that encodes an embed.
-typedef EmbedEncoder<T extends ParagraphEmbed> = Map<String, dynamic> Function(
+/// Function that encodes a paragraph.
+typedef ParagraphEncoder<T extends Paragraph> = Map<String, dynamic> Function(
     T);
 
-/// Codec that can encode/decode the value of the embed with matching key.
+/// Codec that can encode/decode the value of the paragraph with matching key.
 @immutable
-class EmbedCodec<T extends ParagraphEmbed> {
-  /// Create an embed codec.
-  const EmbedCodec(this.key, this.decoder, this.encoder);
+class ParagraphCodec<T extends Paragraph> {
+  /// Create a paragraph codec.
+  const ParagraphCodec(this.key, this.decoder, this.encoder);
 
   /// Object type in the delta format that can be decoded with [decoder].
   final String key;
 
-  /// Decoder for the embed value.
-  final EmbedDecoder<T> decoder;
+  /// Decoder for the paragraph value.
+  final ParagraphDecoder<T> decoder;
 
-  /// Runtime type of the embed this codec encodes and decodes to.
-  Type get embedType => T;
+  /// Runtime type of the paragraph this codec encodes and decodes to.
+  Type get ParagraphType => T;
 
-  /// Encoder for the embed value.
-  final EmbedEncoder<T> encoder;
+  /// Encoder for the paragraph value.
+  final ParagraphEncoder<T> encoder;
 }
 
 /// Convenience function to create a codec for a [TextAttribute] with a boolean
@@ -96,11 +97,13 @@ class DocumentDeltaConverter extends Codec<Document, List<Op>> {
   /// Create a delta converter
   DocumentDeltaConverter(
     List<TextAttributeDeltaCodec> attributeCodecs,
-    List<EmbedCodec> embedCodec,
+    List<ParagraphCodec> paragraphCodec,
   )   : attributeDecoders = {for (final c in attributeCodecs) c.key: c},
         attributeEncoder = _createEncoder(attributeCodecs),
-        embedDecoders = {for (final c in embedCodec) c.key: c.decoder},
-        embedEncoders = {for (final c in embedCodec) c.embedType: c.encoder};
+        paragraphDecoders = {for (final c in paragraphCodec) c.key: c.decoder},
+        paragraphEncoders = {
+          for (final c in paragraphCodec) c.ParagraphType: c.encoder
+        };
 
   static Object? Function(TextAttribute attribute) _createEncoder(
     List<TextAttributeDeltaCodec> attributeCodecs,
@@ -114,22 +117,22 @@ class DocumentDeltaConverter extends Codec<Document, List<Op>> {
   /// Maps string keys to matching attribute codecs.
   final Map<String, TextAttributeDeltaCodec> attributeDecoders;
 
-  /// Maps embed keys to their decoder.
-  final Map<String, EmbedDecoder> embedDecoders;
+  /// Maps paragraph keys to their decoder.
+  final Map<String, ParagraphDecoder> paragraphDecoders;
 
   /// Converts attributes to their value as a Quill delta attribute.
   final Object? Function(TextAttribute) attributeEncoder;
 
-  /// Maps embed keys to their encoder.
-  final Map<Type, EmbedEncoder> embedEncoders;
+  /// Maps paragraph keys to their encoder.
+  final Map<Type, ParagraphEncoder> paragraphEncoders;
 
   @override
   Converter<List<Op>, Document> get decoder =>
-      DocumentDeltaDecoder(attributeDecoders, embedDecoders);
+      DocumentDeltaDecoder(attributeDecoders, paragraphDecoders);
 
   @override
   Converter<Document, List<Op>> get encoder =>
-      DocumentDeltaEncoder(attributeEncoder, embedEncoders);
+      DocumentDeltaEncoder(attributeEncoder, paragraphEncoders);
 }
 
 /// Encodes a document to a list of Quill delta insert operations.
@@ -137,14 +140,14 @@ class DocumentDeltaEncoder extends Converter<Document, List<Op>> {
   /// Create an encoder.
   const DocumentDeltaEncoder(
     this.attributeEncoder,
-    this.embedEncoders,
+    this.paragraphEncoders,
   );
 
   /// Converts attributes to their value as a Quill delta attribute.
   final Object? Function(TextAttribute attribute) attributeEncoder;
 
-  /// Maps embed keys to their encoder.
-  final Map<Type, EmbedEncoder> embedEncoders;
+  /// Maps paragraph keys to their encoder.
+  final Map<Type, ParagraphEncoder> paragraphEncoders;
 
   @override
   List<Op> convert(Document input) {
@@ -161,14 +164,14 @@ class DocumentDeltaDecoder extends Converter<List<Op>, Document> {
   /// Create a decoder.
   const DocumentDeltaDecoder(
     this.attributeCodecs,
-    this.embedDecoders,
+    this.paragraphDecoders,
   );
 
   /// Maps string keys to matching attribute codecs.
   final Map<String, TextAttributeDeltaCodec> attributeCodecs;
 
-  /// Maps embed keys to their decoder.
-  final Map<String, EmbedDecoder> embedDecoders;
+  /// Maps paragraph keys to their decoder.
+  final Map<String, ParagraphDecoder> paragraphDecoders;
 
   @override
   Document convert(List<Op> input) {
@@ -182,14 +185,14 @@ class DocumentDeltaDecoder extends Converter<List<Op>, Document> {
             'InsertObjectOp was not in its own paragraph.');
 
         final key = first.type;
-        final decoder = embedDecoders[key];
+        final decoder = paragraphDecoders[key];
         if (decoder == null) {
           throw ArgumentError.value(
               input, 'input', 'Attribute with missing codec: ${first.type}.');
         }
 
-        final embed = decoder(first.value.asMap());
-        paragraphs.add(embed);
+        final paragraph = decoder(first.value.asMap());
+        paragraphs.add(paragraph);
       } else {
         final paragraph = _opsToLine(line);
         paragraphs.add(paragraph);
@@ -216,8 +219,6 @@ class DocumentDeltaDecoder extends Converter<List<Op>, Document> {
               final opText = text.substring(0, newline);
 
               BuiltMap<String, Object>? lineAttribs;
-
-              // TODO proper line style/modifier support
 
               // If the op contained only a newline character, the attributes apply
               // to the entire line.
@@ -250,7 +251,7 @@ class DocumentDeltaDecoder extends Converter<List<Op>, Document> {
     }
   }
 
-  LineParagraph _opsToLine(_DeltaLine line) {
+  TextParagraph _opsToLine(_DeltaLine line) {
     final buffer = StringBuffer();
     final segments = <AttributeSegment>[];
 
@@ -277,7 +278,8 @@ class DocumentDeltaDecoder extends Converter<List<Op>, Document> {
 
     final text =
         segments.fold<String>('', (str, segment) => str + segment.text.string);
-    return LineParagraph(text: text, spans: spans);
+    final attrText = AttributedText(text, spans);
+    return TextParagraph.attributed(attrText);
   }
 }
 

@@ -339,7 +339,7 @@ class Range extends Equatable {
   }
 
   /// Get the result after deleting a range from this range.
-  Range? splice(Range removedSegment) {
+  Range splice(Range removedSegment) {
     if (start <= removedSegment.start && removedSegment.end <= end) {
       // deletion inside this range
       return withEnd(end - removedSegment.size);
@@ -362,8 +362,9 @@ class Range extends Equatable {
     }
     if (removedSegment.start <= start && end <= removedSegment.end) {
       // deletion of the full range
-      return null;
     }
+
+    return Range.collapsed(0);
   }
 
   @override
@@ -450,9 +451,11 @@ class AttributeSpan extends Equatable {
       return this;
     } else {
       final spliced = range.splice(collapseRange);
-      if (spliced != null && !spliced.isCollapsed) {
-        return copyWith(start: spliced.start, end: spliced.end);
+      if (spliced.isCollapsed) {
+        return null;
       }
+
+      return copyWith(start: spliced.start, end: spliced.end);
     }
   }
 

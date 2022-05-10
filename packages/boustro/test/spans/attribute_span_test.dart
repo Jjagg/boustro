@@ -59,7 +59,7 @@ void main() {
 
       expect(
         t.splice(Range(2, 6)),
-        null,
+        Range.collapsed(0),
       );
     });
   });

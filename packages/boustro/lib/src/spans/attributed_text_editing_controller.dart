@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 import 'attribute_span.dart';
-import 'spanned_string.dart';
+import 'attributed_text.dart';
 
-/// Result of [SpannedTextEditingController.diffStrings].
+/// Result of [AttributedTextEditingController.diffStrings].
 class StringDiff extends Equatable {
   /// Create a string diff.
   const StringDiff(this.index, this.deleted, this.inserted)
@@ -42,7 +42,7 @@ class StringDiff extends Equatable {
   List<Object?> get props => [index, deleted, inserted];
 }
 
-/// Passed to [SpannedTextEditingController.setOverride] to indicate if
+/// Passed to [AttributedTextEditingController.setOverride] to indicate if
 /// a [TextAttribute] should be applied or removed.
 enum OverrideType {
   /// The attribute will be applied on the next insertion.
@@ -69,7 +69,7 @@ class _AttributeOverride {
 
 /// High-level convenience methods for SpannedTextEditingController.
 extension SpannedTextEditingControllerExtension
-    on SpannedTextEditingController {
+    on AttributedTextEditingController {
   /// Apply an attribute to the current selection.
   void applyAttribute(
     TextAttribute attribute,
@@ -174,10 +174,10 @@ extension SpannedTextEditingControllerExtension
   }
 }
 
-/// Used by [SpannedTextEditingController] to process
-/// [SpannedTextEditingController.value] whenever it changes.
+/// Used by [AttributedTextEditingController] to process
+/// [AttributedTextEditingController.value] whenever it changes.
 typedef ProcessTextValue = TextEditingValue Function(
-  SpannedTextEditingController,
+  AttributedTextEditingController,
   TextEditingValue,
 );
 
@@ -196,47 +196,18 @@ class _DefaultCompositionAttribute extends TextAttribute {
 
 const _defaultCompositionAttribute = _DefaultCompositionAttribute();
 
-/// A TextEditingController with rich text capabilities.
-class SpannedTextEditingController implements TextEditingController {
-  /// Create a new SpannedTextEditingController.
-  SpannedTextEditingController({
+/// A [TextEditingController] with rich text capabilities.
+class AttributedTextEditingController implements TextEditingController {
+  /// Create a new [AttributedTextEditingController].
+  AttributedTextEditingController({
     TextAttribute? compositionAttribute,
     this.processTextValue = _defaultProcessTextValue,
-    String? text,
-    AttributeSpanList? spans,
+    AttributedText? text,
     this.hasMarkerCharacters = false,
   })  : compositionAttribute =
             compositionAttribute ?? _defaultCompositionAttribute,
-        _textController = TextEditingController(text: text),
-        _spans = spans ?? AttributeSpanList.empty;
-
-  /// Create a new spanned text editing controller with the same state as this
-  /// one.
-  SpannedTextEditingController copy() => SpannedTextEditingController(
-        compositionAttribute: compositionAttribute,
-        processTextValue: processTextValue,
-        text: text,
-        spans: spans,
-        hasMarkerCharacters: hasMarkerCharacters,
-      );
-
-  /// Create a new spanned text editing controller with the same state as this
-  /// one, but with the given fields replaced with the new values.
-  SpannedTextEditingController copyWith({
-    TextAttribute? compositionAttribute,
-    ProcessTextValue? processTextValue,
-    String? text,
-    AttributeSpanList? spans,
-    bool? hasMarkerCharacters,
-  }) {
-    return SpannedTextEditingController(
-      compositionAttribute: compositionAttribute ?? this.compositionAttribute,
-      processTextValue: processTextValue ?? this.processTextValue,
-      text: text ?? this.text,
-      spans: spans ?? this.spans,
-      hasMarkerCharacters: hasMarkerCharacters ?? this.hasMarkerCharacters,
-    );
-  }
+        _textController = TextEditingController(text: text?.text.string),
+        _spans = text?.spans ?? AttributeSpanList.empty;
 
   /// The attribute that's applied to the active composition.
   ///
@@ -287,10 +258,10 @@ class SpannedTextEditingController implements TextEditingController {
   }
 
   /// Get the rich text contents managed by this controller.
-  SpannedString get spannedString => SpannedString(text, spans);
+  AttributedText get attributedText => AttributedText(text, spans);
 
   /// Set the rich text contents managed by this controller.
-  set spannedString(SpannedString newString) {
+  set attributedText(AttributedText newString) {
     _ignoreSetValue = true;
     value = value.copyWith(text: newString.text.string);
     _ignoreSetValue = false;
@@ -486,7 +457,7 @@ class SpannedTextEditingController implements TextEditingController {
   }
 
   static TextEditingValue _defaultProcessTextValue(
-          SpannedTextEditingController _, TextEditingValue value) =>
+          AttributedTextEditingController _, TextEditingValue value) =>
       value;
 
   /// Diff two strings under the assumption that at most one insertion and one

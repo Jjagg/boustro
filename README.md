@@ -43,11 +43,9 @@ Check out the [docs](https://jjagg.dev/boustro) or the [example](packages/boustr
 ### Glossary and Concepts
 
 - **Document**: Immutable representation of a rich text document.
-- **Paragraph**: Can be either a line of text or (non-inline) embed.
-- **Line**: A line of text with rich formatting.
-- **Embed**: Any content in a document that is not a Line.
-- **Line modifier**: Wraps a line and can change the way it's displayed.
-- **Text attribute**: Applied to text to set its formatting or add gesture recognizers.
+- **Paragraph**: Can be any type of content displayed in a document.
+- **ParagraphController**: The editable variant of a paragraph.
+- **TextAttribute**: Applied to spans of text to set their formatting or have them respond to gestures.
 - **Span**: Text range with a text attribute and rules for how the range behaves when text is inserted (whether it is expanded or not).
 
 ## Limitations
@@ -60,7 +58,7 @@ but not multiple. We can solve this by using a `WidgetSpan` that wraps a `Gestur
 the actual text span, but that's blocked by:
   - ~~[Support WidgetSpan in SelectableText](https://github.com/flutter/flutter/issues/38474)~~ **Fixed**
   - [Support WidgetSpan in EditableText](https://github.com/flutter/flutter/issues/30688)
-- The same issues prevent me from creating inline embeds (e.g. inline images) using `WidgetSpan`. Please
+- The same issues prevents me from creating inline embeds (e.g. inline images) using `WidgetSpan`. Please
 go upvote these issues if you'd like to see these limitations overcome.
 
 ## Alternatives

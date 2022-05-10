@@ -1,13 +1,10 @@
 import 'dart:ui' as ui;
 
+import 'package:boustro/boustro.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
-import '../document.dart';
-import 'editor.dart';
-import 'toolbar.dart';
 
 /// Provides theming for boustro widgets.
 class BoustroTheme extends InheritedTheme {
@@ -60,13 +57,15 @@ class BoustroThemeData extends Equatable {
   const BoustroThemeData.raw({
     required this.editorColor,
     required this.editorPadding,
+    required this.editorTextStyle,
+    required this.textPadding,
+    required this.paragraphPadding,
+    required this.textStyle,
     required this.toolbarDecoration,
     required this.toolbarHeight,
     required this.toolbarItemExtent,
     required this.toolbarPadding,
     required this.toolbarFadeDuration,
-    required this.linePadding,
-    required this.embedPadding,
   });
 
   /// Default theme for [brightness].
@@ -79,6 +78,10 @@ class BoustroThemeData extends Equatable {
     return BoustroThemeData.raw(
       editorColor: null,
       editorPadding: const EdgeInsets.only(top: 8, bottom: 150),
+      editorTextStyle: TextStyle(height: 1.5),
+      textPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      paragraphPadding: const EdgeInsets.symmetric(vertical: 8),
+      textStyle: TextStyle(height: 1.5),
       toolbarDecoration: BoxDecoration(
         color: light ? Colors.grey.shade200 : Colors.grey.shade800,
         border:
@@ -88,8 +91,6 @@ class BoustroThemeData extends Equatable {
       toolbarItemExtent: 44,
       toolbarPadding: const EdgeInsets.symmetric(horizontal: 4),
       toolbarFadeDuration: const Duration(milliseconds: 200),
-      linePadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      embedPadding: const EdgeInsets.symmetric(vertical: 8),
     );
   }
 
@@ -125,25 +126,28 @@ class BoustroThemeData extends Equatable {
   BoustroThemeData copyWith({
     Color? editorColor,
     EdgeInsetsGeometry? editorPadding,
-    double? editorFreeSpace,
+    TextStyle? editorTextStyle,
+    EdgeInsetsGeometry? textPadding,
+    EdgeInsetsGeometry? paragraphPadding,
+    TextStyle? textStyle,
     BoxDecoration? toolbarDecoration,
     double? toolbarHeight,
     double? toolbarItemExtent,
     EdgeInsetsGeometry? toolbarPadding,
     Duration? toolbarFadeDuration,
-    EdgeInsetsGeometry? linePadding,
-    EdgeInsetsGeometry? embedPadding,
   }) {
     return BoustroThemeData.raw(
       editorColor: editorColor ?? this.editorColor,
       editorPadding: editorPadding ?? this.editorPadding,
+      editorTextStyle: editorTextStyle ?? this.editorTextStyle,
+      textPadding: textPadding ?? this.textPadding,
+      paragraphPadding: paragraphPadding ?? this.paragraphPadding,
+      textStyle: textStyle ?? this.textStyle,
       toolbarDecoration: toolbarDecoration ?? this.toolbarDecoration,
       toolbarHeight: toolbarHeight ?? this.toolbarHeight,
       toolbarItemExtent: toolbarItemExtent ?? this.toolbarItemExtent,
       toolbarPadding: toolbarPadding ?? this.toolbarPadding,
       toolbarFadeDuration: toolbarFadeDuration ?? this.toolbarFadeDuration,
-      linePadding: linePadding ?? this.linePadding,
-      embedPadding: embedPadding ?? this.embedPadding,
     );
   }
 
@@ -152,6 +156,18 @@ class BoustroThemeData extends Equatable {
 
   /// Padding inside the scrollable part of a [DocumentEditor].
   final EdgeInsetsGeometry? editorPadding;
+
+  /// Default style of text in [DocumentEditor].
+  final TextStyle? editorTextStyle;
+
+  /// The default padding for text paragraphs.
+  final EdgeInsetsGeometry? textPadding;
+
+  /// Padding for non-text paragraphs.
+  final EdgeInsetsGeometry? paragraphPadding;
+
+  /// Default style of text in [DocumentView].
+  final TextStyle? textStyle;
 
   /// Color and decoration for a [Toolbar].
   final BoxDecoration? toolbarDecoration;
@@ -170,27 +186,19 @@ class BoustroThemeData extends Equatable {
   /// menu).
   final Duration? toolbarFadeDuration;
 
-  /// Padding for lines of text.
-  ///
-  /// The horizontal part of this padding is applied outside of any
-  /// [LineModifier]s, while the vertical part is applied inside of
-  /// them.
-  final EdgeInsetsGeometry? linePadding;
-
-  /// Padding for embeds.
-  final EdgeInsetsGeometry? embedPadding;
-
   @override
   List<Object?> get props => [
         editorColor,
         editorPadding,
+        editorTextStyle,
+        textPadding,
+        paragraphPadding,
+        textStyle,
         toolbarDecoration,
         toolbarHeight,
         toolbarItemExtent,
         toolbarPadding,
         toolbarFadeDuration,
-        linePadding,
-        embedPadding,
       ];
 
   /// Linearly interpolate between two boustro themes.
@@ -202,6 +210,11 @@ class BoustroThemeData extends Equatable {
       editorColor: Color.lerp(a.editorColor, b.editorColor, t),
       editorPadding:
           EdgeInsetsGeometry.lerp(a.editorPadding, b.editorPadding, t),
+      editorTextStyle: TextStyle.lerp(a.editorTextStyle, b.editorTextStyle, t),
+      textPadding: EdgeInsetsGeometry.lerp(a.textPadding, b.textPadding, t),
+      paragraphPadding:
+          EdgeInsetsGeometry.lerp(a.paragraphPadding, b.paragraphPadding, t),
+      textStyle: TextStyle.lerp(a.textStyle, b.textStyle, t),
       toolbarDecoration:
           BoxDecoration.lerp(a.toolbarDecoration, b.toolbarDecoration, t),
       toolbarHeight: ui.lerpDouble(a.toolbarHeight, b.toolbarHeight, t),
@@ -211,8 +224,6 @@ class BoustroThemeData extends Equatable {
           EdgeInsetsGeometry.lerp(a.toolbarPadding, b.toolbarPadding, t),
       toolbarFadeDuration:
           t < 0.5 ? a.toolbarFadeDuration : b.toolbarFadeDuration,
-      linePadding: EdgeInsetsGeometry.lerp(a.linePadding, b.linePadding, t),
-      embedPadding: EdgeInsetsGeometry.lerp(a.embedPadding, b.embedPadding, t),
     );
   }
 }
@@ -304,7 +315,7 @@ class _AnimatedBoustroThemeState
   }
 }
 
-/// Theme for custom components in boustro, like embeds and line modifiers.
+/// Theme for custom paragraphs in boustro.
 class BoustroComponentConfig extends InheritedTheme {
   /// Create a boustro component theme.
   const BoustroComponentConfig({
@@ -493,7 +504,7 @@ class _AnimatedBoustroComponentThemeState
 
 /// Builder for [BoustroComponentConfigData].
 ///
-/// Custom embeds or line modifiers are expected to define extension methods
+/// Custom paragraphs are expected to define extension methods
 /// to set any configurable values they require on this type.
 class BoustroComponentConfigBuilder {
   /// Create a component theme builder, optionally with a starting map of
@@ -522,7 +533,7 @@ class BoustroComponentConfigBuilder {
   }
 }
 
-/// A custom themeable property for user-provided embeds and line modifiers.
+/// A custom themeable property for user-provided paragraphs.
 abstract class ThemeProperty<T> extends Equatable {
   /// Create a theme property with the provided value.
   const ThemeProperty(this.value);

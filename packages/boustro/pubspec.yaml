@@ -1,10 +1,11 @@
 name: boustro
 description: >
-  A rich text editor for Flutter.
+  A rich text editor for Flutter, supporting arbitrary widgets inside documents.
 
 version: 0.2.0
 homepage: https://jjagg.dev/boustro
 repository: https://github.com/Jjagg/boustro
+documentation: https://jjagg.dev/boustro
 
 environment:
   sdk: ">=2.12.0 <3.0.0"

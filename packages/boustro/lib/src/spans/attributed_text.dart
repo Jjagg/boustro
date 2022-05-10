@@ -1,31 +1,29 @@
-// ignore: implementation_imports
-import 'package:characters/src/characters_impl.dart' as characters_impl;
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/widgets.dart';
 
 import 'attribute_span.dart';
-import 'spanned_text_controller.dart';
+import 'attributed_text_editing_controller.dart';
 
 /// Rich text represented with a [String] and a [AttributeSpanList].
 @immutable
-class SpannedString extends Equatable {
+class AttributedText extends Equatable {
   /// Create a spanned string.
-  SpannedString(String text, [AttributeSpanList? spans])
+  AttributedText(String text, [AttributeSpanList? spans])
       : this.chars(text.characters, spans ?? AttributeSpanList.empty);
 
   /// Create a spanned string.
   // The analyzer lets this be const (it shouldn't), but running it as const throws.
   // ignore: prefer_const_constructors_in_immutables
-  SpannedString.chars(this.text, this.spans) : length = text.length;
+  AttributedText.chars(this.text, this.spans) : length = text.length;
 
-  const SpannedString._empty()
-      : text = const characters_impl.StringCharacters(''),
+  const AttributedText._empty()
+      : text = Characters.empty,
         spans = AttributeSpanList.empty,
         length = 0;
 
   /// An empty spanned string.
-  static const SpannedString empty = SpannedString._empty();
+  static const AttributedText empty = AttributedText._empty();
 
   /// Plain text of this spanned string.
   final Characters text;
@@ -38,8 +36,8 @@ class SpannedString extends Equatable {
 
   /// Creates a copy of this spanned string, but with the given fields replaced
   /// with the new values.
-  SpannedString copyWith({Characters? text, AttributeSpanList? spans}) =>
-      SpannedString.chars(
+  AttributedText copyWith({Characters? text, AttributeSpanList? spans}) =>
+      AttributedText.chars(
         text ?? this.text,
         spans ?? this.spans,
       );
@@ -47,7 +45,7 @@ class SpannedString extends Equatable {
   /// Insert text into this spanned text.
   ///
   /// The spans are shifted to accomodate for the insertion.
-  SpannedString insert(int index, Characters inserted) {
+  AttributedText insert(int index, Characters inserted) {
     if (index < 0 || index > length) {
       throw RangeError.index(
           index, text, 'index', 'Index must be inside text range.', length);
@@ -56,7 +54,7 @@ class SpannedString extends Equatable {
       return this;
     }
 
-    return SpannedString.chars(
+    return AttributedText.chars(
       text.getRange(0, index) + inserted + text.getRange(index),
       spans.shift(index, inserted.length),
     );
@@ -66,7 +64,7 @@ class SpannedString extends Equatable {
   ///
   /// The spans are shifted and deleted to accomodate for the deletion.
   /// End is exlusive.
-  SpannedString collapse({int? start, int? end}) {
+  AttributedText collapse({int? start, int? end}) {
     if (start == null && end == null) {
       throw ArgumentError('start and end may not both be null.');
     }
@@ -86,7 +84,7 @@ class SpannedString extends Equatable {
       return this;
     }
 
-    return SpannedString.chars(
+    return AttributedText.chars(
       text.getRange(0, start) + text.getRange(end, length),
       spans.collapse(range),
     );
@@ -95,8 +93,8 @@ class SpannedString extends Equatable {
   /// Concatenate another spanned string with this one and return the result.
   ///
   /// Touching spans with the same attribute will be merged.
-  SpannedString concat(SpannedString other) {
-    return SpannedString.chars(
+  AttributedText concat(AttributedText other) {
+    return AttributedText.chars(
       text + other.text,
       other.spans
           .shift(0, text.length)
@@ -109,7 +107,7 @@ class SpannedString extends Equatable {
   ///
   /// This method will first [collapse] [StringDiff.deleted] and then [insert]
   /// [StringDiff.inserted].
-  SpannedString applyDiff(StringDiff diff) {
+  AttributedText applyDiff(StringDiff diff) {
     // ignore: unnecessary_this
     return this
         .collapse(start: diff.index, end: diff.index + diff.deleted.length)
@@ -145,8 +143,8 @@ class SpannedString extends Equatable {
   List<Object?> get props => [text, spans];
 }
 
-/// Builds a [SpannedString]. Can be used fluently with cascades.
-class SpannedStringBuilder {
+/// Builds an [AttributedText]. Can be used fluently.
+class AttributedTextBuilder {
   final StringBuffer _buffer = StringBuffer();
   AttributeSpanList _spans = AttributeSpanList.empty;
   final Set<AttributeSpan> _activeSpans = {};
@@ -155,22 +153,24 @@ class SpannedStringBuilder {
 
   /// Format written text with [attribute] until [end] is called for the passed
   /// attribute.
-  void start(TextAttribute attribute) {
+  AttributedTextBuilder start(TextAttribute attribute) {
     _activeSpans.add(AttributeSpan(attribute, _length, maxSpanLength));
+    return this;
   }
 
   /// Stop formatting added text with [attribute].
   ///
   /// Throws a [StateError] if [start] was not first called for [attribute].
-  void end(TextAttribute attribute) {
+  AttributedTextBuilder end(TextAttribute attribute) {
     _end(attribute);
+    return this;
   }
 
   /// Write text to the internal string buffer.
   ///
   /// Applies any active attributes (attributes for which [start] was called,
   /// but [end] was not yet called) and the additional attributes passed.
-  void write(
+  AttributedTextBuilder write(
     Object? obj, [
     Iterable<TextAttribute> attributes = const [],
   ]) {
@@ -181,6 +181,7 @@ class SpannedStringBuilder {
       _length += str.characters.length;
     }
     attributes.forEach(end);
+    return this;
   }
 
   /// Write text to the internal string buffer, followed by a newline.
@@ -190,7 +191,7 @@ class SpannedStringBuilder {
   ///
   /// If [obj] is null or [obj.toString()] returns null only a newline is
   /// written.
-  void writeln([
+  AttributedTextBuilder writeln([
     Object? obj,
     Iterable<TextAttribute> attributes = const [],
   ]) {
@@ -199,12 +200,14 @@ class SpannedStringBuilder {
     _buffer.writeln(str);
     _length += str.characters.length + 1;
     attributes.forEach(end);
+    return this;
   }
 
   /// Apply an attribute to all text, including text written after calling this
   /// method. Typically used for attributes with [SpanExpandRules.fixed].
-  void lineStyle(TextAttribute attr) {
+  AttributedTextBuilder lineStyle(TextAttribute attr) {
     _spans = _spans.merge(AttributeSpan(attr, 0, maxSpanLength));
+    return this;
   }
 
   void _end(TextAttribute attribute) {
@@ -222,13 +225,13 @@ class SpannedStringBuilder {
   /// Finishes building and returns the created span.
   ///
   /// The builder will be reset and can be reused.
-  SpannedString build() {
+  AttributedText build() {
     for (final span in _activeSpans) {
       _spans = _spans.merge(span.copyWith(end: _length));
     }
     _activeSpans.clear();
 
-    final str = SpannedString(_buffer.toString(), _spans);
+    final str = AttributedText(_buffer.toString(), _spans);
     _buffer.clear();
     return str;
   }

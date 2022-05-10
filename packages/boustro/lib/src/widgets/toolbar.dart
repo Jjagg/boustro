@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'document_controller.dart';
+import '../core/document_controller.dart';
 import 'nested_list_controller.dart';
 import 'boustro_theme.dart';
 
@@ -53,7 +53,8 @@ class ToolbarItem extends StatelessWidget with NestedListItem<ToolbarItem> {
   /// Create a toolbar item that builds any widget.
   factory ToolbarItem.custom({required CustomToolbarItemBuilder builder}) {
     return ToolbarItem._(
-        builder: (context, controller, _) => builder(context, controller));
+      builder: (context, controller, _) => builder(context, controller),
+    );
   }
 
   /// Create a toolbar item that - when clicked - shows a submenu of other
@@ -89,7 +90,7 @@ class ToolbarItem extends StatelessWidget with NestedListItem<ToolbarItem> {
 
   @override
   Widget build(BuildContext context) {
-    final toolbarScope = _ToolbarScope.of(context);
+    final toolbarScope = ToolbarScope.of(context);
     assert(() {
       if (toolbarScope == null) {
         throw FlutterError.fromParts(<DiagnosticsNode>[
@@ -122,26 +123,37 @@ class ToolbarItem extends StatelessWidget with NestedListItem<ToolbarItem> {
   }
 }
 
-class _ToolbarScope extends InheritedWidget {
-  const _ToolbarScope({
+/// Inherited widget that's inserted by [Toolbar] and exposes
+/// [controller] and [defaultItemBuilder].
+class ToolbarScope extends InheritedWidget {
+  const ToolbarScope({
     Key? key,
     required this.controller,
     required this.defaultItemBuilder,
+    required this.maxWidth,
     required Widget child,
   }) : super(key: key, child: child);
 
-  // ignore: diagnostic_describe_all_properties
+  /// The document controller attached to the [Toolbar] that created this
+  /// widget.
   final DocumentController controller;
-  // ignore: diagnostic_describe_all_properties
+
+  /// The default toolbar item builder of the [Toolbar] that created this
+  /// widget.
   final ToolbarItemBuilder defaultItemBuilder;
 
-  static _ToolbarScope? of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<_ToolbarScope>();
+  /// The width available to the toolbar in logical pixels.
+  final double maxWidth;
+
+  static ToolbarScope? of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<ToolbarScope>();
   }
 
   @override
-  bool updateShouldNotify(covariant _ToolbarScope oldWidget) {
-    return controller != oldWidget.controller;
+  bool updateShouldNotify(covariant ToolbarScope oldWidget) {
+    return controller != oldWidget.controller ||
+        defaultItemBuilder != oldWidget.defaultItemBuilder ||
+        maxWidth != oldWidget.maxWidth;
   }
 }
 
@@ -154,6 +166,7 @@ class Toolbar extends StatelessWidget {
     required this.documentController,
     required this.defaultItemBuilder,
     required this.items,
+    this.createSurface = true,
   }) : super(key: key);
 
   /// The controller that the toolbar items will have access to to modify the
@@ -166,25 +179,33 @@ class Toolbar extends StatelessWidget {
   /// The toolbar items that are displayed by this toolbar.
   final List<ToolbarItem> items;
 
+  final bool createSurface;
+
   @override
   Widget build(BuildContext context) {
     final btheme = BoustroTheme.of(context);
     final padding = btheme.toolbarPadding ??
         BoustroThemeData.fallbackForContext(context).toolbarPadding!;
+    Widget child = Padding(
+      padding: padding,
+      child: _ToolbarItemsBuilder(
+        documentController: documentController,
+        defaultItemBuilder: defaultItemBuilder,
+        items: items,
+      ),
+    );
+
+    if (createSurface) {
+      child = Material(
+        type: MaterialType.card,
+        child: child,
+      );
+    }
+
     return Container(
       height: btheme.toolbarHeight,
-      decoration: btheme.toolbarDecoration,
-      child: Material(
-        type: MaterialType.transparency,
-        child: Padding(
-          padding: padding,
-          child: _ToolbarItemsBuilder(
-            documentController: documentController,
-            defaultItemBuilder: defaultItemBuilder,
-            items: items,
-          ),
-        ),
-      ),
+      //decoration: btheme.toolbarDecoration,
+      child: child,
     );
   }
 
@@ -221,48 +242,52 @@ class _ToolbarItemsBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _ToolbarScope(
-      controller: documentController,
-      defaultItemBuilder: defaultItemBuilder,
-      child: DefaultNestedListController<ToolbarItem>(
-        rootItems: items,
-        child: Builder(
-          builder: (context) {
-            final controller =
-                DefaultNestedListController.of<ToolbarItem>(context)!;
-            final theme = BoustroTheme.of(context);
+    return LayoutBuilder(builder: (context, constraints) {
+      return ToolbarScope(
+        controller: documentController,
+        defaultItemBuilder: defaultItemBuilder,
+        maxWidth: constraints.maxWidth,
+        child: DefaultNestedListController<ToolbarItem>(
+          rootItems: items,
+          child: Builder(
+            builder: (context) {
+              final controller =
+                  DefaultNestedListController.of<ToolbarItem>(context)!;
+              final theme = BoustroTheme.of(context);
 
-            Widget list = ListView(
-                key: Key(controller.depth.toString()),
-                scrollDirection: Axis.horizontal,
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                itemExtent: theme.toolbarItemExtent,
-                children: controller.currentItems);
+              Widget list = ListView(
+                  key:
+                      Key('boustro_toolbar_list${controller.depth.toString()}'),
+                  scrollDirection: Axis.horizontal,
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  //itemExtent: theme.toolbarItemExtent,
+                  children: controller.currentItems);
 
-            if (controller.isNested) {
-              list = Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Flexible(child: list),
-                  ToolbarItem(
-                    onPressed: (_, __) => controller.pop(),
-                    tooltip: 'Close',
-                    title: const Icon(Icons.close),
-                  )
-                ],
+              if (controller.isNested) {
+                list = Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(child: list),
+                    ToolbarItem(
+                      onPressed: (_, __) => controller.pop(),
+                      tooltip: 'Close',
+                      title: const Icon(Icons.close),
+                    )
+                  ],
+                );
+              }
+
+              return AnimatedSwitcher(
+                duration: theme.toolbarFadeDuration ??
+                    BoustroThemeData.fallbackForContext(context)
+                        .toolbarFadeDuration!,
+                child: list,
               );
-            }
-
-            return AnimatedSwitcher(
-              duration: theme.toolbarFadeDuration ??
-                  BoustroThemeData.fallbackForContext(context)
-                      .toolbarFadeDuration!,
-              child: list,
-            );
-          },
+            },
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 }

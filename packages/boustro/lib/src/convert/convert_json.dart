@@ -1,9 +1,7 @@
 import 'dart:convert';
 
+import 'package:boustro/boustro.dart';
 import 'package:built_collection/built_collection.dart';
-
-import '../spans/attribute_span.dart';
-import '../document.dart';
 
 // Document JSON:
 // {
@@ -23,7 +21,7 @@ import '../document.dart';
 //       ]?
 //     } OR
 //     {
-//       "type": "<embed type>",
+//       "type": "<paragraph type>",
 //       "value": <json serialized value>?
 //     }
 //   ]
@@ -85,33 +83,17 @@ class TextAttributeCodec<T extends TextAttribute> extends ComponentCodec<T> {
   }) : super.stateless(typeStr: typeStr, create: create);
 }
 
-/// Component codec for [LineModifier]s.
-class LineModifierCodec<T extends LineModifier> extends ComponentCodec<T> {
-  /// Create a line modifier codec for a stateful line modifier.
-  const LineModifierCodec.stateful({
+/// Component codec for [Paragraph]s.
+class ParagraphCodec<T extends Paragraph> extends ComponentCodec<T> {
+  /// Create a paragraph codec for a stateful paragraph.
+  const ParagraphCodec.stateful({
     required String typeStr,
     required Object? Function(T) encode,
     required T Function(Object?) decode,
   }) : super.stateful(typeStr: typeStr, encode: encode, decode: decode);
 
-  /// Create a line modifier codec for a stateless line modifier.
-  const LineModifierCodec.stateless({
-    required String typeStr,
-    required T Function() create,
-  }) : super.stateless(typeStr: typeStr, create: create);
-}
-
-/// Component codec for [ParagraphEmbed]s.
-class ParagraphEmbedCodec<T extends ParagraphEmbed> extends ComponentCodec<T> {
-  /// Create an embed codec for a stateful paragraph embed.
-  const ParagraphEmbedCodec.stateful({
-    required String typeStr,
-    required Object? Function(T) encode,
-    required T Function(Object?) decode,
-  }) : super.stateful(typeStr: typeStr, encode: encode, decode: decode);
-
-  /// Create an embed codec for a stateless paragraph embed.
-  const ParagraphEmbedCodec.stateless({
+  /// Create a paragraph codec for a stateless paragraph.
+  const ParagraphCodec.stateless({
     required String typeStr,
     required T Function() create,
   }) : super.stateless(typeStr: typeStr, create: create);
@@ -120,23 +102,20 @@ class ParagraphEmbedCodec<T extends ParagraphEmbed> extends ComponentCodec<T> {
 /// Convert a document to or from JSON.
 class DocumentJsonCodec extends Codec<Document, dynamic> {
   /// Create a codec to convert a document to or from JSON with codecs for
-  /// attributes, line modifiers and embeds that are supported for conversion.
+  /// attributes and paragraphs that are supported for conversion.
   factory DocumentJsonCodec({
     Iterable<TextAttributeCodec> attributes = const [],
-    Iterable<LineModifierCodec> lineModifiers = const [],
-    Iterable<ParagraphEmbedCodec> embeds = const [],
+    Iterable<ParagraphCodec> paragraphs = const [],
   }) {
     final decoder = _JsonDecoder(
       attributeDecoders:
           {for (final ac in attributes) ac.typeStr: ac.decode}.build(),
-      lineModifierDecoders:
-          {for (final lc in lineModifiers) lc.typeStr: lc.decode}.build(),
-      embedDecoders: {for (final lc in embeds) lc.typeStr: lc.decode}.build(),
+      paragraphDecoders:
+          {for (final lc in paragraphs) lc.typeStr: lc.decode}.build(),
     );
     final encoder = _JsonEncoder(
       attributes: {for (final attr in attributes) attr.type: attr}.build(),
-      lineModifiers: {for (final lc in lineModifiers) lc.type: lc}.build(),
-      embeds: {for (final embed in embeds) embed.type: embed}.build(),
+      paragraphs: {for (final p in paragraphs) p.type: p}.build(),
     );
     return DocumentJsonCodec._(decoder, encoder);
   }
@@ -158,7 +137,6 @@ const String _paragraphsKey = 'paragraphs';
 const String _lineType = 'text';
 
 const String _textKey = 'text';
-const String _modifiersKey = 'modifiers';
 const String _spansKey = 'spans';
 
 const String _typeKey = 'type';
@@ -170,13 +148,11 @@ const String _endKey = 'end';
 class _JsonDecoder extends Converter<dynamic, Document> {
   const _JsonDecoder({
     required this.attributeDecoders,
-    required this.lineModifierDecoders,
-    required this.embedDecoders,
+    required this.paragraphDecoders,
   });
 
   final BuiltMap<String, TextAttribute Function(Object?)> attributeDecoders;
-  final BuiltMap<String, LineModifier Function(Object?)> lineModifierDecoders;
-  final BuiltMap<String, ParagraphEmbed Function(Object?)> embedDecoders;
+  final BuiltMap<String, Paragraph Function(Object?)> paragraphDecoders;
 
   @override
   Document convert(dynamic input) {
@@ -201,53 +177,34 @@ class _JsonDecoder extends Converter<dynamic, Document> {
         final lineMap = _expectProperties(
           () => _paragraphsKey,
           p,
-          [_typeKey, _textKey, _modifiersKey, _spansKey],
+          [_typeKey, _textKey, _spansKey],
         );
         final text = _expectProperty<String?>(
             () => '$_paragraphsKey.$_textKey', lineMap, _textKey);
-        final modifiers = _expectProperty<List<dynamic>?>(
-          () => '$_paragraphsKey.$_modifiersKey',
-          lineMap,
-          _modifiersKey,
-        )?.map(_parseLineModifier).toList();
         final spans = _expectProperty<List<dynamic>?>(
           () => '$_paragraphsKey.$_spansKey',
           lineMap,
           _spansKey,
         )?.map(_parseSpan);
 
-        final line = LineParagraph(
-          text: text ?? '',
-          spans: AttributeSpanList(spans),
-          modifiers: modifiers,
+        final line = TextParagraph(
+          text ?? '',
+          spans,
         );
         decodedParagraphs.add(line);
       } else {
-        final decoder = embedDecoders[type];
+        final decoder = paragraphDecoders[type];
         if (decoder == null) {
-          throw FormatException('Missing decoder for embed of type $type.');
+          throw FormatException('Missing decoder for paragraph of type $type.');
         }
         final value = p[_valueKey] as Object?;
-        final embed = decoder(value);
+        final paragraph = decoder(value);
 
-        decodedParagraphs.add(embed);
+        decodedParagraphs.add(paragraph);
       }
     }
 
     return Document(decodedParagraphs);
-  }
-
-  LineModifier _parseLineModifier(dynamic map) {
-    final typedMap = _expectProperties(
-      () => '$_paragraphsKey.$_modifiersKey',
-      map,
-      [_typeKey, _valueKey],
-    );
-    return _parseTypeValue(
-      () => '$_paragraphsKey.$_modifiersKey',
-      typedMap,
-      lineModifierDecoders,
-    );
   }
 
   AttributeSpan _parseSpan(dynamic map) {
@@ -282,13 +239,11 @@ class _JsonDecoder extends Converter<dynamic, Document> {
 class _JsonEncoder extends Converter<Document, dynamic> {
   const _JsonEncoder({
     required this.attributes,
-    required this.lineModifiers,
-    required this.embeds,
+    required this.paragraphs,
   });
 
   final BuiltMap<Type, TextAttributeCodec> attributes;
-  final BuiltMap<Type, LineModifierCodec> lineModifiers;
-  final BuiltMap<Type, ParagraphEmbedCodec> embeds;
+  final BuiltMap<Type, ParagraphCodec> paragraphs;
 
   @override
   dynamic convert(Document input) {
@@ -300,25 +255,16 @@ class _JsonEncoder extends Converter<Document, dynamic> {
   }
 
   Map<String, Object> _encodeParagraph(Paragraph p) {
-    if (p is LineParagraph) {
+    if (p is TextParagraph) {
+      final t = p.attributedText;
       return <String, Object>{
         _typeKey: _lineType,
-        if (p.text.isNotEmpty) _textKey: p.text.string,
-        if (p.modifiers.isNotEmpty)
-          _modifiersKey: p.modifiers.map<Object>(_encodeModifier).toList(),
-        if (p.spans.iter.isNotEmpty)
-          _spansKey: p.spans.iter.map<Object>(_encodeSpan).toList(),
+        if (t.text.isNotEmpty) _textKey: p.attributedText.text.string,
+        if (t.spans.iter.isNotEmpty)
+          _spansKey: t.spans.iter.map<Object>(_encodeSpan).toList(),
       };
-    } else if (p is ParagraphEmbed) {
-      return _encodeWithTypeMap('embed', embeds, p);
-    } else {
-      throw JsonEncoderException._(
-          'Unsupported paragraph type ${p.runtimeType}.');
     }
-  }
-
-  Object _encodeModifier(LineModifier modifier) {
-    return _encodeWithTypeMap('line modifier', lineModifiers, modifier);
+    return _encodeWithTypeMap('paragraph', paragraphs, p);
   }
 
   Object _encodeSpan(AttributeSpan span) {

@@ -3,7 +3,7 @@
 Boustro — the rich text editor itself — does not know how to apply .
 
 Boustro uses abstractions to make it as extensible[^extensible] as possible.
-Any text attributes, line modifiers and embeds[^components] can be defined in user code.
+Any text attributes and paragraphs[^components] can be defined in user code.
 
 Boustro provides a range of built-in components that are commonly required in a rich
 text editor. Here, you'll find a list of components provided.
@@ -16,14 +16,11 @@ text editor. Here, you'll find a list of components provided.
 - Strikethrough
 - Link (with user-defined callback)
 
-## Line Modifiers
+## Paragraphs
 
-- Bullet list
+- **Bullet list (TODO)**
 - **Numbered list (TODO)**
 - **Blockquote (TODO)**
-
-## Embeds
-
 - Image
 - **Code block (TODO)**
 
