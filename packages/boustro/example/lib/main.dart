@@ -81,9 +81,12 @@ class _HomeScreenState extends State<HomeScreen> {
       // focusNode of your DocumentController.
       body: CallbackShortcuts(
         bindings: {
-          SingleActivator(LogicalKeyboardKey.keyB, control: true): () => _toggleAttribute(boldAttribute),
-          SingleActivator(LogicalKeyboardKey.keyI, control: true): () => _toggleAttribute(italicAttribute),
-          SingleActivator(LogicalKeyboardKey.keyU, control: true): () => _toggleAttribute(underlineAttribute),
+          SingleActivator(LogicalKeyboardKey.keyB, control: true): () =>
+              _toggleAttribute(boldAttribute),
+          SingleActivator(LogicalKeyboardKey.keyI, control: true): () =>
+              _toggleAttribute(italicAttribute),
+          SingleActivator(LogicalKeyboardKey.keyU, control: true): () =>
+              _toggleAttribute(underlineAttribute),
         },
         child: BoustroScaffold(
           focusNode: controller.focusNode,
@@ -94,7 +97,8 @@ class _HomeScreenState extends State<HomeScreen> {
             controller: controller,
             rules: [
               FormatRule.group(CommonPatterns.hashtag, 1, (_) => boldAttribute),
-              FormatRule.group(CommonPatterns.mention, 1, (_) => italicAttribute),
+              FormatRule.group(
+                  CommonPatterns.mention, 1, (_) => italicAttribute),
               FormatRule.group(CommonPatterns.httpUrl, 1, (_) => boldAttribute),
             ],
             // DocumentEditor is the main editor class. It manages the
@@ -183,9 +187,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-Future<void> _handleLinkTap(BuildContext context, String url) async {
-  if (await canLaunch(url)) {
-    await launch(url);
+Future<void> _handleLinkTap(BuildContext context, String link) async {
+  if (!link.contains('://')) {
+    link = 'http://$link';
+  }
+  final uri = Uri.tryParse(link);
+  if (uri != null) {
+    try {
+      await launchUrl(uri);
+    } catch (_) {}
   }
 }
 

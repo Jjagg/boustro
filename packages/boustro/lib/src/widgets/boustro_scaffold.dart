@@ -24,8 +24,11 @@ class BoustroScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FocusTrapArea(
-      focusNode: focusNode,
+    return TapRegion(
+      behavior: HitTestBehavior.opaque,
+      onTapInside: (_) {},
+      // TODO fix tap region
+      //focusNode: focusNode,
       child: Column(
         children: [
           Expanded(child: editor),

@@ -51,10 +51,12 @@ class ImageWrapper extends StatelessWidget {
             ? Colors.deepPurple.shade900.withOpacity(0.2)
             : Colors.brown.withOpacity(0.2));
 
-    return Container(
-      constraints: BoxConstraints(maxHeight: maxHeight),
+    return ColoredBox(
       color: sideColor,
-      child: child,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxHeight),
+        child: child,
+      ),
     );
   }
 }
@@ -79,6 +81,8 @@ class ImageParagraphView extends StatelessWidget {
     final config = BoustroComponentConfig.of(context);
     final padding =
         config.imagePadding ?? const EdgeInsets.symmetric(vertical: 10);
+    final maxHeight = config.imageMaxHeight ?? 1000;
+
     return Padding(
       padding: padding.resolve(Directionality.of(context)),
       child: ImageWrapper(
@@ -88,6 +92,10 @@ class ImageParagraphView extends StatelessWidget {
             fit: BoxFit.contain,
             semanticLabel: alt,
             image: image,
+            frameBuilder: (context, child, frame, _) {
+              if (frame == null) return SizedBox(height: maxHeight);
+              return child;
+            },
           ),
         ),
       ),

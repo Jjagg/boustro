@@ -11,6 +11,8 @@ class DocumentView extends StatelessWidget {
   const DocumentView({
     Key? key,
     required this.document,
+    this.cacheExtent,
+    this.padding,
     this.physics,
     this.primaryScroll,
     this.scrollController,
@@ -18,6 +20,12 @@ class DocumentView extends StatelessWidget {
 
   /// The contents this view will display.
   final Document document;
+
+  /// See [ScrollView.cacheExtent].
+  final double? cacheExtent;
+
+  /// The amount of space by which to inset the children.
+  final EdgeInsetsGeometry? padding;
 
   /// ScrollPhysics to pass to the [ListView] that holds the paragraphs.
   /// See [ScrollView.physics].
@@ -34,7 +42,9 @@ class DocumentView extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       addAutomaticKeepAlives: false,
+      cacheExtent: cacheExtent,
       controller: scrollController,
+      padding: padding,
       physics: physics,
       primary: primaryScroll,
       shrinkWrap: true,
